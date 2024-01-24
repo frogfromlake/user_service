@@ -3,9 +3,6 @@ package util
 import (
 	"math/rand"
 	"time"
-
-	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz"
@@ -55,11 +52,6 @@ func RandomString(n int, r ...*rand.Rand) string {
 	return string(b)
 }
 
-// RandomUUID generates a random UUID as a string.
-func RandomUUID() string {
-	return uuid.New().String()
-}
-
 // RandomUsername generates a random username
 // If an optional *rand.Rand instance is provided, it is used to generate the random username.
 // Otherwise, a new *rand.Rand instance is created using the current time as a seed.
@@ -87,27 +79,6 @@ func RandomPasswordHash(r ...*rand.Rand) string {
 func RandomCountryCode(r ...*rand.Rand) string {
 	// return RandomString(2, r...)
 	return "US" // <- i know ... but it's just a test
-}
-
-// RandomDuration generates a random song duration as decimal.Decimal representing total seconds.
-// If an optional *rand.Rand instance is provided, it is used to generate the random duration.
-// Otherwise, a new *rand.Rand instance is created using the current time as a seed.
-func RandomDuration(r ...*rand.Rand) decimal.Decimal {
-	var randInstance *rand.Rand
-	if len(r) > 0 {
-		randInstance = r[0]
-	} else {
-		randInstance = rand.New(rand.NewSource(time.Now().UnixNano()))
-	}
-
-	// Limit the range of random values
-	hours := randInstance.Intn(2)    // Up to 1 hour
-	minutes := randInstance.Intn(60) // Up to 59 minutes
-	seconds := randInstance.Intn(60) // Up to 59 seconds
-
-	totalSeconds := hours*3600 + minutes*60 + seconds
-
-	return decimal.NewFromInt(int64(totalSeconds))
 }
 
 // RandomDate generates a random date within the last 100 years with time part set to 00:00:00 UTC

@@ -5,8 +5,8 @@ import "github.com/spf13/viper"
 // Config is a struct that holds all configurations for the application.
 // The values are read by viper from a config file or environment variables.
 type Config struct {
-	DBSource      string `mapstructure:"DB_SOURCE"`
-	ServerAddress string `mapstructure:"SERVER_ADDRESS"`
+	DBSource      string `mapstructure:"DB_SOURCE_USER_SERVICE"`
+	ServerAddress string `mapstructure:"SERVER_ADDRESS_USER_SERVICE"`
 }
 
 // LoadConfig loads the configuration from the given path.
@@ -17,10 +17,10 @@ func LoadConfig(path string) (config Config, err error) {
 	viper.AutomaticEnv()
 
 	// Check if environment variables are set
-	if dbSource := viper.GetString("DB_SOURCE"); dbSource != "" {
+	if dbSource := viper.GetString("DB_SOURCE_USER_SERVICE"); dbSource != "" {
 		config.DBSource = dbSource
 	}
-	if serverAddress := viper.GetString("SERVER_ADDRESS"); serverAddress != "" {
+	if serverAddress := viper.GetString("SERVER_ADDRESS_USER_SERVICE"); serverAddress != "" {
 		config.ServerAddress = serverAddress
 	}
 

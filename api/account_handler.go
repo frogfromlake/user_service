@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	db "github.com/frogfromlake/user_service/db/sqlc"
-	"github.com/frogfromlake/user_service/util"
+	db "github.com/frogfromlake/streamfair_backend/user_service/db/sqlc"
+	"github.com/frogfromlake/streamfair_backend/user_service/util"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -149,7 +149,7 @@ type getAccountByAllParamsRequest struct {
 }
 
 type getAccountByAllParamsResponse struct {
-	Account        db.StreamfairAccount
+	Account        db.UserServiceAccount
 	AccountTypeIDs []db.GetAccountTypeIDsForAccountRow
 }
 

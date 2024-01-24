@@ -11,9 +11,9 @@ import (
 	"reflect"
 	"testing"
 
-	mock_db "github.com/frogfromlake/user_service/db/mock"
-	db "github.com/frogfromlake/user_service/db/sqlc"
-	"github.com/frogfromlake/user_service/util"
+	mock_db "github.com/frogfromlake/streamfair_backend/user_service/db/mock"
+	db "github.com/frogfromlake/streamfair_backend/user_service/db/sqlc"
+	"github.com/frogfromlake/streamfair_backend/user_service/util"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -409,7 +409,7 @@ func TestGetAccountByAllParamsAPI(t *testing.T) {
 				store.EXPECT().
 					GetAccountByAllParams(gomock.Any(), gomock.Eq(getAccByAllParams)).
 					Times(1).
-					Return(db.StreamfairAccount{}, sql.ErrNoRows)
+					Return(db.UserServiceAccount{}, sql.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -422,7 +422,7 @@ func TestGetAccountByAllParamsAPI(t *testing.T) {
 				store.EXPECT().
 					GetAccountByAllParams(gomock.Any(), gomock.Eq(getAccByAllParams)).
 					Times(1).
-					Return(db.StreamfairAccount{}, sql.ErrConnDone)
+					Return(db.UserServiceAccount{}, sql.ErrConnDone)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -924,8 +924,8 @@ func TestDeleteAccountAPI(t *testing.T) {
 	}
 }
 
-func randomAccount() db.StreamfairAccount {
-	return db.StreamfairAccount{
+func randomAccount() db.UserServiceAccount {
+	return db.UserServiceAccount{
 		ID:           util.RandomInt(1, 1000),
 		Username:     util.RandomUsername(),
 		Email:        util.RandomEmail(),
@@ -1012,8 +1012,8 @@ func requireBodyMatch(t *testing.T, body *bytes.Buffer, expected interface{}, ty
 			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*getAccountByUsernameResponse))
 		}
 	case "db.StreamfairAccount":
-		if !reflect.DeepEqual(expected, *gotResult.(*db.StreamfairAccount)) {
-			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*db.StreamfairAccount))
+		if !reflect.DeepEqual(expected, *gotResult.(*db.UserServiceAccount)) {
+			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*db.UserServiceAccount))
 		}
 	case "[]db.ListAccountsRow":
 		if !reflect.DeepEqual(expected, *gotResult.(*[]db.ListAccountsRow)) {
@@ -1026,14 +1026,6 @@ func requireBodyMatch(t *testing.T, body *bytes.Buffer, expected interface{}, ty
 	case "db.UpdateAccountPasswordRow":
 		if !reflect.DeepEqual(expected, *gotResult.(*db.UpdateAccountPasswordRow)) {
 			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*db.UpdateAccountPasswordRow))
-		}
-	case "db.AddSongTxResult":
-		if !reflect.DeepEqual(expected, *gotResult.(*db.AddSongTxResult)) {
-			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*db.AddSongTxResult))
-		}
-	case "db.UpdateSongTxResults":
-		if !reflect.DeepEqual(expected, *gotResult.(*db.UpdateSongTxResults)) {
-			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*db.UpdateSongTxResults))
 		}
 	default:
 		t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, gotResult)

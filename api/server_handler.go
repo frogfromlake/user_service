@@ -1,7 +1,12 @@
 package api
 
 import (
-	db "github.com/frogfromlake/user_service/db/sqlc"
+	"context"
+	"fmt"
+	"os"
+
+	db "github.com/frogfromlake/streamfair_backend/user_service/db/sqlc"
+	"github.com/frogfromlake/streamfair_backend/user_service/util"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -34,63 +39,61 @@ func NewServer(store db.Store) *Server {
 	router.PUT("/accounts/password/:id", server.updateAccountPassword)
 	router.DELETE("/accounts/:id", server.deleteAccount)
 
-	router.POST("/songs", server.addSong)
-	router.PUT("/songs/:id", server.updateSong)
-	router.DELETE("/songs/:id", server.deleteSong)
 	server.router = router
 	return server
 }
 
 // StartServer starts a new HTTP server on the specified address.
 func (server *Server) StartServer(address string) error {
-	// if err := InitializeDatabase(server.store); err != nil {
-	// 	fmt.Fprintf(os.Stderr, "database: error while initializing database: %v\n", err)
-	// }
+	if err := InitializeDatabase(server.store); err != nil {
+		fmt.Fprintf(os.Stderr, "database: error while initializing database: %v\n", err)
+		return err
+	}
 	return server.router.Run(address)
 }
 
 // InitializeDatabase creates the initial fixed entries in the database.
-// func InitializeDatabase(store db.Store) error {
-// 	accountTypes := util.GetAccountTypeStruct()
-// 	arg := db.ListAccountTypesParams{
-// 		Limit:  int32(len(accountTypes)),
-// 		Offset: 0,
-// 	}
-// 	accountTypesInDB, err := store.ListAccountTypes(context.Background(), arg)
-// 	if err != nil {
-// 		return err
-// 	}
+func InitializeDatabase(store db.Store) error {
+	accountTypes := util.GetAccountTypeStruct()
+	arg := db.ListAccountTypesParams{
+		Limit:  int32(len(accountTypes)),
+		Offset: 0,
+	}
+	accountTypesInDB, err := store.ListAccountTypes(context.Background(), arg)
+	if err != nil {
+		return err
+	}
 
-// 	// Convert accountTypesInDB into a map for faster lookup
-// 	accountTypesMap := make(map[int64]bool)
-// 	for _, accountTypeInDB := range accountTypesInDB {
-// 		accountTypesMap[accountTypeInDB.ID] = true
-// 	}
+	// Convert accountTypesInDB into a map for faster lookup
+	accountTypesMap := make(map[int64]bool)
+	for _, accountTypeInDB := range accountTypesInDB {
+		accountTypesMap[accountTypeInDB.ID] = true
+	}
 
-// 	var errs []error
-// 	for _, accountType := range accountTypes {
-// 		if !accountTypesMap[accountType.ID] {
-// 			_, err := store.CreateAccountType(context.Background(), db.CreateAccountTypeParams{
-// 				Description: accountType.Description,
-// 				Permissions: accountType.Permissions,
-// 				IsArtist:    accountType.IsArtist,
-// 				IsProducer:  accountType.IsProducer,
-// 				IsWriter:    accountType.IsWriter,
-// 				IsLabel:     accountType.IsLabel,
-// 			})
-// 			if err != nil {
-// 				errs = append(errs, err)
-// 			}
-// 		}
-// 	}
+	var errs []error
+	for _, accountType := range accountTypes {
+		if !accountTypesMap[accountType.ID] {
+			_, err := store.CreateAccountType(context.Background(), db.CreateAccountTypeParams{
+				Description: accountType.Description,
+				Permissions: accountType.Permissions,
+				IsArtist:    accountType.IsArtist,
+				IsProducer:  accountType.IsProducer,
+				IsWriter:    accountType.IsWriter,
+				IsLabel:     accountType.IsLabel,
+			})
+			if err != nil {
+				errs = append(errs, err)
+			}
+		}
+	}
 
-// 	if len(errs) > 0 {
-// 		return fmt.Errorf("%q", errs)
-// 	}
+	if len(errs) > 0 {
+		return fmt.Errorf("%q", errs)
+	}
 
-// 	fmt.Println("Database initialized.")
-// 	return nil
-// }
+	fmt.Println("Database initialized.")
+	return nil
+}
 
 func errorResponse(err error) gin.H {
 	return gin.H{"error": err.Error()}

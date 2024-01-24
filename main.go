@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/frogfromlake/user_service/api"
-	db "github.com/frogfromlake/user_service/db/sqlc"
-	"github.com/frogfromlake/user_service/util"
+	"github.com/frogfromlake/streamfair_backend/user_service/api"
+	db "github.com/frogfromlake/streamfair_backend/user_service/db/sqlc"
+	"github.com/frogfromlake/streamfair_backend/user_service/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
-	fmt.Println("Hello, Streamfair!")
+	fmt.Println("Hello, Streamfair User Service!")
 	config, err := util.LoadConfig(".")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "config: error while loading config: %v\n", err)

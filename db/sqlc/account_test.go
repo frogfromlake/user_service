@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/frogfromlake/user_service/util"
+	"github.com/frogfromlake/streamfair_backend/user_service/util"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/require"
 )

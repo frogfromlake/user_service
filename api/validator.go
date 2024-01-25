@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/frogfromlake/streamfair_backend/user_service/util"
+	"github.com/Streamfair/user_service/util"
 	"github.com/go-playground/validator/v10"
 )
 

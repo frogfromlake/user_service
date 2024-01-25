@@ -1,4 +1,4 @@
-module github.com/frogfromlake/streamfair_backend/user_service
+module github.com/Streamfair/user_service
 
 go 1.21.6
 

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/frogfromlake/streamfair_backend/user_service/util"
+	"github.com/Streamfair/user_service/util"
 	"github.com/stretchr/testify/require"
 )
 

@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	db "github.com/Streamfair/user_service/db/sqlc"
+	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	gomock "go.uber.org/mock/gomock"
 )
 

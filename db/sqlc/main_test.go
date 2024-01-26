@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Streamfair/user_service/util"
+	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"testing"

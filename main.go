@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Streamfair/user_service/api"
-	db "github.com/Streamfair/user_service/db/sqlc"
-	"github.com/Streamfair/user_service/util"
+	"github.com/Streamfair/streamfair_user_svc/api"
+	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
+	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

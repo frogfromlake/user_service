@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	db "github.com/Streamfair/user_service/db/sqlc"
-	"github.com/Streamfair/user_service/util"
+	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
+	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 )

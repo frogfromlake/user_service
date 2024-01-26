@@ -1,4 +1,4 @@
-module github.com/Streamfair/user_service
+module github.com/Streamfair/streamfair_user_svc
 
 go 1.21.6
 

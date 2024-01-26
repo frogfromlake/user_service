@@ -3,7 +3,7 @@ package api
 import (
 	"testing"
 
-	"github.com/Streamfair/user_service/util"
+	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/stretchr/testify/require"
 )
 

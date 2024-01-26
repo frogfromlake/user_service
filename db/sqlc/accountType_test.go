@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Streamfair/user_service/util"
+	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/require"
 )

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	mock_db "github.com/Streamfair/user_service/db/mock"
+	mock_db "github.com/Streamfair/streamfair_user_svc/db/mock"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/mock/gomock"
 )

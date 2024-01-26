@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	mock_db "github.com/Streamfair/user_service/db/mock"
-	db "github.com/Streamfair/user_service/db/sqlc"
-	"github.com/Streamfair/user_service/util"
+	mock_db "github.com/Streamfair/streamfair_user_svc/db/mock"
+	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
+	"github.com/Streamfair/streamfair_user_svc/util"
 	"go.uber.org/mock/gomock"
 )
 

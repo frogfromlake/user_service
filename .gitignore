@@ -1,0 +1,36 @@
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Folders
+_obj
+_test
+vendor/
+node_modules/
+
+# Compiled binary executables
+*.exe
+*.out
+
+# Log files
+*.log
+
+# IDE files
+.idea/
+.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# macOS Finder files
+.AppleDouble
+.DS_Store
+
+# env
+app.env
+.env
+
+# output
+coverage.out

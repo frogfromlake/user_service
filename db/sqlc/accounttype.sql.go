@@ -12,7 +12,7 @@ import (
 )
 
 const createAccountType = `-- name: CreateAccountType :one
-INSERT INTO "user_service"."AccountTypes" (
+INSERT INTO "user_svc"."AccountTypes" (
   description,
   permissions,
   is_artist,
@@ -34,7 +34,7 @@ type CreateAccountTypeParams struct {
 	IsLabel     bool        `json:"is_label"`
 }
 
-func (q *Queries) CreateAccountType(ctx context.Context, arg CreateAccountTypeParams) (UserServiceAccountType, error) {
+func (q *Queries) CreateAccountType(ctx context.Context, arg CreateAccountTypeParams) (UserSvcAccountType, error) {
 	row := q.db.QueryRow(ctx, createAccountType,
 		arg.Description,
 		arg.Permissions,
@@ -43,7 +43,7 @@ func (q *Queries) CreateAccountType(ctx context.Context, arg CreateAccountTypePa
 		arg.IsWriter,
 		arg.IsLabel,
 	)
-	var i UserServiceAccountType
+	var i UserSvcAccountType
 	err := row.Scan(
 		&i.ID,
 		&i.Description,
@@ -59,7 +59,7 @@ func (q *Queries) CreateAccountType(ctx context.Context, arg CreateAccountTypePa
 }
 
 const deleteAccountType = `-- name: DeleteAccountType :exec
-DELETE FROM "user_service"."AccountTypes"
+DELETE FROM "user_svc"."AccountTypes"
 WHERE id = $1
 `
 
@@ -69,13 +69,13 @@ func (q *Queries) DeleteAccountType(ctx context.Context, id int64) error {
 }
 
 const getAccountType = `-- name: GetAccountType :one
-SELECT id, description, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at FROM "user_service"."AccountTypes"
+SELECT id, description, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at FROM "user_svc"."AccountTypes"
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetAccountType(ctx context.Context, id int64) (UserServiceAccountType, error) {
+func (q *Queries) GetAccountType(ctx context.Context, id int64) (UserSvcAccountType, error) {
 	row := q.db.QueryRow(ctx, getAccountType, id)
-	var i UserServiceAccountType
+	var i UserSvcAccountType
 	err := row.Scan(
 		&i.ID,
 		&i.Description,
@@ -91,7 +91,7 @@ func (q *Queries) GetAccountType(ctx context.Context, id int64) (UserServiceAcco
 }
 
 const getAccountTypeByAllParams = `-- name: GetAccountTypeByAllParams :one
-SELECT id, description, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at FROM "user_service"."AccountTypes"
+SELECT id, description, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at FROM "user_svc"."AccountTypes"
 WHERE description = $1 AND permissions = $2 AND is_artist = $3 AND is_producer = $4 AND is_writer = $5 AND is_label = $6 LIMIT 1
 `
 
@@ -104,7 +104,7 @@ type GetAccountTypeByAllParamsParams struct {
 	IsLabel     bool        `json:"is_label"`
 }
 
-func (q *Queries) GetAccountTypeByAllParams(ctx context.Context, arg GetAccountTypeByAllParamsParams) (UserServiceAccountType, error) {
+func (q *Queries) GetAccountTypeByAllParams(ctx context.Context, arg GetAccountTypeByAllParamsParams) (UserSvcAccountType, error) {
 	row := q.db.QueryRow(ctx, getAccountTypeByAllParams,
 		arg.Description,
 		arg.Permissions,
@@ -113,7 +113,7 @@ func (q *Queries) GetAccountTypeByAllParams(ctx context.Context, arg GetAccountT
 		arg.IsWriter,
 		arg.IsLabel,
 	)
-	var i UserServiceAccountType
+	var i UserSvcAccountType
 	err := row.Scan(
 		&i.ID,
 		&i.Description,
@@ -129,7 +129,7 @@ func (q *Queries) GetAccountTypeByAllParams(ctx context.Context, arg GetAccountT
 }
 
 const listAccountTypes = `-- name: ListAccountTypes :many
-SELECT id, description, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at FROM "user_service"."AccountTypes"
+SELECT id, description, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at FROM "user_svc"."AccountTypes"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -140,15 +140,15 @@ type ListAccountTypesParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListAccountTypes(ctx context.Context, arg ListAccountTypesParams) ([]UserServiceAccountType, error) {
+func (q *Queries) ListAccountTypes(ctx context.Context, arg ListAccountTypesParams) ([]UserSvcAccountType, error) {
 	rows, err := q.db.Query(ctx, listAccountTypes, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []UserServiceAccountType{}
+	items := []UserSvcAccountType{}
 	for rows.Next() {
-		var i UserServiceAccountType
+		var i UserSvcAccountType
 		if err := rows.Scan(
 			&i.ID,
 			&i.Description,
@@ -171,7 +171,7 @@ func (q *Queries) ListAccountTypes(ctx context.Context, arg ListAccountTypesPara
 }
 
 const updateAccountType = `-- name: UpdateAccountType :one
-UPDATE "user_service"."AccountTypes"
+UPDATE "user_svc"."AccountTypes"
 SET 
   description = COALESCE($2, description),
   permissions = COALESCE($3, permissions),
@@ -194,7 +194,7 @@ type UpdateAccountTypeParams struct {
 	IsLabel     bool        `json:"is_label"`
 }
 
-func (q *Queries) UpdateAccountType(ctx context.Context, arg UpdateAccountTypeParams) (UserServiceAccountType, error) {
+func (q *Queries) UpdateAccountType(ctx context.Context, arg UpdateAccountTypeParams) (UserSvcAccountType, error) {
 	row := q.db.QueryRow(ctx, updateAccountType,
 		arg.ID,
 		arg.Description,
@@ -204,7 +204,7 @@ func (q *Queries) UpdateAccountType(ctx context.Context, arg UpdateAccountTypePa
 		arg.IsWriter,
 		arg.IsLabel,
 	)
-	var i UserServiceAccountType
+	var i UserSvcAccountType
 	err := row.Scan(
 		&i.ID,
 		&i.Description,

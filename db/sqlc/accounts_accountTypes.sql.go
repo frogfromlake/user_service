@@ -12,7 +12,7 @@ import (
 )
 
 const addAccountTypeToAccount = `-- name: AddAccountTypeToAccount :exec
-INSERT INTO "user_service"."Accounts_AccountTypes" ("Accounts_id", "AccountTypes_id")
+INSERT INTO "user_svc"."Accounts_AccountTypes" ("Accounts_id", "AccountTypes_id")
 VALUES ($1, $2)
 `
 
@@ -27,8 +27,8 @@ func (q *Queries) AddAccountTypeToAccount(ctx context.Context, arg AddAccountTyp
 }
 
 const getAccountTypeIDsForAccount = `-- name: GetAccountTypeIDsForAccount :many
-SELECT at.id, at.created_at, at.updated_at FROM "user_service"."AccountTypes" at
-JOIN "user_service"."Accounts_AccountTypes" aat ON at.id = aat."AccountTypes_id"
+SELECT at.id, at.created_at, at.updated_at FROM "user_svc"."AccountTypes" at
+JOIN "user_svc"."Accounts_AccountTypes" aat ON at.id = aat."AccountTypes_id"
 WHERE aat."Accounts_id" = $1
 `
 
@@ -59,20 +59,20 @@ func (q *Queries) GetAccountTypeIDsForAccount(ctx context.Context, accountsID in
 }
 
 const getAccountTypesForAccount = `-- name: GetAccountTypesForAccount :many
-SELECT at.id, at.description, at.permissions, at.is_artist, at.is_producer, at.is_writer, at.is_label, at.created_at, at.updated_at FROM "user_service"."AccountTypes" at
-JOIN "user_service"."Accounts_AccountTypes" aat ON at.id = aat."AccountTypes_id"
+SELECT at.id, at.description, at.permissions, at.is_artist, at.is_producer, at.is_writer, at.is_label, at.created_at, at.updated_at FROM "user_svc"."AccountTypes" at
+JOIN "user_svc"."Accounts_AccountTypes" aat ON at.id = aat."AccountTypes_id"
 WHERE aat."Accounts_id" = $1
 `
 
-func (q *Queries) GetAccountTypesForAccount(ctx context.Context, accountsID int64) ([]UserServiceAccountType, error) {
+func (q *Queries) GetAccountTypesForAccount(ctx context.Context, accountsID int64) ([]UserSvcAccountType, error) {
 	rows, err := q.db.Query(ctx, getAccountTypesForAccount, accountsID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []UserServiceAccountType{}
+	items := []UserSvcAccountType{}
 	for rows.Next() {
-		var i UserServiceAccountType
+		var i UserSvcAccountType
 		if err := rows.Scan(
 			&i.ID,
 			&i.Description,
@@ -95,8 +95,8 @@ func (q *Queries) GetAccountTypesForAccount(ctx context.Context, accountsID int6
 }
 
 const getAccountsForAccountType = `-- name: GetAccountsForAccountType :many
-SELECT ac.id, ac.username, ac.email, ac.country_code, ac.avatar_url, ac.likes_count, ac.follows_count, ac.created_at, ac.updated_at FROM "user_service"."Accounts" ac
-JOIN "user_service"."Accounts_AccountTypes" aat ON ac.id = aat."Accounts_id"
+SELECT ac.id, ac.username, ac.email, ac.country_code, ac.avatar_url, ac.likes_count, ac.follows_count, ac.created_at, ac.updated_at FROM "user_svc"."Accounts" ac
+JOIN "user_svc"."Accounts_AccountTypes" aat ON ac.id = aat."Accounts_id"
 WHERE aat."AccountTypes_id" = $1
 `
 
@@ -143,7 +143,7 @@ func (q *Queries) GetAccountsForAccountType(ctx context.Context, accounttypesID 
 }
 
 const removeAccountTypeFromAccount = `-- name: RemoveAccountTypeFromAccount :exec
-DELETE FROM "user_service"."Accounts_AccountTypes"
+DELETE FROM "user_svc"."Accounts_AccountTypes"
 WHERE "Accounts_id" = $1 AND "AccountTypes_id" = $2
 `
 
@@ -158,7 +158,7 @@ func (q *Queries) RemoveAccountTypeFromAccount(ctx context.Context, arg RemoveAc
 }
 
 const removeAllRelationshipsForAccountAccountType = `-- name: RemoveAllRelationshipsForAccountAccountType :exec
-DELETE FROM "user_service"."Accounts_AccountTypes"
+DELETE FROM "user_svc"."Accounts_AccountTypes"
 WHERE "Accounts_id" = $1
 `
 
@@ -168,7 +168,7 @@ func (q *Queries) RemoveAllRelationshipsForAccountAccountType(ctx context.Contex
 }
 
 const removeAllRelationshipsForAccountTypeAccount = `-- name: RemoveAllRelationshipsForAccountTypeAccount :exec
-DELETE FROM "user_service"."Accounts_AccountTypes"
+DELETE FROM "user_svc"."Accounts_AccountTypes"
 WHERE "AccountTypes_id" = $1
 `
 

@@ -59,8 +59,8 @@ func TestStartServer(t *testing.T) {
 			if tc.dbError {
 				mockStore.EXPECT().ListAccountTypes(gomock.Any(), gomock.Any()).Times(1).Return(nil, errors.New("some error"))
 			} else {
-				mockStore.EXPECT().ListAccountTypes(gomock.Any(), gomock.Any()).Times(1).Return([]db.UserServiceAccountType{{ID: 1}, {ID: 2}}, nil)
-				mockStore.EXPECT().CreateAccountType(gomock.Any(), gomock.Any()).AnyTimes().Return(db.UserServiceAccountType{}, nil)
+				mockStore.EXPECT().ListAccountTypes(gomock.Any(), gomock.Any()).Times(1).Return([]db.UserSvcAccountType{{ID: 1}, {ID: 2}}, nil)
+				mockStore.EXPECT().CreateAccountType(gomock.Any(), gomock.Any()).AnyTimes().Return(db.UserSvcAccountType{}, nil)
 			}
 
 			server := NewServer(mockStore)
@@ -108,10 +108,10 @@ func getRandomPort() (int, error) {
 	return addr.Port, nil
 }
 
-func convertUtilAccountTypesToDbAccountTypes(utilAccountTypes []util.AccountType) []db.UserServiceAccountType {
-	dbAccountTypes := make([]db.UserServiceAccountType, len(utilAccountTypes))
+func convertUtilAccountTypesToDbAccountTypes(utilAccountTypes []util.AccountType) []db.UserSvcAccountType {
+	dbAccountTypes := make([]db.UserSvcAccountType, len(utilAccountTypes))
 	for i, utilAccountType := range utilAccountTypes {
-		dbAccountTypes[i] = db.UserServiceAccountType{
+		dbAccountTypes[i] = db.UserSvcAccountType{
 			ID:          utilAccountType.ID,
 			Description: utilAccountType.Description,
 			Permissions: utilAccountType.Permissions,
@@ -135,7 +135,7 @@ func TestInitializeDatabase(t *testing.T) {
 
 	testCases := []struct {
 		name         string
-		accountTypes []db.UserServiceAccountType
+		accountTypes []db.UserSvcAccountType
 		buildStubs   func(*mock_db.MockStore)
 		expectedErr  error
 		expectedStr  []string
@@ -144,7 +144,7 @@ func TestInitializeDatabase(t *testing.T) {
 			name:         "OK",
 			accountTypes: dbAccountTypes,
 			buildStubs: func(store *mock_db.MockStore) {
-				store.EXPECT().ListAccountTypes(gomock.Any(), gomock.Any()).Times(1).Return([]db.UserServiceAccountType{}, nil)
+				store.EXPECT().ListAccountTypes(gomock.Any(), gomock.Any()).Times(1).Return([]db.UserSvcAccountType{}, nil)
 				for _, accountType := range dbAccountTypes {
 					store.EXPECT().CreateAccountType(gomock.Any(), db.CreateAccountTypeParams{
 						Description: accountType.Description,
@@ -169,7 +169,7 @@ func TestInitializeDatabase(t *testing.T) {
 			name:         "CreateAccountTypeError",
 			accountTypes: dbAccountTypes,
 			buildStubs: func(store *mock_db.MockStore) {
-				store.EXPECT().ListAccountTypes(gomock.Any(), gomock.Any()).Times(1).Return([]db.UserServiceAccountType{}, nil)
+				store.EXPECT().ListAccountTypes(gomock.Any(), gomock.Any()).Times(1).Return([]db.UserSvcAccountType{}, nil)
 				for _, accountType := range dbAccountTypes {
 					store.EXPECT().CreateAccountType(gomock.Any(), db.CreateAccountTypeParams{
 						Description: accountType.Description,
@@ -178,7 +178,7 @@ func TestInitializeDatabase(t *testing.T) {
 						IsProducer:  accountType.IsProducer,
 						IsWriter:    accountType.IsWriter,
 						IsLabel:     accountType.IsLabel,
-					}).Times(1).Return(db.UserServiceAccountType{}, errors.New("another error"))
+					}).Times(1).Return(db.UserSvcAccountType{}, errors.New("another error"))
 				}
 			},
 			expectedStr: []string{"another error", "another error", "another error", "another error", "another error"},

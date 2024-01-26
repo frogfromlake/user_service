@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomAccountType(t *testing.T) UserServiceAccountType {
+func createRandomAccountType(t *testing.T) UserSvcAccountType {
 	arg := CreateAccountTypeParams{
 		Description: util.ConvertToText("This is a test account type"),
 		Permissions: []byte(`{"key": "value"}`),

@@ -1,6 +1,6 @@
-CREATE SCHEMA "user_service";
+CREATE SCHEMA "user_svc";
 
-CREATE TABLE "user_service"."Accounts" (
+CREATE TABLE "user_svc"."Accounts" (
   "id" bigserial PRIMARY KEY,
   "username" varchar UNIQUE NOT NULL,
   "email" varchar UNIQUE NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE "user_service"."Accounts" (
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-CREATE TABLE "user_service"."AccountTypes" (
+CREATE TABLE "user_svc"."AccountTypes" (
   "id" bigserial PRIMARY KEY,
   "description" text,
   "permissions" jsonb,
@@ -25,20 +25,20 @@ CREATE TABLE "user_service"."AccountTypes" (
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-CREATE INDEX "idx_acc_id" ON "user_service"."Accounts" ("id");
+CREATE INDEX "idx_acc_id" ON "user_svc"."Accounts" ("id");
 
-CREATE INDEX "idx_acc_username" ON "user_service"."Accounts" ("username");
+CREATE INDEX "idx_acc_username" ON "user_svc"."Accounts" ("username");
 
-CREATE INDEX "idx_acc_email" ON "user_service"."Accounts" ("email");
+CREATE INDEX "idx_acc_email" ON "user_svc"."Accounts" ("email");
 
-CREATE INDEX "idx_accType_id" ON "user_service"."AccountTypes" ("id");
+CREATE INDEX "idx_accType_id" ON "user_svc"."AccountTypes" ("id");
 
-CREATE TABLE "user_service"."Accounts_AccountTypes" (
+CREATE TABLE "user_svc"."Accounts_AccountTypes" (
   "Accounts_id" bigserial,
   "AccountTypes_id" bigserial,
   PRIMARY KEY ("Accounts_id", "AccountTypes_id")
 );
 
-ALTER TABLE "user_service"."Accounts_AccountTypes" ADD FOREIGN KEY ("Accounts_id") REFERENCES "user_service"."Accounts" ("id");
+ALTER TABLE "user_svc"."Accounts_AccountTypes" ADD FOREIGN KEY ("Accounts_id") REFERENCES "user_svc"."Accounts" ("id");
 
-ALTER TABLE "user_service"."Accounts_AccountTypes" ADD FOREIGN KEY ("AccountTypes_id") REFERENCES "user_service"."AccountTypes" ("id");
+ALTER TABLE "user_svc"."Accounts_AccountTypes" ADD FOREIGN KEY ("AccountTypes_id") REFERENCES "user_svc"."AccountTypes" ("id");

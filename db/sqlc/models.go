@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type UserServiceAccount struct {
+type UserSvcAccount struct {
 	ID           int64              `json:"id"`
 	Username     string             `json:"username"`
 	Email        string             `json:"email"`
@@ -21,7 +21,7 @@ type UserServiceAccount struct {
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
-type UserServiceAccountType struct {
+type UserSvcAccountType struct {
 	ID          int64              `json:"id"`
 	Description pgtype.Text        `json:"description"`
 	Permissions []byte             `json:"permissions"`
@@ -33,7 +33,7 @@ type UserServiceAccountType struct {
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
-type UserServiceAccountsAccountType struct {
+type UserSvcAccountsAccountType struct {
 	AccountsID     int64 `json:"Accounts_id"`
 	AccountTypesID int64 `json:"AccountTypes_id"`
 }

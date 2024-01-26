@@ -86,10 +86,10 @@ func (mr *MockStoreMockRecorder) CreateAccountTx(ctx, params any) *gomock.Call {
 }
 
 // CreateAccountType mocks base method.
-func (m *MockStore) CreateAccountType(ctx context.Context, arg db.CreateAccountTypeParams) (db.UserServiceAccountType, error) {
+func (m *MockStore) CreateAccountType(ctx context.Context, arg db.CreateAccountTypeParams) (db.UserSvcAccountType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAccountType", ctx, arg)
-	ret0, _ := ret[0].(db.UserServiceAccountType)
+	ret0, _ := ret[0].(db.UserSvcAccountType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -143,10 +143,10 @@ func (mr *MockStoreMockRecorder) DeleteAccountType(ctx, id any) *gomock.Call {
 }
 
 // GetAccountByAllParams mocks base method.
-func (m *MockStore) GetAccountByAllParams(ctx context.Context, arg db.GetAccountByAllParamsParams) (db.UserServiceAccount, error) {
+func (m *MockStore) GetAccountByAllParams(ctx context.Context, arg db.GetAccountByAllParamsParams) (db.UserSvcAccount, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccountByAllParams", ctx, arg)
-	ret0, _ := ret[0].(db.UserServiceAccount)
+	ret0, _ := ret[0].(db.UserSvcAccount)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -188,10 +188,10 @@ func (mr *MockStoreMockRecorder) GetAccountByUsername(ctx, username any) *gomock
 }
 
 // GetAccountType mocks base method.
-func (m *MockStore) GetAccountType(ctx context.Context, id int64) (db.UserServiceAccountType, error) {
+func (m *MockStore) GetAccountType(ctx context.Context, id int64) (db.UserSvcAccountType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccountType", ctx, id)
-	ret0, _ := ret[0].(db.UserServiceAccountType)
+	ret0, _ := ret[0].(db.UserSvcAccountType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -203,10 +203,10 @@ func (mr *MockStoreMockRecorder) GetAccountType(ctx, id any) *gomock.Call {
 }
 
 // GetAccountTypeByAllParams mocks base method.
-func (m *MockStore) GetAccountTypeByAllParams(ctx context.Context, arg db.GetAccountTypeByAllParamsParams) (db.UserServiceAccountType, error) {
+func (m *MockStore) GetAccountTypeByAllParams(ctx context.Context, arg db.GetAccountTypeByAllParamsParams) (db.UserSvcAccountType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccountTypeByAllParams", ctx, arg)
-	ret0, _ := ret[0].(db.UserServiceAccountType)
+	ret0, _ := ret[0].(db.UserSvcAccountType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -233,10 +233,10 @@ func (mr *MockStoreMockRecorder) GetAccountTypeIDsForAccount(ctx, accountsID any
 }
 
 // GetAccountTypesForAccount mocks base method.
-func (m *MockStore) GetAccountTypesForAccount(ctx context.Context, accountsID int64) ([]db.UserServiceAccountType, error) {
+func (m *MockStore) GetAccountTypesForAccount(ctx context.Context, accountsID int64) ([]db.UserSvcAccountType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccountTypesForAccount", ctx, accountsID)
-	ret0, _ := ret[0].([]db.UserServiceAccountType)
+	ret0, _ := ret[0].([]db.UserSvcAccountType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -263,10 +263,10 @@ func (mr *MockStoreMockRecorder) GetAccountsForAccountType(ctx, accounttypesID a
 }
 
 // ListAccountTypes mocks base method.
-func (m *MockStore) ListAccountTypes(ctx context.Context, arg db.ListAccountTypesParams) ([]db.UserServiceAccountType, error) {
+func (m *MockStore) ListAccountTypes(ctx context.Context, arg db.ListAccountTypesParams) ([]db.UserSvcAccountType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAccountTypes", ctx, arg)
-	ret0, _ := ret[0].([]db.UserServiceAccountType)
+	ret0, _ := ret[0].([]db.UserSvcAccountType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -379,10 +379,10 @@ func (mr *MockStoreMockRecorder) UpdateAccountPassword(ctx, arg any) *gomock.Cal
 }
 
 // UpdateAccountType mocks base method.
-func (m *MockStore) UpdateAccountType(ctx context.Context, arg db.UpdateAccountTypeParams) (db.UserServiceAccountType, error) {
+func (m *MockStore) UpdateAccountType(ctx context.Context, arg db.UpdateAccountTypeParams) (db.UserSvcAccountType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAccountType", ctx, arg)
-	ret0, _ := ret[0].(db.UserServiceAccountType)
+	ret0, _ := ret[0].(db.UserSvcAccountType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

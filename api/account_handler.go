@@ -149,7 +149,7 @@ type getAccountByAllParamsRequest struct {
 }
 
 type getAccountByAllParamsResponse struct {
-	Account        db.UserServiceAccount
+	Account        db.UserSvcAccount
 	AccountTypeIDs []db.GetAccountTypeIDsForAccountRow
 }
 

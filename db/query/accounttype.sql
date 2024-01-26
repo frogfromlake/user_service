@@ -1,5 +1,5 @@
 -- name: CreateAccountType :one
-INSERT INTO "user_service"."AccountTypes" (
+INSERT INTO "user_svc"."AccountTypes" (
   description,
   permissions,
   is_artist,
@@ -12,21 +12,21 @@ INSERT INTO "user_service"."AccountTypes" (
 RETURNING *;
 
 -- name: GetAccountType :one
-SELECT * FROM "user_service"."AccountTypes"
+SELECT * FROM "user_svc"."AccountTypes"
 WHERE id = $1 LIMIT 1;
 
 -- name: GetAccountTypeByAllParams :one
-SELECT * FROM "user_service"."AccountTypes"
+SELECT * FROM "user_svc"."AccountTypes"
 WHERE description = $1 AND permissions = $2 AND is_artist = $3 AND is_producer = $4 AND is_writer = $5 AND is_label = $6 LIMIT 1;
 
 -- name: ListAccountTypes :many
-SELECT * FROM "user_service"."AccountTypes"
+SELECT * FROM "user_svc"."AccountTypes"
 ORDER BY id
 LIMIT $1
 OFFSET $2;
 
 -- name: UpdateAccountType :one
-UPDATE "user_service"."AccountTypes"
+UPDATE "user_svc"."AccountTypes"
 SET 
   description = COALESCE($2, description),
   permissions = COALESCE($3, permissions),
@@ -39,5 +39,5 @@ WHERE id = $1
 RETURNING *;
 
 -- name: DeleteAccountType :exec
-DELETE FROM "user_service"."AccountTypes"
+DELETE FROM "user_svc"."AccountTypes"
 WHERE id = $1;

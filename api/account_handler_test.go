@@ -409,7 +409,7 @@ func TestGetAccountByAllParamsAPI(t *testing.T) {
 				store.EXPECT().
 					GetAccountByAllParams(gomock.Any(), gomock.Eq(getAccByAllParams)).
 					Times(1).
-					Return(db.UserServiceAccount{}, sql.ErrNoRows)
+					Return(db.UserSvcAccount{}, sql.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -422,7 +422,7 @@ func TestGetAccountByAllParamsAPI(t *testing.T) {
 				store.EXPECT().
 					GetAccountByAllParams(gomock.Any(), gomock.Eq(getAccByAllParams)).
 					Times(1).
-					Return(db.UserServiceAccount{}, sql.ErrConnDone)
+					Return(db.UserSvcAccount{}, sql.ErrConnDone)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -924,8 +924,8 @@ func TestDeleteAccountAPI(t *testing.T) {
 	}
 }
 
-func randomAccount() db.UserServiceAccount {
-	return db.UserServiceAccount{
+func randomAccount() db.UserSvcAccount {
+	return db.UserSvcAccount{
 		ID:           util.RandomInt(1, 1000),
 		Username:     util.RandomUsername(),
 		Email:        util.RandomEmail(),
@@ -1012,8 +1012,8 @@ func requireBodyMatch(t *testing.T, body *bytes.Buffer, expected interface{}, ty
 			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*getAccountByUsernameResponse))
 		}
 	case "db.StreamfairAccount":
-		if !reflect.DeepEqual(expected, *gotResult.(*db.UserServiceAccount)) {
-			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*db.UserServiceAccount))
+		if !reflect.DeepEqual(expected, *gotResult.(*db.UserSvcAccount)) {
+			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*db.UserSvcAccount))
 		}
 	case "[]db.ListAccountsRow":
 		if !reflect.DeepEqual(expected, *gotResult.(*[]db.ListAccountsRow)) {

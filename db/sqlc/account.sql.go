@@ -12,7 +12,7 @@ import (
 )
 
 const createAccount = `-- name: CreateAccount :one
-INSERT INTO "user_service"."Accounts" (
+INSERT INTO "user_svc"."Accounts" (
   username,
   email,
   password_hash,
@@ -62,7 +62,7 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (C
 }
 
 const deleteAccount = `-- name: DeleteAccount :exec
-DELETE FROM "user_service"."Accounts"
+DELETE FROM "user_svc"."Accounts"
 WHERE id = $1
 `
 
@@ -72,7 +72,7 @@ func (q *Queries) DeleteAccount(ctx context.Context, id int64) error {
 }
 
 const getAccountByAllParams = `-- name: GetAccountByAllParams :one
-SELECT id, username, email, password_hash, country_code, avatar_url, likes_count, follows_count, created_at, updated_at FROM "user_service"."Accounts"
+SELECT id, username, email, password_hash, country_code, avatar_url, likes_count, follows_count, created_at, updated_at FROM "user_svc"."Accounts"
 WHERE username = $1 AND email = $2 AND country_code = $3 AND avatar_url = $4
 `
 
@@ -83,14 +83,14 @@ type GetAccountByAllParamsParams struct {
 	AvatarUrl   pgtype.Text `json:"avatar_url"`
 }
 
-func (q *Queries) GetAccountByAllParams(ctx context.Context, arg GetAccountByAllParamsParams) (UserServiceAccount, error) {
+func (q *Queries) GetAccountByAllParams(ctx context.Context, arg GetAccountByAllParamsParams) (UserSvcAccount, error) {
 	row := q.db.QueryRow(ctx, getAccountByAllParams,
 		arg.Username,
 		arg.Email,
 		arg.CountryCode,
 		arg.AvatarUrl,
 	)
-	var i UserServiceAccount
+	var i UserSvcAccount
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
@@ -116,7 +116,7 @@ likes_count,
 follows_count,
 created_at,
 updated_at
-FROM "user_service"."Accounts"
+FROM "user_svc"."Accounts"
 WHERE id = $1 LIMIT 1
 `
 
@@ -159,7 +159,7 @@ likes_count,
 follows_count,
 created_at,
 updated_at
-FROM "user_service"."Accounts"
+FROM "user_svc"."Accounts"
 WHERE username = $1 LIMIT 1
 `
 
@@ -193,7 +193,7 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ge
 }
 
 const listAccounts = `-- name: ListAccounts :many
-SELECT id, username, country_code, created_at, updated_at FROM "user_service"."Accounts"
+SELECT id, username, country_code, created_at, updated_at FROM "user_svc"."Accounts"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -239,7 +239,7 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]L
 }
 
 const updateAccount = `-- name: UpdateAccount :one
-UPDATE "user_service"."Accounts"
+UPDATE "user_svc"."Accounts"
 SET
   username = COALESCE($2, username),
   email = COALESCE($3, email),
@@ -292,7 +292,7 @@ func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (U
 }
 
 const updateAccountPassword = `-- name: UpdateAccountPassword :one
-UPDATE "user_service"."Accounts"
+UPDATE "user_svc"."Accounts"
 SET
   password_hash = COALESCE($2, password_hash)
 WHERE id = $1

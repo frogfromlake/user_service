@@ -142,26 +142,11 @@ func (mr *MockStoreMockRecorder) DeleteAccountType(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAccountType", reflect.TypeOf((*MockStore)(nil).DeleteAccountType), ctx, id)
 }
 
-// GetAccountByAllParams mocks base method.
-func (m *MockStore) GetAccountByAllParams(ctx context.Context, arg db.GetAccountByAllParamsParams) (db.UserSvcAccount, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAccountByAllParams", ctx, arg)
-	ret0, _ := ret[0].(db.UserSvcAccount)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAccountByAllParams indicates an expected call of GetAccountByAllParams.
-func (mr *MockStoreMockRecorder) GetAccountByAllParams(ctx, arg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountByAllParams", reflect.TypeOf((*MockStore)(nil).GetAccountByAllParams), ctx, arg)
-}
-
 // GetAccountByID mocks base method.
-func (m *MockStore) GetAccountByID(ctx context.Context, id int64) (db.GetAccountByIDRow, error) {
+func (m *MockStore) GetAccountByID(ctx context.Context, id int64) (db.UserSvcAccount, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccountByID", ctx, id)
-	ret0, _ := ret[0].(db.GetAccountByIDRow)
+	ret0, _ := ret[0].(db.UserSvcAccount)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -172,19 +157,19 @@ func (mr *MockStoreMockRecorder) GetAccountByID(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountByID", reflect.TypeOf((*MockStore)(nil).GetAccountByID), ctx, id)
 }
 
-// GetAccountByUsername mocks base method.
-func (m *MockStore) GetAccountByUsername(ctx context.Context, username string) (db.GetAccountByUsernameRow, error) {
+// GetAccountByOwner mocks base method.
+func (m *MockStore) GetAccountByOwner(ctx context.Context, owner string) (db.UserSvcAccount, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAccountByUsername", ctx, username)
-	ret0, _ := ret[0].(db.GetAccountByUsernameRow)
+	ret := m.ctrl.Call(m, "GetAccountByOwner", ctx, owner)
+	ret0, _ := ret[0].(db.UserSvcAccount)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAccountByUsername indicates an expected call of GetAccountByUsername.
-func (mr *MockStoreMockRecorder) GetAccountByUsername(ctx, username any) *gomock.Call {
+// GetAccountByOwner indicates an expected call of GetAccountByOwner.
+func (mr *MockStoreMockRecorder) GetAccountByOwner(ctx, owner any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountByUsername", reflect.TypeOf((*MockStore)(nil).GetAccountByUsername), ctx, username)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountByOwner", reflect.TypeOf((*MockStore)(nil).GetAccountByOwner), ctx, owner)
 }
 
 // GetAccountType mocks base method.
@@ -200,36 +185,6 @@ func (m *MockStore) GetAccountType(ctx context.Context, id int64) (db.UserSvcAcc
 func (mr *MockStoreMockRecorder) GetAccountType(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountType", reflect.TypeOf((*MockStore)(nil).GetAccountType), ctx, id)
-}
-
-// GetAccountTypeByAllParams mocks base method.
-func (m *MockStore) GetAccountTypeByAllParams(ctx context.Context, arg db.GetAccountTypeByAllParamsParams) (db.UserSvcAccountType, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAccountTypeByAllParams", ctx, arg)
-	ret0, _ := ret[0].(db.UserSvcAccountType)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAccountTypeByAllParams indicates an expected call of GetAccountTypeByAllParams.
-func (mr *MockStoreMockRecorder) GetAccountTypeByAllParams(ctx, arg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountTypeByAllParams", reflect.TypeOf((*MockStore)(nil).GetAccountTypeByAllParams), ctx, arg)
-}
-
-// GetAccountTypeIDsForAccount mocks base method.
-func (m *MockStore) GetAccountTypeIDsForAccount(ctx context.Context, accountsID int64) ([]db.GetAccountTypeIDsForAccountRow, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAccountTypeIDsForAccount", ctx, accountsID)
-	ret0, _ := ret[0].([]db.GetAccountTypeIDsForAccountRow)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAccountTypeIDsForAccount indicates an expected call of GetAccountTypeIDsForAccount.
-func (mr *MockStoreMockRecorder) GetAccountTypeIDsForAccount(ctx, accountsID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountTypeIDsForAccount", reflect.TypeOf((*MockStore)(nil).GetAccountTypeIDsForAccount), ctx, accountsID)
 }
 
 // GetAccountTypesForAccount mocks base method.
@@ -248,10 +203,10 @@ func (mr *MockStoreMockRecorder) GetAccountTypesForAccount(ctx, accountsID any) 
 }
 
 // GetAccountsForAccountType mocks base method.
-func (m *MockStore) GetAccountsForAccountType(ctx context.Context, accounttypesID int64) ([]db.GetAccountsForAccountTypeRow, error) {
+func (m *MockStore) GetAccountsForAccountType(ctx context.Context, accounttypesID int64) ([]db.UserSvcAccount, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccountsForAccountType", ctx, accounttypesID)
-	ret0, _ := ret[0].([]db.GetAccountsForAccountTypeRow)
+	ret0, _ := ret[0].([]db.UserSvcAccount)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -349,10 +304,10 @@ func (mr *MockStoreMockRecorder) RemoveAllRelationshipsForAccountTypeAccount(ctx
 }
 
 // UpdateAccount mocks base method.
-func (m *MockStore) UpdateAccount(ctx context.Context, arg db.UpdateAccountParams) (db.UpdateAccountRow, error) {
+func (m *MockStore) UpdateAccount(ctx context.Context, arg db.UpdateAccountParams) (db.UserSvcAccount, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAccount", ctx, arg)
-	ret0, _ := ret[0].(db.UpdateAccountRow)
+	ret0, _ := ret[0].(db.UserSvcAccount)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -361,21 +316,6 @@ func (m *MockStore) UpdateAccount(ctx context.Context, arg db.UpdateAccountParam
 func (mr *MockStoreMockRecorder) UpdateAccount(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAccount", reflect.TypeOf((*MockStore)(nil).UpdateAccount), ctx, arg)
-}
-
-// UpdateAccountPassword mocks base method.
-func (m *MockStore) UpdateAccountPassword(ctx context.Context, arg db.UpdateAccountPasswordParams) (db.UpdateAccountPasswordRow, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAccountPassword", ctx, arg)
-	ret0, _ := ret[0].(db.UpdateAccountPasswordRow)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateAccountPassword indicates an expected call of UpdateAccountPassword.
-func (mr *MockStoreMockRecorder) UpdateAccountPassword(ctx, arg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAccountPassword", reflect.TypeOf((*MockStore)(nil).UpdateAccountPassword), ctx, arg)
 }
 
 // UpdateAccountType mocks base method.

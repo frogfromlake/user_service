@@ -113,7 +113,7 @@ func convertUtilAccountTypesToDbAccountTypes(utilAccountTypes []util.AccountType
 	for i, utilAccountType := range utilAccountTypes {
 		dbAccountTypes[i] = db.UserSvcAccountType{
 			ID:          utilAccountType.ID,
-			Description: utilAccountType.Description,
+			Type:        utilAccountType.Type,
 			Permissions: utilAccountType.Permissions,
 			IsArtist:    utilAccountType.IsArtist,
 			IsProducer:  utilAccountType.IsProducer,
@@ -147,7 +147,7 @@ func TestInitializeDatabase(t *testing.T) {
 				store.EXPECT().ListAccountTypes(gomock.Any(), gomock.Any()).Times(1).Return([]db.UserSvcAccountType{}, nil)
 				for _, accountType := range dbAccountTypes {
 					store.EXPECT().CreateAccountType(gomock.Any(), db.CreateAccountTypeParams{
-						Description: accountType.Description,
+						Type:        accountType.Type,
 						Permissions: accountType.Permissions,
 						IsArtist:    accountType.IsArtist,
 						IsProducer:  accountType.IsProducer,
@@ -172,7 +172,7 @@ func TestInitializeDatabase(t *testing.T) {
 				store.EXPECT().ListAccountTypes(gomock.Any(), gomock.Any()).Times(1).Return([]db.UserSvcAccountType{}, nil)
 				for _, accountType := range dbAccountTypes {
 					store.EXPECT().CreateAccountType(gomock.Any(), db.CreateAccountTypeParams{
-						Description: accountType.Description,
+						Type:        accountType.Type,
 						Permissions: accountType.Permissions,
 						IsArtist:    accountType.IsArtist,
 						IsProducer:  accountType.IsProducer,

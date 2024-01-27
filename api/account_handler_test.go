@@ -21,37 +21,30 @@ import (
 
 func createAccountParamsToBody(params db.CreateAccountTxParams) gin.H {
 	return gin.H{
-		"account_type_id": params.AccountTypeID,
-		"username":        params.AccountParams.Username,
-		"email":           params.AccountParams.Email,
-		"password_hash":   params.AccountParams.PasswordHash,
-		"country_code":    params.AccountParams.CountryCode,
-		"avatar_url":      params.AccountParams.AvatarUrl,
+		"account_type_ids": params.AccountTypeIDs,
+		"owner":            params.AccountParams.Owner,
+		"avatar_uri":       params.AccountParams.AvatarUrl,
 	}
 }
 
 func createRandomAccountParamsAndReturns() (db.CreateAccountTxParams, db.CreateAccountTxResult) {
 	createAccTxParams := db.CreateAccountTxParams{
+		AccountTypeIDs: []int64{1, 2},
 		AccountParams: db.CreateAccountParams{
-			Username:     util.RandomUsername(),
-			Email:        util.RandomEmail(),
-			PasswordHash: util.RandomPasswordHash(),
-			CountryCode:  util.RandomCountryCode(),
-			AvatarUrl:    util.ConvertToText("http://example.com/avatar.png"),
+			Owner:     util.RandomUsername(),
+			AvatarUrl: util.ConvertToText("http://example.com/avatar.png"),
 		},
-		AccountTypeID: []int64{1, 2},
 	}
 
 	createAccTxReturn := db.CreateAccountTxResult{
 		Account: &db.CreateAccountRow{
-			ID:          util.RandomInt(1, 1000),
-			Username:    createAccTxParams.AccountParams.Username,
-			Email:       createAccTxParams.AccountParams.Email,
-			CountryCode: createAccTxParams.AccountParams.CountryCode,
-			CreatedAt:   util.ConvertToTimestamptz(util.RandomDate()),
-			UpdatedAt:   util.ConvertToTimestamptz(util.RandomDate()),
+			ID:        util.RandomInt(1, 1000),
+			Owner:     createAccTxParams.AccountParams.Owner,
+			AvatarUrl: createAccTxParams.AccountParams.AvatarUrl,
+			CreatedAt: util.ConvertToTimestamptz(util.RandomDate()),
+			UpdatedAt: util.ConvertToTimestamptz(util.RandomDate()),
 		},
-		AccountTypeID: []int64{1, 2},
+		AccountTypeIDs: []int64{1, 2},
 	}
 	return createAccTxParams, createAccTxReturn
 }
@@ -149,15 +142,15 @@ func TestGetAccountByIdAPI(t *testing.T) {
 					Return(account, nil)
 
 				store.EXPECT().
-					GetAccountTypeIDsForAccount(gomock.Any(), gomock.Eq(account.ID)).
+					GetAccountTypesForAccount(gomock.Any(), gomock.Eq(account.ID)).
 					Times(1).
-					Return([]db.GetAccountTypeIDsForAccountRow{{ID: 1}}, nil)
+					Return([]db.UserSvcAccountType{{ID: 1}}, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 				expected := getAccountByIDResponse{
-					Account:        account,
-					AccountTypeIDs: []db.GetAccountTypeIDsForAccountRow{{ID: 1}},
+					Account:      account,
+					AccountTypes: []db.UserSvcAccountType{{ID: 1}},
 				}
 				requireBodyMatch(t, recorder.Body, expected, "getAccountByIDResponse")
 			},
@@ -169,7 +162,7 @@ func TestGetAccountByIdAPI(t *testing.T) {
 				store.EXPECT().
 					GetAccountByID(gomock.Any(), gomock.Eq(account.ID)).
 					Times(1).
-					Return(db.GetAccountByIDRow{}, sql.ErrNoRows)
+					Return(db.UserSvcAccount{}, sql.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -182,7 +175,7 @@ func TestGetAccountByIdAPI(t *testing.T) {
 				store.EXPECT().
 					GetAccountByID(gomock.Any(), gomock.Eq(account.ID)).
 					Times(1).
-					Return(db.GetAccountByIDRow{}, sql.ErrConnDone)
+					Return(db.UserSvcAccount{}, sql.ErrConnDone)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -210,7 +203,7 @@ func TestGetAccountByIdAPI(t *testing.T) {
 					Return(account, nil)
 
 				store.EXPECT().
-					GetAccountTypeIDsForAccount(gomock.Any(), gomock.Any()).
+					GetAccountTypesForAccount(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(nil, sql.ErrNoRows)
 			},
@@ -244,61 +237,59 @@ func TestGetAccountByIdAPI(t *testing.T) {
 	}
 }
 
-func TestGetAccountByUsernameAPI(t *testing.T) {
-	params := randomAccountFromID()
-	account := db.GetAccountByUsernameRow(params)
-	getAccByUsername := db.GetAccountByUsernameRow(account)
+func TestGetAccountByOwnerAPI(t *testing.T) {
+	account := randomAccountFromID()
 
 	testCases := []struct {
-		name            string
-		accountUsername string
-		buildStubs      func(store *mock_db.MockStore)
-		checkResponse   func(t *testing.T, recorder *httptest.ResponseRecorder)
+		name          string
+		accountOwner  string
+		buildStubs    func(store *mock_db.MockStore)
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name:            "OK",
-			accountUsername: account.Username,
+			name:         "OK",
+			accountOwner: account.Owner,
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
-					GetAccountTypeIDsForAccount(gomock.Any(), gomock.Eq(account.ID)).
+					GetAccountTypesForAccount(gomock.Any(), gomock.Eq(account.ID)).
 					Times(1).
-					Return([]db.GetAccountTypeIDsForAccountRow{{ID: 1}}, nil)
+					Return([]db.UserSvcAccountType{{ID: 1}}, nil)
 
 				store.EXPECT().
-					GetAccountByUsername(gomock.Any(), gomock.Eq(account.Username)).
+					GetAccountByOwner(gomock.Any(), gomock.Eq(account.Owner)).
 					Times(1).
-					Return(getAccByUsername, nil)
+					Return(account, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				expected := getAccountByUsernameResponse{
-					Account:        account,
-					AccountTypeIDs: []db.GetAccountTypeIDsForAccountRow{{ID: 1}},
+				expected := getAccountByOwnerResponse{
+					Account:      account,
+					AccountTypes: []db.UserSvcAccountType{{ID: 1}},
 				}
-				requireBodyMatch(t, recorder.Body, expected, "getAccountByUsernameResponse")
+				requireBodyMatch(t, recorder.Body, expected, "getAccountByOwnerResponse")
 			},
 		},
 		{
-			name:            "NotFound",
-			accountUsername: account.Username,
+			name:         "NotFound",
+			accountOwner: account.Owner,
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
-					GetAccountByUsername(gomock.Any(), gomock.Eq(account.Username)).
+					GetAccountByOwner(gomock.Any(), gomock.Eq(account.Owner)).
 					Times(1).
-					Return(db.GetAccountByUsernameRow{}, sql.ErrNoRows)
+					Return(db.UserSvcAccount{}, sql.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
 			},
 		},
 		{
-			name:            "InternalError",
-			accountUsername: account.Username,
+			name:         "InternalError",
+			accountOwner: account.Owner,
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
-					GetAccountByUsername(gomock.Any(), gomock.Eq(account.Username)).
+					GetAccountByOwner(gomock.Any(), gomock.Eq(account.Owner)).
 					Times(1).
-					Return(db.GetAccountByUsernameRow{}, sql.ErrConnDone)
+					Return(db.UserSvcAccount{}, sql.ErrConnDone)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -312,24 +303,24 @@ func TestGetAccountByUsernameAPI(t *testing.T) {
 			},
 		},
 		{
-			name:            "ShouldBindUriError",
-			accountUsername: "%20", // Percent-encoded space character
-			buildStubs:      func(store *mock_db.MockStore) {},
+			name:         "ShouldBindUriError",
+			accountOwner: "%20", // Percent-encoded space character
+			buildStubs:   func(store *mock_db.MockStore) {},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
 		{
-			name:            "InvalidAccountType",
-			accountUsername: account.Username,
+			name:         "InvalidAccountType",
+			accountOwner: account.Owner,
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
-					GetAccountByUsername(gomock.Any(), gomock.Any()).
+					GetAccountByOwner(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(account, nil)
 
 				store.EXPECT().
-					GetAccountTypeIDsForAccount(gomock.Any(), gomock.Any()).
+					GetAccountTypesForAccount(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(nil, sql.ErrNoRows)
 			},
@@ -355,129 +346,10 @@ func TestGetAccountByUsernameAPI(t *testing.T) {
 			// build request
 			var url string
 			if tc.name == "BadRedquest" {
-				url = "/accounts/name"
+				url = "/accounts/owner"
 			} else {
-				url = fmt.Sprintf("/accounts/name/%s", tc.accountUsername)
+				url = fmt.Sprintf("/accounts/owner/%s", tc.accountOwner)
 			}
-			request := httptest.NewRequest("GET", url, nil)
-
-			// send request
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
-		})
-	}
-}
-
-func TestGetAccountByAllParamsAPI(t *testing.T) {
-	account := randomAccount()
-	getAccByAllParams := db.GetAccountByAllParamsParams{
-		Username:    account.Username,
-		Email:       account.Email,
-		CountryCode: account.CountryCode,
-		AvatarUrl:   account.AvatarUrl,
-	}
-
-	testCases := []struct {
-		name          string
-		Params        db.GetAccountByAllParamsParams
-		buildStubs    func(store *mock_db.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
-	}{
-		{
-			name:   "OK",
-			Params: getAccByAllParams,
-			buildStubs: func(store *mock_db.MockStore) {
-				store.EXPECT().
-					GetAccountByAllParams(gomock.Any(), gomock.Eq(getAccByAllParams)).
-					Times(1).
-					Return(account, nil)
-
-				store.EXPECT().
-					GetAccountTypeIDsForAccount(gomock.Any(), gomock.Eq(account.ID)).
-					Times(1).
-					Return([]db.GetAccountTypeIDsForAccountRow{{ID: 1}}, nil)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatch(t, recorder.Body, account, "db.StreamfairAccount")
-			},
-		},
-		{
-			name:   "NotFound",
-			Params: getAccByAllParams,
-			buildStubs: func(store *mock_db.MockStore) {
-				store.EXPECT().
-					GetAccountByAllParams(gomock.Any(), gomock.Eq(getAccByAllParams)).
-					Times(1).
-					Return(db.UserSvcAccount{}, sql.ErrNoRows)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusNotFound, recorder.Code)
-			},
-		},
-		{
-			name:   "InternalError",
-			Params: getAccByAllParams,
-			buildStubs: func(store *mock_db.MockStore) {
-				store.EXPECT().
-					GetAccountByAllParams(gomock.Any(), gomock.Eq(getAccByAllParams)).
-					Times(1).
-					Return(db.UserSvcAccount{}, sql.ErrConnDone)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
-			},
-		},
-		{
-			name:   "BadRedquest",
-			Params: db.GetAccountByAllParamsParams{},
-			buildStubs: func(store *mock_db.MockStore) {
-				store.EXPECT().
-					GetAccountByAllParams(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
-			},
-		},
-		{
-			name:   "InvalidAccountType",
-			Params: getAccByAllParams,
-			buildStubs: func(store *mock_db.MockStore) {
-				store.EXPECT().
-					GetAccountByAllParams(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(account, nil)
-
-				store.EXPECT().
-					GetAccountTypeIDsForAccount(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(nil, sql.ErrNoRows)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
-			},
-		},
-	}
-
-	for i := range testCases {
-		tc := testCases[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			store := mock_db.NewMockStore(ctrl)
-			tc.buildStubs(store)
-			// start test server and send request
-			server := NewServer(store)
-
-			recorder := httptest.NewRecorder()
-
-			// build request
-			url := fmt.Sprintf("/accounts/params?username=%s&email=%s&country_code=%s&avatar_url=%s",
-				tc.Params.Username, tc.Params.Email, tc.Params.CountryCode, tc.Params.AvatarUrl.String)
-
 			request := httptest.NewRequest("GET", url, nil)
 
 			// send request
@@ -603,26 +475,26 @@ func TestListAccountsAPI(t *testing.T) {
 
 func UpdateAccountParamsToBody(params db.UpdateAccountParams) gin.H {
 	return gin.H{
-		"id":            params.ID,
-		"username":      params.Username,
-		"email":         params.Email,
-		"country_code":  params.CountryCode,
-		"avatar_url":    params.AvatarUrl,
-		"likes_count":   params.LikesCount,
-		"follows_count": params.FollowsCount,
+		"id":         params.ID,
+		"username":   params.Owner,
+		"avatar_url": params.AvatarUrl,
+		"plays":      params.Plays,
+		"likes":      params.Likes,
+		"follows":    params.Follows,
+		"shares":     params.Shares,
 	}
 }
 
 func TestUpdateAccountAPI(t *testing.T) {
-	account := randomAccountFromUpdate()
+	account := randomAccount()
 	updateAccParams := db.UpdateAccountParams{
-		ID:           account.ID,
-		Username:     util.RandomUsername(),
-		Email:        util.RandomEmail(),
-		CountryCode:  util.RandomCountryCode(),
-		AvatarUrl:    util.ConvertToText("http://example.com/avatar.png"),
-		LikesCount:   1,
-		FollowsCount: 1,
+		ID:        account.ID,
+		Owner:     util.RandomUsername(),
+		AvatarUrl: util.ConvertToText("http://example.com/avatar.png"),
+		Plays:     1,
+		Likes:     1,
+		Follows:   1,
+		Shares:    1,
 	}
 
 	testCases := []struct {
@@ -642,7 +514,7 @@ func TestUpdateAccountAPI(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatch(t, recorder.Body, account, "db.UpdateAccountRow")
+				requireBodyMatch(t, recorder.Body, account, "*db.UserSvcAccount")
 			},
 		},
 		{
@@ -652,7 +524,7 @@ func TestUpdateAccountAPI(t *testing.T) {
 				store.EXPECT().
 					UpdateAccount(gomock.Any(), gomock.Eq(updateAccParams)).
 					Times(1).
-					Return(db.UpdateAccountRow{}, sql.ErrConnDone)
+					Return(db.UserSvcAccount{}, sql.ErrConnDone)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -673,13 +545,13 @@ func TestUpdateAccountAPI(t *testing.T) {
 		{
 			name: "BadRedquestJSON",
 			body: gin.H{
-				"id":            util.RandomInt(1, 1000),
-				"username":      "ab", // Invalid username length
-				"email":         "invalid email",
-				"country_code":  "USA",
-				"avatar_url":    "http://example.com/avatar.png",
-				"likes_count":   1,
-				"follows_count": 1,
+				"id":           util.RandomInt(1, 1000),
+				"username":     "ab", // Invalid username length
+				"email":        "invalid email",
+				"country_code": "USA",
+				"avatar_url":   "http://example.com/avatar.png",
+				"likes":        1,
+				"follows":      1,
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
@@ -710,109 +582,6 @@ func TestUpdateAccountAPI(t *testing.T) {
 			require.NoError(t, err)
 
 			url := fmt.Sprintf("/accounts/%d", tc.body["id"])
-			request := httptest.NewRequest("PUT", url, bytes.NewReader(data))
-			require.NoError(t, err)
-
-			server.router.ServeHTTP(recorder, request)
-			tc.checkResponse(t, recorder)
-		})
-	}
-}
-
-func UpdateAccountPasswordParamsToBody(params db.UpdateAccountPasswordParams) gin.H {
-	return gin.H{
-		"id":            params.ID,
-		"password_hash": params.PasswordHash,
-	}
-}
-
-func TestUpdateAccountPasswordAPI(t *testing.T) {
-	account := randomAccountFromPasswordUpdate()
-	updateAccPwParams := db.UpdateAccountPasswordParams{
-		ID:           account.ID,
-		PasswordHash: util.RandomPasswordHash(),
-	}
-
-	testCases := []struct {
-		name          string
-		body          gin.H
-		buildStubs    func(store *mock_db.MockStore)
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
-	}{
-		{
-			name: "OK",
-			body: UpdateAccountPasswordParamsToBody(updateAccPwParams),
-			buildStubs: func(store *mock_db.MockStore) {
-				store.EXPECT().
-					UpdateAccountPassword(gomock.Any(), gomock.Eq(updateAccPwParams)).
-					Times(1).
-					Return(account, nil)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatch(t, recorder.Body, account, "db.UpdateAccountPasswordRow")
-			},
-		},
-		{
-			name: "InternalError",
-			body: UpdateAccountPasswordParamsToBody(updateAccPwParams),
-			buildStubs: func(store *mock_db.MockStore) {
-				store.EXPECT().
-					UpdateAccountPassword(gomock.Any(), gomock.Eq(updateAccPwParams)).
-					Times(1).
-					Return(db.UpdateAccountPasswordRow{}, sql.ErrConnDone)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, recorder.Code)
-			},
-		},
-		{
-			name: "BadRedquest",
-			body: UpdateAccountPasswordParamsToBody(db.UpdateAccountPasswordParams{}),
-			buildStubs: func(store *mock_db.MockStore) {
-				store.EXPECT().
-					UpdateAccountPassword(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
-			},
-		},
-		{
-			name: "BadRedquestJSON",
-			body: gin.H{
-				"id":            util.RandomInt(1, 1000),
-				"password_hash": "ab", // Invalid password hash length
-			},
-			buildStubs: func(store *mock_db.MockStore) {
-				store.EXPECT().
-					UpdateAccount(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
-			},
-		},
-	}
-
-	for i := range testCases {
-		tc := testCases[i]
-
-		t.Run(tc.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			store := mock_db.NewMockStore(ctrl)
-			tc.buildStubs(store)
-
-			server := NewServer(store)
-			recorder := httptest.NewRecorder()
-
-			// Marshal body data to JSON
-			data, err := json.Marshal(tc.body)
-			require.NoError(t, err)
-
-			url := fmt.Sprintf("/accounts/password/%d", tc.body["id"])
 			request := httptest.NewRequest("PUT", url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -856,7 +625,7 @@ func TestDeleteAccountAPI(t *testing.T) {
 				store.EXPECT().
 					GetAccountByID(gomock.Any(), gomock.Eq(account.ID)).
 					Times(1).
-					Return(db.GetAccountByIDRow{}, sql.ErrNoRows)
+					Return(db.UserSvcAccount{}, sql.ErrNoRows)
 
 				store.EXPECT().
 					DeleteAccountTx(gomock.Any(), gomock.Any()).
@@ -926,26 +695,24 @@ func TestDeleteAccountAPI(t *testing.T) {
 
 func randomAccount() db.UserSvcAccount {
 	return db.UserSvcAccount{
-		ID:           util.RandomInt(1, 1000),
-		Username:     util.RandomUsername(),
-		Email:        util.RandomEmail(),
-		CountryCode:  util.RandomCountryCode(),
-		AvatarUrl:    util.ConvertToText("http://example.com/avatar.png"),
-		LikesCount:   0,
-		FollowsCount: 0,
-		CreatedAt:    util.ConvertToTimestamptz(util.RandomDate()),
-		UpdatedAt:    util.ConvertToTimestamptz(util.RandomDate()),
+		ID:        util.RandomInt(1, 1000),
+		Owner:     util.RandomUsername(),
+		AvatarUrl: util.ConvertToText("http://example.com/avatar.png"),
+		Plays:     0,
+		Likes:     0,
+		Follows:   0,
+		CreatedAt: util.ConvertToTimestamptz(util.RandomDate()),
+		UpdatedAt: util.ConvertToTimestamptz(util.RandomDate()),
 	}
 }
 
 func randomAccountFromList(n int) []db.ListAccountsRow {
 	accounts := make([]db.ListAccountsRow, n)
 	account := db.ListAccountsRow{
-		ID:          util.RandomInt(1, 1000),
-		Username:    util.RandomUsername(),
-		CountryCode: util.RandomCountryCode(),
-		CreatedAt:   util.ConvertToTimestamptz(util.RandomDate()),
-		UpdatedAt:   util.ConvertToTimestamptz(util.RandomDate()),
+		ID:        util.RandomInt(1, 1000),
+		Owner:     util.RandomUsername(),
+		CreatedAt: util.ConvertToTimestamptz(util.RandomDate()),
+		UpdatedAt: util.ConvertToTimestamptz(util.RandomDate()),
 	}
 	for i := 0; i < n; i++ {
 		accounts[i] = account
@@ -953,34 +720,15 @@ func randomAccountFromList(n int) []db.ListAccountsRow {
 	return accounts
 }
 
-func randomAccountFromID() db.GetAccountByIDRow {
-	return db.GetAccountByIDRow{
-		ID:           util.RandomInt(1, 1000),
-		Username:     util.RandomUsername(),
-		Email:        util.RandomEmail(),
-		CountryCode:  util.RandomCountryCode(),
-		AvatarUrl:    util.ConvertToText("http://example.com/avatar.png"),
-		LikesCount:   0,
-		FollowsCount: 0,
-		CreatedAt:    util.ConvertToTimestamptz(util.RandomDate()),
-		UpdatedAt:    util.ConvertToTimestamptz(util.RandomDate()),
-	}
-}
-
-func randomAccountFromUpdate() db.UpdateAccountRow {
-	return db.UpdateAccountRow{
-		ID:          util.RandomInt(1, 1000),
-		Username:    util.RandomUsername(),
-		CountryCode: util.RandomCountryCode(),
-		CreatedAt:   util.ConvertToTimestamptz(util.RandomDate()),
-		UpdatedAt:   util.ConvertToTimestamptz(util.RandomDate()),
-	}
-}
-
-func randomAccountFromPasswordUpdate() db.UpdateAccountPasswordRow {
-	return db.UpdateAccountPasswordRow{
+func randomAccountFromID() db.UserSvcAccount {
+	return db.UserSvcAccount{
 		ID:        util.RandomInt(1, 1000),
-		Username:  util.RandomUsername(),
+		Owner:     util.RandomUsername(),
+		AvatarUrl: util.ConvertToText("http://example.com/avatar.png"),
+		Plays:     0,
+		Likes:     0,
+		Follows:   0,
+		Shares:    0,
 		CreatedAt: util.ConvertToTimestamptz(util.RandomDate()),
 		UpdatedAt: util.ConvertToTimestamptz(util.RandomDate()),
 	}
@@ -1007,25 +755,17 @@ func requireBodyMatch(t *testing.T, body *bytes.Buffer, expected interface{}, ty
 		if !reflect.DeepEqual(expected, *gotResult.(*getAccountByIDResponse)) {
 			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*getAccountByIDResponse))
 		}
-	case "getAccountByUsernameResponse":
-		if !reflect.DeepEqual(expected, *gotResult.(*getAccountByUsernameResponse)) {
-			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*getAccountByUsernameResponse))
-		}
-	case "db.StreamfairAccount":
-		if !reflect.DeepEqual(expected, *gotResult.(*db.UserSvcAccount)) {
-			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*db.UserSvcAccount))
+	case "getAccountByOwnerResponse":
+		if !reflect.DeepEqual(expected, *gotResult.(*getAccountByOwnerResponse)) {
+			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*getAccountByOwnerResponse))
 		}
 	case "[]db.ListAccountsRow":
 		if !reflect.DeepEqual(expected, *gotResult.(*[]db.ListAccountsRow)) {
 			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*[]db.ListAccountsRow))
 		}
-	case "db.UpdateAccountRow":
-		if !reflect.DeepEqual(expected, *gotResult.(*db.UpdateAccountRow)) {
-			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*db.UpdateAccountRow))
-		}
-	case "db.UpdateAccountPasswordRow":
-		if !reflect.DeepEqual(expected, *gotResult.(*db.UpdateAccountPasswordRow)) {
-			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*db.UpdateAccountPasswordRow))
+	case "*db.UserSvcAccount":
+		if !reflect.DeepEqual(expected, *gotResult.(*db.UserSvcAccount)) {
+			t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, *gotResult.(*db.UserSvcAccount))
 		}
 	default:
 		t.Errorf("Body mismatch for %s: \nEXP: %+v, \nGOT: %+v", typeName, expected, gotResult)

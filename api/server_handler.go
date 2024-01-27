@@ -31,12 +31,10 @@ func NewServer(store db.Store) *Server {
 
 	router.POST("/accounts", server.createAccount)
 	router.GET("/accounts/:id", server.getAccountByID)
-	router.GET("/accounts/name/:username", server.getAccountByUsername)
-	router.GET("/accounts/name", server.handleMissingUsername)
-	router.GET("/accounts/params", server.getAccountbyAllParams)
+	router.GET("/accounts/owner/:owner", server.getAccountByOwner)
+	router.GET("/accounts/owner", server.handleMissingUsername)
 	router.GET("/accounts", server.listAccount)
 	router.PUT("/accounts/:id", server.updateAccount)
-	router.PUT("/accounts/password/:id", server.updateAccountPassword)
 	router.DELETE("/accounts/:id", server.deleteAccount)
 
 	server.router = router
@@ -74,7 +72,7 @@ func InitializeDatabase(store db.Store) error {
 	for _, accountType := range accountTypes {
 		if !accountTypesMap[accountType.ID] {
 			_, err := store.CreateAccountType(context.Background(), db.CreateAccountTypeParams{
-				Description: accountType.Description,
+				Type:        accountType.Type,
 				Permissions: accountType.Permissions,
 				IsArtist:    accountType.IsArtist,
 				IsProducer:  accountType.IsProducer,

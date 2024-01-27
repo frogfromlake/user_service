@@ -1,7 +1,5 @@
 package util
 
-import "github.com/jackc/pgx/v5/pgtype"
-
 // GetAccountTypes returns a copy of accountTypes slice.
 func GetAccountTypeStruct() []AccountType {
 	result := make([]AccountType, len(accountTypes))
@@ -19,7 +17,7 @@ const (
 
 type AccountType struct {
 	ID          int64
-	Description pgtype.Text
+	Type        string
 	Permissions []byte
 	IsArtist    bool
 	IsProducer  bool
@@ -30,7 +28,7 @@ type AccountType struct {
 var accountTypes = []AccountType{
 	{
 		ID:          user_account,
-		Description: ConvertToText("Default User Account Type"),
+		Type:        "Default User Account Type",
 		Permissions: []byte(`{"Upload Songs": "false", "Upload Albums": "false", "Upload Playlists": "false"}`),
 		IsArtist:    false,
 		IsProducer:  false,
@@ -39,7 +37,7 @@ var accountTypes = []AccountType{
 	},
 	{
 		ID:          artist_account,
-		Description: ConvertToText("Artist Account Type"),
+		Type:        "Artist Account Type",
 		Permissions: []byte(`{"Upload Songs": "true", "Upload Albums": "true", "Upload Playlists": "true"}`),
 		IsArtist:    true,
 		IsProducer:  false,
@@ -48,7 +46,7 @@ var accountTypes = []AccountType{
 	},
 	{
 		ID:          producer_account,
-		Description: ConvertToText("Producer Account Type"),
+		Type:        "Default Producer Account Type",
 		Permissions: []byte(`{"Upload Songs": "true", "Upload Albums": "true", "Upload Playlists": "true"}`),
 		IsArtist:    false,
 		IsProducer:  true,
@@ -57,7 +55,7 @@ var accountTypes = []AccountType{
 	},
 	{
 		ID:          writer_account,
-		Description: ConvertToText("Writer Account Type"),
+		Type:        "Default Writer Account Type",
 		Permissions: []byte(`{"Upload Songs": "true", "Upload Albums": "true", "Upload Playlists": "true"}`),
 		IsArtist:    false,
 		IsProducer:  false,
@@ -66,7 +64,7 @@ var accountTypes = []AccountType{
 	},
 	{
 		ID:          label_account,
-		Description: ConvertToText("Label Account Type"),
+		Type:        "Default Label Account Type",
 		Permissions: []byte(`{"Upload Songs": "true", "Upload Albums": "true", "Upload Playlists": "true"}`),
 		IsArtist:    false,
 		IsProducer:  false,

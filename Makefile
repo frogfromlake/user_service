@@ -18,9 +18,17 @@ migrateup:
 	@echo "Migrating up..."
 	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/streamfair_user_service_db?sslmode=disable" -verbose up
 
+migrateup1:
+	@echo "Migrating up..."
+	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/streamfair_user_service_db?sslmode=disable" -verbose up 1
+
 migratedown:
 	@echo "Migrating down..."
 	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/streamfair_user_service_db?sslmode=disable" -verbose down
+
+migratedown1:
+	@echo "Migrating down..."
+	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/streamfair_user_service_db?sslmode=disable" -verbose down 1
 
 dbclean: migratedown migrateup
 	clear
@@ -75,4 +83,4 @@ mock:
 clean:
 	rm -f coverage.out tests.log db_tests.log api_tests.log
 
-.PHONY: createdb dropdb postgres migrateup migratedown sqlc test dbtest apitest testout dbtestout apitestout dbclean server mock clean debug
+.PHONY: createdb dropdb postgres migrateup migrateup1 migratedown migratedown1 sqlc test dbtest apitest testout dbtestout apitestout dbclean server mock clean debug

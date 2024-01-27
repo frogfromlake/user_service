@@ -13,48 +13,34 @@ import (
 
 const createAccount = `-- name: CreateAccount :one
 INSERT INTO "user_svc"."Accounts" (
-  username,
-  email,
-  password_hash,
-  country_code,
-  avatar_url
+ owner,
+ avatar_url
 ) VALUES (
-  $1, $2, $3, $4, $5
+ $1, $2
 )
-RETURNING id, username, email, country_code, created_at, updated_at
+RETURNING id, owner, avatar_url, created_at, updated_at
 `
 
 type CreateAccountParams struct {
-	Username     string      `json:"username"`
-	Email        string      `json:"email"`
-	PasswordHash string      `json:"password_hash"`
-	CountryCode  string      `json:"country_code"`
-	AvatarUrl    pgtype.Text `json:"avatar_url"`
+	Owner     string      `json:"owner"`
+	AvatarUrl pgtype.Text `json:"avatar_url"`
 }
 
 type CreateAccountRow struct {
-	ID          int64              `json:"id"`
-	Username    string             `json:"username"`
-	Email       string             `json:"email"`
-	CountryCode string             `json:"country_code"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	ID        int64              `json:"id"`
+	Owner     string             `json:"owner"`
+	AvatarUrl pgtype.Text        `json:"avatar_url"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (CreateAccountRow, error) {
-	row := q.db.QueryRow(ctx, createAccount,
-		arg.Username,
-		arg.Email,
-		arg.PasswordHash,
-		arg.CountryCode,
-		arg.AvatarUrl,
-	)
+	row := q.db.QueryRow(ctx, createAccount, arg.Owner, arg.AvatarUrl)
 	var i CreateAccountRow
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
-		&i.Email,
-		&i.CountryCode,
+		&i.Owner,
+		&i.AvatarUrl,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -62,130 +48,82 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (C
 }
 
 const deleteAccount = `-- name: DeleteAccount :exec
+
 DELETE FROM "user_svc"."Accounts"
 WHERE id = $1
 `
 
+// -- name: UpdateAccountPassword :one
+// UPDATE "user_svc"."Accounts"
+// SET
+//
+//	password_hash = COALESCE($2, password_hash)
+//
+// WHERE id = $1
+// RETURNING id, username, created_at, updated_at;
 func (q *Queries) DeleteAccount(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, deleteAccount, id)
 	return err
 }
 
-const getAccountByAllParams = `-- name: GetAccountByAllParams :one
-SELECT id, username, email, password_hash, country_code, avatar_url, likes_count, follows_count, created_at, updated_at FROM "user_svc"."Accounts"
-WHERE username = $1 AND email = $2 AND country_code = $3 AND avatar_url = $4
-`
-
-type GetAccountByAllParamsParams struct {
-	Username    string      `json:"username"`
-	Email       string      `json:"email"`
-	CountryCode string      `json:"country_code"`
-	AvatarUrl   pgtype.Text `json:"avatar_url"`
-}
-
-func (q *Queries) GetAccountByAllParams(ctx context.Context, arg GetAccountByAllParamsParams) (UserSvcAccount, error) {
-	row := q.db.QueryRow(ctx, getAccountByAllParams,
-		arg.Username,
-		arg.Email,
-		arg.CountryCode,
-		arg.AvatarUrl,
-	)
-	var i UserSvcAccount
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
-		&i.Email,
-		&i.PasswordHash,
-		&i.CountryCode,
-		&i.AvatarUrl,
-		&i.LikesCount,
-		&i.FollowsCount,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
 const getAccountByID = `-- name: GetAccountByID :one
 SELECT
 id,
-username,
-email, country_code,
+owner,
 avatar_url,
-likes_count,
-follows_count,
+plays,
+likes,
+follows,
+shares,
 created_at,
 updated_at
 FROM "user_svc"."Accounts"
 WHERE id = $1 LIMIT 1
 `
 
-type GetAccountByIDRow struct {
-	ID           int64              `json:"id"`
-	Username     string             `json:"username"`
-	Email        string             `json:"email"`
-	CountryCode  string             `json:"country_code"`
-	AvatarUrl    pgtype.Text        `json:"avatar_url"`
-	LikesCount   int64              `json:"likes_count"`
-	FollowsCount int64              `json:"follows_count"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) GetAccountByID(ctx context.Context, id int64) (GetAccountByIDRow, error) {
+func (q *Queries) GetAccountByID(ctx context.Context, id int64) (UserSvcAccount, error) {
 	row := q.db.QueryRow(ctx, getAccountByID, id)
-	var i GetAccountByIDRow
+	var i UserSvcAccount
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
-		&i.Email,
-		&i.CountryCode,
+		&i.Owner,
 		&i.AvatarUrl,
-		&i.LikesCount,
-		&i.FollowsCount,
+		&i.Plays,
+		&i.Likes,
+		&i.Follows,
+		&i.Shares,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
-const getAccountByUsername = `-- name: GetAccountByUsername :one
+const getAccountByOwner = `-- name: GetAccountByOwner :one
 SELECT
 id,
-username,
-email, country_code,
+owner,
 avatar_url,
-likes_count,
-follows_count,
+plays,
+likes,
+follows,
+shares,
 created_at,
 updated_at
 FROM "user_svc"."Accounts"
-WHERE username = $1 LIMIT 1
+WHERE owner = $1 LIMIT 1
 `
 
-type GetAccountByUsernameRow struct {
-	ID           int64              `json:"id"`
-	Username     string             `json:"username"`
-	Email        string             `json:"email"`
-	CountryCode  string             `json:"country_code"`
-	AvatarUrl    pgtype.Text        `json:"avatar_url"`
-	LikesCount   int64              `json:"likes_count"`
-	FollowsCount int64              `json:"follows_count"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (GetAccountByUsernameRow, error) {
-	row := q.db.QueryRow(ctx, getAccountByUsername, username)
-	var i GetAccountByUsernameRow
+func (q *Queries) GetAccountByOwner(ctx context.Context, owner string) (UserSvcAccount, error) {
+	row := q.db.QueryRow(ctx, getAccountByOwner, owner)
+	var i UserSvcAccount
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
-		&i.Email,
-		&i.CountryCode,
+		&i.Owner,
 		&i.AvatarUrl,
-		&i.LikesCount,
-		&i.FollowsCount,
+		&i.Plays,
+		&i.Likes,
+		&i.Follows,
+		&i.Shares,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -193,7 +131,7 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ge
 }
 
 const listAccounts = `-- name: ListAccounts :many
-SELECT id, username, country_code, created_at, updated_at FROM "user_svc"."Accounts"
+SELECT id, owner, created_at, updated_at FROM "user_svc"."Accounts"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -205,11 +143,10 @@ type ListAccountsParams struct {
 }
 
 type ListAccountsRow struct {
-	ID          int64              `json:"id"`
-	Username    string             `json:"username"`
-	CountryCode string             `json:"country_code"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	ID        int64              `json:"id"`
+	Owner     string             `json:"owner"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error) {
@@ -223,8 +160,7 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]L
 		var i ListAccountsRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Username,
-			&i.CountryCode,
+			&i.Owner,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -241,82 +177,46 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]L
 const updateAccount = `-- name: UpdateAccount :one
 UPDATE "user_svc"."Accounts"
 SET
-  username = COALESCE($2, username),
-  email = COALESCE($3, email),
-  country_code = COALESCE($4, country_code),
-  avatar_url = COALESCE($5, avatar_url),
-  likes_count = COALESCE($6, likes_count),
-  follows_count = COALESCE($7, follows_count),
-  updated_at = NOW()
+ owner = COALESCE($2, owner),
+ avatar_url = COALESCE($3, avatar_url),
+ plays = COALESCE($4, plays),
+ likes = COALESCE($5, likes),
+ follows = COALESCE($6, follows),
+ shares = COALESCE($7, shares),
+ updated_at = NOW()
 WHERE id = $1
-RETURNING id, username, country_code, created_at, updated_at
+RETURNING id, owner, avatar_url, plays, likes, follows, shares, created_at, updated_at
 `
 
 type UpdateAccountParams struct {
-	ID           int64       `json:"id"`
-	Username     string      `json:"username"`
-	Email        string      `json:"email"`
-	CountryCode  string      `json:"country_code"`
-	AvatarUrl    pgtype.Text `json:"avatar_url"`
-	LikesCount   int64       `json:"likes_count"`
-	FollowsCount int64       `json:"follows_count"`
+	ID        int64       `json:"id"`
+	Owner     string      `json:"owner"`
+	AvatarUrl pgtype.Text `json:"avatar_url"`
+	Plays     int64       `json:"plays"`
+	Likes     int64       `json:"likes"`
+	Follows   int64       `json:"follows"`
+	Shares    int64       `json:"shares"`
 }
 
-type UpdateAccountRow struct {
-	ID          int64              `json:"id"`
-	Username    string             `json:"username"`
-	CountryCode string             `json:"country_code"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (UpdateAccountRow, error) {
+func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (UserSvcAccount, error) {
 	row := q.db.QueryRow(ctx, updateAccount,
 		arg.ID,
-		arg.Username,
-		arg.Email,
-		arg.CountryCode,
+		arg.Owner,
 		arg.AvatarUrl,
-		arg.LikesCount,
-		arg.FollowsCount,
+		arg.Plays,
+		arg.Likes,
+		arg.Follows,
+		arg.Shares,
 	)
-	var i UpdateAccountRow
+	var i UserSvcAccount
 	err := row.Scan(
 		&i.ID,
-		&i.Username,
-		&i.CountryCode,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const updateAccountPassword = `-- name: UpdateAccountPassword :one
-UPDATE "user_svc"."Accounts"
-SET
-  password_hash = COALESCE($2, password_hash)
-WHERE id = $1
-RETURNING id, username, created_at, updated_at
-`
-
-type UpdateAccountPasswordParams struct {
-	ID           int64  `json:"id"`
-	PasswordHash string `json:"password_hash"`
-}
-
-type UpdateAccountPasswordRow struct {
-	ID        int64              `json:"id"`
-	Username  string             `json:"username"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) UpdateAccountPassword(ctx context.Context, arg UpdateAccountPasswordParams) (UpdateAccountPasswordRow, error) {
-	row := q.db.QueryRow(ctx, updateAccountPassword, arg.ID, arg.PasswordHash)
-	var i UpdateAccountPasswordRow
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
+		&i.Owner,
+		&i.AvatarUrl,
+		&i.Plays,
+		&i.Likes,
+		&i.Follows,
+		&i.Shares,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

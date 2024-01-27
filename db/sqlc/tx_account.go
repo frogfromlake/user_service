@@ -5,13 +5,13 @@ import (
 )
 
 type CreateAccountTxParams struct {
+	AccountTypeIDs []int64
 	AccountParams CreateAccountParams
-	AccountTypeID []int64
 }
 
 type CreateAccountTxResult struct {
+	AccountTypeIDs []int64
 	Account       *CreateAccountRow
-	AccountTypeID []int64
 }
 
 // CreateAccountTx creates a new account and it with one ore more account types.
@@ -29,7 +29,7 @@ func (store *SQLStore) CreateAccountTx(ctx context.Context, params CreateAccount
 		result.Account = &account
 
 		// Associate the account with the account types
-		for _, accountTypeID := range params.AccountTypeID {
+		for _, accountTypeID := range params.AccountTypeIDs {
 			err = q.AddAccountTypeToAccount(ctx, AddAccountTypeToAccountParams{
 				AccountsID:     account.ID,
 				AccountTypesID: accountTypeID,
@@ -38,7 +38,7 @@ func (store *SQLStore) CreateAccountTx(ctx context.Context, params CreateAccount
 				return err
 			}
 		}
-		result.AccountTypeID = params.AccountTypeID
+		result.AccountTypeIDs = params.AccountTypeIDs
 
 		return nil
 	})

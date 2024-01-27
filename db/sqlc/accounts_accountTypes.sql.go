@@ -7,12 +7,10 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addAccountTypeToAccount = `-- name: AddAccountTypeToAccount :exec
-INSERT INTO "user_svc"."Accounts_AccountTypes" ("Accounts_id", "AccountTypes_id")
+INSERT INTO "user_svc"."AccountTypes_Accounts" ("Accounts_id", "AccountTypes_id")
 VALUES ($1, $2)
 `
 
@@ -26,41 +24,9 @@ func (q *Queries) AddAccountTypeToAccount(ctx context.Context, arg AddAccountTyp
 	return err
 }
 
-const getAccountTypeIDsForAccount = `-- name: GetAccountTypeIDsForAccount :many
-SELECT at.id, at.created_at, at.updated_at FROM "user_svc"."AccountTypes" at
-JOIN "user_svc"."Accounts_AccountTypes" aat ON at.id = aat."AccountTypes_id"
-WHERE aat."Accounts_id" = $1
-`
-
-type GetAccountTypeIDsForAccountRow struct {
-	ID        int64              `json:"id"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) GetAccountTypeIDsForAccount(ctx context.Context, accountsID int64) ([]GetAccountTypeIDsForAccountRow, error) {
-	rows, err := q.db.Query(ctx, getAccountTypeIDsForAccount, accountsID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetAccountTypeIDsForAccountRow{}
-	for rows.Next() {
-		var i GetAccountTypeIDsForAccountRow
-		if err := rows.Scan(&i.ID, &i.CreatedAt, &i.UpdatedAt); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getAccountTypesForAccount = `-- name: GetAccountTypesForAccount :many
-SELECT at.id, at.description, at.permissions, at.is_artist, at.is_producer, at.is_writer, at.is_label, at.created_at, at.updated_at FROM "user_svc"."AccountTypes" at
-JOIN "user_svc"."Accounts_AccountTypes" aat ON at.id = aat."AccountTypes_id"
+SELECT at.id, at.type, at.permissions, at.is_artist, at.is_producer, at.is_writer, at.is_label, at.created_at, at.updated_at FROM "user_svc"."AccountTypes" at
+JOIN "user_svc"."AccountTypes_Accounts" aat ON at.id = aat."AccountTypes_id"
 WHERE aat."Accounts_id" = $1
 `
 
@@ -75,7 +41,7 @@ func (q *Queries) GetAccountTypesForAccount(ctx context.Context, accountsID int6
 		var i UserSvcAccountType
 		if err := rows.Scan(
 			&i.ID,
-			&i.Description,
+			&i.Type,
 			&i.Permissions,
 			&i.IsArtist,
 			&i.IsProducer,
@@ -95,40 +61,28 @@ func (q *Queries) GetAccountTypesForAccount(ctx context.Context, accountsID int6
 }
 
 const getAccountsForAccountType = `-- name: GetAccountsForAccountType :many
-SELECT ac.id, ac.username, ac.email, ac.country_code, ac.avatar_url, ac.likes_count, ac.follows_count, ac.created_at, ac.updated_at FROM "user_svc"."Accounts" ac
-JOIN "user_svc"."Accounts_AccountTypes" aat ON ac.id = aat."Accounts_id"
+SELECT ac.id, ac.owner, ac.avatar_url, ac.plays, ac.likes, ac.follows, ac.shares, ac.created_at, ac.updated_at FROM "user_svc"."Accounts" ac
+JOIN "user_svc"."AccountTypes_Accounts" aat ON ac.id = aat."Accounts_id"
 WHERE aat."AccountTypes_id" = $1
 `
 
-type GetAccountsForAccountTypeRow struct {
-	ID           int64              `json:"id"`
-	Username     string             `json:"username"`
-	Email        string             `json:"email"`
-	CountryCode  string             `json:"country_code"`
-	AvatarUrl    pgtype.Text        `json:"avatar_url"`
-	LikesCount   int64              `json:"likes_count"`
-	FollowsCount int64              `json:"follows_count"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) GetAccountsForAccountType(ctx context.Context, accounttypesID int64) ([]GetAccountsForAccountTypeRow, error) {
+func (q *Queries) GetAccountsForAccountType(ctx context.Context, accounttypesID int64) ([]UserSvcAccount, error) {
 	rows, err := q.db.Query(ctx, getAccountsForAccountType, accounttypesID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetAccountsForAccountTypeRow{}
+	items := []UserSvcAccount{}
 	for rows.Next() {
-		var i GetAccountsForAccountTypeRow
+		var i UserSvcAccount
 		if err := rows.Scan(
 			&i.ID,
-			&i.Username,
-			&i.Email,
-			&i.CountryCode,
+			&i.Owner,
 			&i.AvatarUrl,
-			&i.LikesCount,
-			&i.FollowsCount,
+			&i.Plays,
+			&i.Likes,
+			&i.Follows,
+			&i.Shares,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -143,7 +97,7 @@ func (q *Queries) GetAccountsForAccountType(ctx context.Context, accounttypesID 
 }
 
 const removeAccountTypeFromAccount = `-- name: RemoveAccountTypeFromAccount :exec
-DELETE FROM "user_svc"."Accounts_AccountTypes"
+DELETE FROM "user_svc"."AccountTypes_Accounts"
 WHERE "Accounts_id" = $1 AND "AccountTypes_id" = $2
 `
 
@@ -158,7 +112,7 @@ func (q *Queries) RemoveAccountTypeFromAccount(ctx context.Context, arg RemoveAc
 }
 
 const removeAllRelationshipsForAccountAccountType = `-- name: RemoveAllRelationshipsForAccountAccountType :exec
-DELETE FROM "user_svc"."Accounts_AccountTypes"
+DELETE FROM "user_svc"."AccountTypes_Accounts"
 WHERE "Accounts_id" = $1
 `
 
@@ -168,7 +122,7 @@ func (q *Queries) RemoveAllRelationshipsForAccountAccountType(ctx context.Contex
 }
 
 const removeAllRelationshipsForAccountTypeAccount = `-- name: RemoveAllRelationshipsForAccountTypeAccount :exec
-DELETE FROM "user_svc"."Accounts_AccountTypes"
+DELETE FROM "user_svc"."AccountTypes_Accounts"
 WHERE "AccountTypes_id" = $1
 `
 

@@ -9,21 +9,20 @@ import (
 )
 
 type UserSvcAccount struct {
-	ID           int64              `json:"id"`
-	Username     string             `json:"username"`
-	Email        string             `json:"email"`
-	PasswordHash string             `json:"password_hash"`
-	CountryCode  string             `json:"country_code"`
-	AvatarUrl    pgtype.Text        `json:"avatar_url"`
-	LikesCount   int64              `json:"likes_count"`
-	FollowsCount int64              `json:"follows_count"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ID        int64              `json:"id"`
+	Owner     string             `json:"owner"`
+	AvatarUrl pgtype.Text        `json:"avatar_url"`
+	Plays     int64              `json:"plays"`
+	Likes     int64              `json:"likes"`
+	Follows   int64              `json:"follows"`
+	Shares    int64              `json:"shares"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 type UserSvcAccountType struct {
 	ID          int64              `json:"id"`
-	Description pgtype.Text        `json:"description"`
+	Type        string             `json:"type"`
 	Permissions []byte             `json:"permissions"`
 	IsArtist    bool               `json:"is_artist"`
 	IsProducer  bool               `json:"is_producer"`
@@ -33,7 +32,21 @@ type UserSvcAccountType struct {
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
-type UserSvcAccountsAccountType struct {
-	AccountsID     int64 `json:"Accounts_id"`
+type UserSvcAccountTypesAccount struct {
 	AccountTypesID int64 `json:"AccountTypes_id"`
+	AccountsID     int64 `json:"Accounts_id"`
+}
+
+type UserSvcUser struct {
+	ID                pgtype.Int8        `json:"id"`
+	Username          string             `json:"username"`
+	FullName          string             `json:"full_name"`
+	Email             string             `json:"email"`
+	PasswordHash      string             `json:"password_hash"`
+	CountryCode       string             `json:"country_code"`
+	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
+	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
+	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 }

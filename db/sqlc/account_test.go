@@ -12,21 +12,16 @@ import (
 
 func createRandomAccount(t *testing.T, passwordHash string) CreateAccountRow {
 	arg := CreateAccountParams{
-		Username:     util.RandomUsername(),
-		Email:        util.RandomEmail(),
-		PasswordHash: passwordHash,
-		CountryCode:  util.RandomCountryCode(),
+		Owner:     util.RandomUsername(),
 		AvatarUrl:    util.ConvertToText("http://example.com/test-account-avatar.png"),
 	}
 
 	account, err := testQueries.CreateAccount(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
-	require.Equal(t, arg.Username, account.Username)
-	require.Equal(t, arg.Email, account.Email)
-	require.Equal(t, arg.CountryCode, account.CountryCode)
-	require.NotEmpty(t, arg.AvatarUrl)
 	require.NotZero(t, account.ID)
+	require.Equal(t, arg.Owner, account.Owner)
+	require.Equal(t, arg.AvatarUrl, account.AvatarUrl)
 	require.WithinDuration(t, time.Now(), account.CreatedAt.Time, time.Second)
 	require.WithinDuration(t, time.Now(), account.UpdatedAt.Time, time.Second)
 
@@ -57,9 +52,7 @@ func TestGetAccountByID(t *testing.T) {
 	require.NotEmpty(t, fetchedAccount)
 
 	require.Equal(t, account.ID, fetchedAccount.ID)
-	require.Equal(t, account.Username, fetchedAccount.Username)
-	require.Equal(t, account.Email, fetchedAccount.Email)
-	require.Equal(t, account.CountryCode, fetchedAccount.CountryCode)
+	require.Equal(t, account.Owner, fetchedAccount.Owner)
 	require.NotEmpty(t, fetchedAccount.AvatarUrl)
 	require.WithinDuration(t, account.CreatedAt.Time, fetchedAccount.CreatedAt.Time, time.Second)
 	require.WithinDuration(t, account.UpdatedAt.Time, fetchedAccount.UpdatedAt.Time, time.Second)
@@ -69,50 +62,13 @@ func TestGetAccountByUsername(t *testing.T) {
 	passwordHash := util.RandomPasswordHash()
 
 	account := createRandomAccount(t, passwordHash)
-	fetchedAccount, err := testQueries.GetAccountByUsername(context.Background(), account.Username)
+	fetchedAccount, err := testQueries.GetAccountByOwner(context.Background(), account.Owner)
 	require.NoError(t, err)
 	require.NotEmpty(t, fetchedAccount)
 
 	require.Equal(t, account.ID, fetchedAccount.ID)
-	require.Equal(t, account.Username, fetchedAccount.Username)
-	require.Equal(t, account.Email, fetchedAccount.Email)
-	require.Equal(t, account.CountryCode, fetchedAccount.CountryCode)
-	require.NotEmpty(t, fetchedAccount.AvatarUrl)
-	require.WithinDuration(t, account.CreatedAt.Time, fetchedAccount.CreatedAt.Time, time.Second)
-	require.WithinDuration(t, account.UpdatedAt.Time, fetchedAccount.UpdatedAt.Time, time.Second)
-}
-
-func TestGetAccountByAllParams(t *testing.T) {
-	username := util.RandomUsername()
-	email := util.RandomEmail()
-	passwordHash := util.RandomPasswordHash()
-	countryCode := util.RandomCountryCode()
-	avatarUrl := util.ConvertToText("http://example.com/test-account-avatar.png")
-	arg := CreateAccountParams{
-		Username:     username,
-		Email:        email,
-		PasswordHash: passwordHash,
-		CountryCode:  countryCode,
-		AvatarUrl:    avatarUrl,
-	}
-	account, err := testQueries.CreateAccount(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, account)
-
-	argGet := GetAccountByAllParamsParams{
-		Username:    username,
-		Email:       email,
-		CountryCode: countryCode,
-		AvatarUrl:   avatarUrl,
-	}
-	fetchedAccount, err := testQueries.GetAccountByAllParams(context.Background(), argGet)
-	require.NoError(t, err)
-	require.NotEmpty(t, fetchedAccount)
-	require.Equal(t, account.ID, fetchedAccount.ID)
-	require.Equal(t, account.Username, fetchedAccount.Username)
-	require.Equal(t, account.Email, fetchedAccount.Email)
-	require.Equal(t, account.CountryCode, fetchedAccount.CountryCode)
-	require.NotEmpty(t, fetchedAccount.AvatarUrl)
+	require.Equal(t, account.Owner, fetchedAccount.Owner)
+	require.Equal(t, account.AvatarUrl, fetchedAccount.AvatarUrl)
 	require.WithinDuration(t, account.CreatedAt.Time, fetchedAccount.CreatedAt.Time, time.Second)
 	require.WithinDuration(t, account.UpdatedAt.Time, fetchedAccount.UpdatedAt.Time, time.Second)
 }
@@ -185,9 +141,10 @@ func TestListAccounts(t *testing.T) {
 
 			for _, account := range accounts {
 				require.NotEmpty(t, account)
-				require.NotEqual(t, int64(0), account.ID)
-				require.NotEmpty(t, account.Username)
-				require.NotZero(t, account.CountryCode)
+				require.NotZero(t, account.ID)
+				require.NotEmpty(t, account.Owner)
+				require.NotZero(t, account.CreatedAt)
+				require.NotZero(t, account.UpdatedAt)
 			}
 		})
 	}
@@ -197,10 +154,12 @@ func TestUpdateAccount(t *testing.T) {
 	account := createRandomAccount(t, util.RandomPasswordHash())
 	arg := UpdateAccountParams{
 		ID:          account.ID,
-		Username:    util.RandomUsername(),
-		Email:       util.RandomEmail(),
-		CountryCode: util.RandomCountryCode(),
+		Owner:    util.RandomUsername(),
 		AvatarUrl:   util.ConvertToText("http://example.com/test-account-avatar.png"),
+		Plays:      100,
+		Likes:      100,
+		Follows:    100,
+		Shares:     100,
 	}
 
 	updatedAccount, err := testQueries.UpdateAccount(context.Background(), arg)
@@ -208,28 +167,12 @@ func TestUpdateAccount(t *testing.T) {
 	require.NotEmpty(t, updatedAccount)
 
 	require.Equal(t, account.ID, updatedAccount.ID)
-	require.Equal(t, arg.Username, updatedAccount.Username)
-	require.Equal(t, arg.CountryCode, updatedAccount.CountryCode)
-	require.WithinDuration(t, account.CreatedAt.Time, updatedAccount.CreatedAt.Time, time.Second)
-	require.WithinDuration(t, time.Now(), updatedAccount.UpdatedAt.Time, time.Second)
-}
-
-func TestUpdateAccountPassword(t *testing.T) {
-	passwordHash := util.RandomPasswordHash()
-	newPasswordHash := util.RandomPasswordHash()
-	require.NotEqual(t, passwordHash, newPasswordHash)
-
-	account := createRandomAccount(t, passwordHash)
-	arg := UpdateAccountPasswordParams{
-		ID:           account.ID,
-		PasswordHash: newPasswordHash,
-	}
-
-	updatedAccount, err := testQueries.UpdateAccountPassword(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, updatedAccount)
-	require.Equal(t, account.ID, updatedAccount.ID)
-	require.Equal(t, account.Username, updatedAccount.Username)
+	require.Equal(t, arg.Owner, updatedAccount.Owner)
+	require.Equal(t, arg.AvatarUrl, updatedAccount.AvatarUrl)
+	require.Equal(t, arg.Plays, updatedAccount.Plays)
+	require.Equal(t, arg.Likes, updatedAccount.Likes)
+	require.Equal(t, arg.Follows, updatedAccount.Follows)
+	require.Equal(t, arg.Shares, updatedAccount.Shares)
 	require.WithinDuration(t, account.CreatedAt.Time, updatedAccount.CreatedAt.Time, time.Second)
 	require.WithinDuration(t, time.Now(), updatedAccount.UpdatedAt.Time, time.Second)
 }

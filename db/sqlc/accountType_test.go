@@ -11,7 +11,7 @@ import (
 
 func createRandomAccountType(t *testing.T) UserSvcAccountType {
 	arg := CreateAccountTypeParams{
-		Description: util.ConvertToText("This is a test account type"),
+		Type:        util.RandomString(10),
 		Permissions: []byte(`{"key": "value"}`),
 		IsArtist:    false,
 		IsProducer:  false,
@@ -22,13 +22,13 @@ func createRandomAccountType(t *testing.T) UserSvcAccountType {
 	accountType, err := testQueries.CreateAccountType(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, accountType)
-	require.Equal(t, arg.Description, accountType.Description)
+	require.NotZero(t, accountType.ID)
+	require.Equal(t, arg.Type, accountType.Type)
 	require.Equal(t, arg.Permissions, accountType.Permissions)
 	require.Equal(t, arg.IsArtist, accountType.IsArtist)
 	require.Equal(t, arg.IsProducer, accountType.IsProducer)
 	require.Equal(t, arg.IsWriter, accountType.IsWriter)
 	require.Equal(t, arg.IsLabel, accountType.IsLabel)
-	require.NotZero(t, accountType.ID)
 	require.NotZero(t, accountType.CreatedAt)
 	require.NotZero(t, accountType.UpdatedAt)
 
@@ -45,39 +45,7 @@ func TestGetAccountType(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, fetchedAccountType)
 	require.Equal(t, accountType.ID, fetchedAccountType.ID)
-	require.Equal(t, accountType.Description, fetchedAccountType.Description)
-	require.Equal(t, accountType.Permissions, fetchedAccountType.Permissions)
-	require.Equal(t, accountType.IsArtist, fetchedAccountType.IsArtist)
-	require.Equal(t, accountType.IsProducer, fetchedAccountType.IsProducer)
-	require.Equal(t, accountType.IsWriter, fetchedAccountType.IsWriter)
-	require.Equal(t, accountType.IsLabel, fetchedAccountType.IsLabel)
-	require.Equal(t, accountType.CreatedAt, fetchedAccountType.CreatedAt)
-	require.Equal(t, accountType.UpdatedAt, fetchedAccountType.UpdatedAt)
-}
-
-func TestGetAccountTypeByAllParams(t *testing.T) {
-	arg := CreateAccountTypeParams{
-		Description: util.ConvertToText(util.RandomString(10)),
-		Permissions: []byte(`{"key": "value"}`),
-	}
-	accountType, err := testQueries.CreateAccountType(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, accountType)
-
-	argGet := GetAccountTypeByAllParamsParams{
-		Description: arg.Description,
-		Permissions: arg.Permissions,
-		IsArtist:    accountType.IsArtist,
-		IsProducer:  accountType.IsProducer,
-		IsWriter:    accountType.IsWriter,
-		IsLabel:     accountType.IsLabel,
-	}
-
-	fetchedAccountType, err := testQueries.GetAccountTypeByAllParams(context.Background(), argGet)
-	require.NoError(t, err)
-	require.NotEmpty(t, fetchedAccountType)
-	require.Equal(t, accountType.ID, fetchedAccountType.ID)
-	require.Equal(t, accountType.Description, fetchedAccountType.Description)
+	require.Equal(t, accountType.Type, fetchedAccountType.Type)
 	require.Equal(t, accountType.Permissions, fetchedAccountType.Permissions)
 	require.Equal(t, accountType.IsArtist, fetchedAccountType.IsArtist)
 	require.Equal(t, accountType.IsProducer, fetchedAccountType.IsProducer)
@@ -164,14 +132,14 @@ func TestListAccountTypes(t *testing.T) {
 
 			for _, accountType := range accountTypes {
 				require.NotZero(t, accountType.ID)
-				require.NotEmpty(t, accountType.Description)
+				require.NotEmpty(t, accountType.Type)
 				require.NotEmpty(t, accountType.Permissions)
 				require.False(t, accountType.IsArtist)
 				require.False(t, accountType.IsProducer)
 				require.False(t, accountType.IsWriter)
 				require.False(t, accountType.IsLabel)
-				require.NotEmpty(t, accountType.CreatedAt)
-				require.NotEmpty(t, accountType.UpdatedAt)
+				require.NotZero(t, accountType.CreatedAt)
+				require.NotZero(t, accountType.UpdatedAt)
 			}
 		})
 	}
@@ -181,7 +149,7 @@ func TestUpdateAccountType(t *testing.T) {
 	accountType := createRandomAccountType(t)
 	arg := UpdateAccountTypeParams{
 		ID:          accountType.ID,
-		Description: util.ConvertToText("This is an updated account type"),
+		Type:        util.RandomString(10),
 		Permissions: []byte(`{"key": "value"}`),
 		IsArtist:    true,
 		IsProducer:  true,
@@ -192,7 +160,7 @@ func TestUpdateAccountType(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, updatedAccountType)
 	require.Equal(t, arg.ID, updatedAccountType.ID)
-	require.Equal(t, arg.Description, updatedAccountType.Description)
+	require.Equal(t, arg.Type, updatedAccountType.Type)
 	require.Equal(t, arg.Permissions, updatedAccountType.Permissions)
 	require.Equal(t, arg.IsArtist, updatedAccountType.IsArtist)
 	require.Equal(t, arg.IsProducer, updatedAccountType.IsProducer)

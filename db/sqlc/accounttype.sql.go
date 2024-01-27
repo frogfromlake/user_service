@@ -7,36 +7,34 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createAccountType = `-- name: CreateAccountType :one
 INSERT INTO "user_svc"."AccountTypes" (
-  description,
-  permissions,
-  is_artist,
-  is_producer,
-  is_writer,
-  is_label
+ type,
+ permissions,
+ is_artist,
+ is_producer,
+ is_writer,
+ is_label
 ) VALUES (
  $1, $2, $3, $4, $5, $6
 )
-RETURNING id, description, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at
+RETURNING id, type, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at
 `
 
 type CreateAccountTypeParams struct {
-	Description pgtype.Text `json:"description"`
-	Permissions []byte      `json:"permissions"`
-	IsArtist    bool        `json:"is_artist"`
-	IsProducer  bool        `json:"is_producer"`
-	IsWriter    bool        `json:"is_writer"`
-	IsLabel     bool        `json:"is_label"`
+	Type        string `json:"type"`
+	Permissions []byte `json:"permissions"`
+	IsArtist    bool   `json:"is_artist"`
+	IsProducer  bool   `json:"is_producer"`
+	IsWriter    bool   `json:"is_writer"`
+	IsLabel     bool   `json:"is_label"`
 }
 
 func (q *Queries) CreateAccountType(ctx context.Context, arg CreateAccountTypeParams) (UserSvcAccountType, error) {
 	row := q.db.QueryRow(ctx, createAccountType,
-		arg.Description,
+		arg.Type,
 		arg.Permissions,
 		arg.IsArtist,
 		arg.IsProducer,
@@ -46,7 +44,7 @@ func (q *Queries) CreateAccountType(ctx context.Context, arg CreateAccountTypePa
 	var i UserSvcAccountType
 	err := row.Scan(
 		&i.ID,
-		&i.Description,
+		&i.Type,
 		&i.Permissions,
 		&i.IsArtist,
 		&i.IsProducer,
@@ -69,7 +67,7 @@ func (q *Queries) DeleteAccountType(ctx context.Context, id int64) error {
 }
 
 const getAccountType = `-- name: GetAccountType :one
-SELECT id, description, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at FROM "user_svc"."AccountTypes"
+SELECT id, type, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at FROM "user_svc"."AccountTypes"
 WHERE id = $1 LIMIT 1
 `
 
@@ -78,45 +76,7 @@ func (q *Queries) GetAccountType(ctx context.Context, id int64) (UserSvcAccountT
 	var i UserSvcAccountType
 	err := row.Scan(
 		&i.ID,
-		&i.Description,
-		&i.Permissions,
-		&i.IsArtist,
-		&i.IsProducer,
-		&i.IsWriter,
-		&i.IsLabel,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getAccountTypeByAllParams = `-- name: GetAccountTypeByAllParams :one
-SELECT id, description, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at FROM "user_svc"."AccountTypes"
-WHERE description = $1 AND permissions = $2 AND is_artist = $3 AND is_producer = $4 AND is_writer = $5 AND is_label = $6 LIMIT 1
-`
-
-type GetAccountTypeByAllParamsParams struct {
-	Description pgtype.Text `json:"description"`
-	Permissions []byte      `json:"permissions"`
-	IsArtist    bool        `json:"is_artist"`
-	IsProducer  bool        `json:"is_producer"`
-	IsWriter    bool        `json:"is_writer"`
-	IsLabel     bool        `json:"is_label"`
-}
-
-func (q *Queries) GetAccountTypeByAllParams(ctx context.Context, arg GetAccountTypeByAllParamsParams) (UserSvcAccountType, error) {
-	row := q.db.QueryRow(ctx, getAccountTypeByAllParams,
-		arg.Description,
-		arg.Permissions,
-		arg.IsArtist,
-		arg.IsProducer,
-		arg.IsWriter,
-		arg.IsLabel,
-	)
-	var i UserSvcAccountType
-	err := row.Scan(
-		&i.ID,
-		&i.Description,
+		&i.Type,
 		&i.Permissions,
 		&i.IsArtist,
 		&i.IsProducer,
@@ -129,7 +89,7 @@ func (q *Queries) GetAccountTypeByAllParams(ctx context.Context, arg GetAccountT
 }
 
 const listAccountTypes = `-- name: ListAccountTypes :many
-SELECT id, description, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at FROM "user_svc"."AccountTypes"
+SELECT id, type, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at FROM "user_svc"."AccountTypes"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -151,7 +111,7 @@ func (q *Queries) ListAccountTypes(ctx context.Context, arg ListAccountTypesPara
 		var i UserSvcAccountType
 		if err := rows.Scan(
 			&i.ID,
-			&i.Description,
+			&i.Type,
 			&i.Permissions,
 			&i.IsArtist,
 			&i.IsProducer,
@@ -173,31 +133,31 @@ func (q *Queries) ListAccountTypes(ctx context.Context, arg ListAccountTypesPara
 const updateAccountType = `-- name: UpdateAccountType :one
 UPDATE "user_svc"."AccountTypes"
 SET 
-  description = COALESCE($2, description),
-  permissions = COALESCE($3, permissions),
-  is_artist = COALESCE($4, is_artist),
-  is_producer = COALESCE($5, is_producer),
-  is_writer = COALESCE($6, is_writer),
-  is_label = COALESCE($7, is_label),
-  updated_at = NOW()
+ type = COALESCE($2, type),
+ permissions = COALESCE($3, permissions),
+ is_artist = COALESCE($4, is_artist),
+ is_producer = COALESCE($5, is_producer),
+ is_writer = COALESCE($6, is_writer),
+ is_label = COALESCE($7, is_label),
+ updated_at = NOW()
 WHERE id = $1
-RETURNING id, description, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at
+RETURNING id, type, permissions, is_artist, is_producer, is_writer, is_label, created_at, updated_at
 `
 
 type UpdateAccountTypeParams struct {
-	ID          int64       `json:"id"`
-	Description pgtype.Text `json:"description"`
-	Permissions []byte      `json:"permissions"`
-	IsArtist    bool        `json:"is_artist"`
-	IsProducer  bool        `json:"is_producer"`
-	IsWriter    bool        `json:"is_writer"`
-	IsLabel     bool        `json:"is_label"`
+	ID          int64  `json:"id"`
+	Type        string `json:"type"`
+	Permissions []byte `json:"permissions"`
+	IsArtist    bool   `json:"is_artist"`
+	IsProducer  bool   `json:"is_producer"`
+	IsWriter    bool   `json:"is_writer"`
+	IsLabel     bool   `json:"is_label"`
 }
 
 func (q *Queries) UpdateAccountType(ctx context.Context, arg UpdateAccountTypeParams) (UserSvcAccountType, error) {
 	row := q.db.QueryRow(ctx, updateAccountType,
 		arg.ID,
-		arg.Description,
+		arg.Type,
 		arg.Permissions,
 		arg.IsArtist,
 		arg.IsProducer,
@@ -207,7 +167,7 @@ func (q *Queries) UpdateAccountType(ctx context.Context, arg UpdateAccountTypePa
 	var i UserSvcAccountType
 	err := row.Scan(
 		&i.ID,
-		&i.Description,
+		&i.Type,
 		&i.Permissions,
 		&i.IsArtist,
 		&i.IsProducer,

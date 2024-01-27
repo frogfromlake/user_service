@@ -76,7 +76,7 @@ func TestGetAccountTypesForAccount(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, accountTypes)
 	require.Equal(t, accountType.ID, accountTypes[0].ID)
-	require.Equal(t, accountType.Description, accountTypes[0].Description)
+	require.Equal(t, accountType.Type, accountTypes[0].Type)
 	require.WithinDuration(t, accountType.CreatedAt.Time, accountTypes[0].CreatedAt.Time, time.Second)
 	require.WithinDuration(t, accountType.UpdatedAt.Time, accountTypes[0].UpdatedAt.Time, time.Second)
 }
@@ -90,7 +90,7 @@ func TestGetAccountTypeIDsForAccount(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	accountTypes, err := testQueries.GetAccountTypeIDsForAccount(context.Background(), account.ID)
+	accountTypes, err := testQueries.GetAccountTypesForAccount(context.Background(), account.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, accountTypes)
 	require.Equal(t, accountType.ID, accountTypes[0].ID)
@@ -111,9 +111,12 @@ func TestGetAccountsForAccountType(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, accounts)
 	require.Equal(t, account.ID, accounts[0].ID)
-	require.Equal(t, account.Username, accounts[0].Username)
-	require.Equal(t, account.Email, accounts[0].Email)
-	require.Equal(t, account.CountryCode, accounts[0].CountryCode)
+	require.Equal(t, account.Owner, accounts[0].Owner)
+	require.Equal(t, account.AvatarUrl, accounts[0].AvatarUrl)
+	require.Zero(t, accounts[0].Plays)
+	require.Zero(t, accounts[0].Likes)
+	require.Zero(t, accounts[0].Follows)
+	require.Zero(t, accounts[0].Shares)
 	require.WithinDuration(t, account.CreatedAt.Time, accounts[0].CreatedAt.Time, time.Second)
 	require.WithinDuration(t, account.UpdatedAt.Time, accounts[0].UpdatedAt.Time, time.Second)
 }

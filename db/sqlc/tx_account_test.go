@@ -13,14 +13,11 @@ import (
 
 func GenerateRandomParams(r *rand.Rand) (CreateAccountParams, CreateAccountTypeParams) {
 	randomAccountParams := CreateAccountParams{
-		Username:     util.RandomString(10, r),
-		Email:        util.RandomEmail(r),
-		PasswordHash: util.RandomString(10, r),
-		CountryCode:  util.RandomCountryCode(r),
-		AvatarUrl:    util.ConvertToText("http://example.com/test-artist-avatar.png"),
+		Owner:     util.RandomString(10, r),
+		AvatarUrl: util.ConvertToText("http://example.com/test-artist-avatar.png"),
 	}
 	randomAccountTypeParams := CreateAccountTypeParams{
-		Description: util.ConvertToText("Test Account Type"),
+		Type:        util.RandomString(10, r),
 		Permissions: []byte(`{"can upload": "false"}`),
 		IsArtist:    false,
 		IsProducer:  false,
@@ -63,7 +60,7 @@ func TestCreateAccountTx(t *testing.T) {
 
 			params := CreateAccountTxParams{
 				AccountParams: accountParams[i],
-				AccountTypeID: []int64{accountType.ID},
+				AccountTypeIDs: []int64{accountType.ID},
 			}
 
 			// Send the params to the channel
@@ -89,9 +86,8 @@ func TestCreateAccountTx(t *testing.T) {
 		account := result.Account
 		require.NotEmpty(t, account)
 		require.NotZero(t, account.ID)
-		require.Equal(t, params.AccountParams.Username, account.Username)
-		require.Equal(t, params.AccountParams.Email, account.Email)
-		require.Equal(t, params.AccountParams.CountryCode, account.CountryCode)
+		require.Equal(t, params.AccountParams.Owner, account.Owner)
+		require.Equal(t, params.AccountParams.AvatarUrl, account.AvatarUrl)
 		require.NotZero(t, account.CreatedAt)
 		require.NotZero(t, account.UpdatedAt)
 
@@ -100,7 +96,7 @@ func TestCreateAccountTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify the account types have been associated with the account
-		for index, accountTypeID := range result.AccountTypeID {
+		for index, accountTypeID := range result.AccountTypeIDs {
 			fetchedAccountType, err := store.GetAccountType(context.Background(), accountTypeID)
 			require.NoError(t, err)
 			require.NotEmpty(t, fetchedAccountType)
@@ -109,7 +105,7 @@ func TestCreateAccountTx(t *testing.T) {
 			// Verify the relationship from the account side
 			accountTypes, err := store.GetAccountTypesForAccount(context.Background(), account.ID)
 			require.NoError(t, err)
-			require.Len(t, accountTypes, len(params.AccountTypeID))
+			require.Len(t, accountTypes, len(params.AccountTypeIDs))
 			require.Equal(t, accountTypeID, accountTypes[index].ID)
 
 			// Verify the relationship from the account type side
@@ -154,7 +150,7 @@ func TestDeleteAccountTx(t *testing.T) {
 
 			params := CreateAccountTxParams{
 				AccountParams: accountParams[i],
-				AccountTypeID: []int64{accountType.ID},
+				AccountTypeIDs: []int64{accountType.ID},
 			}
 
 			result, err := store.CreateAccountTx(context.Background(), params)
@@ -192,7 +188,7 @@ func TestDeleteAccountTx(t *testing.T) {
 		require.Error(t, err)
 
 		// Verify the account types have been disassociated
-		for _, accountTypeID := range result.AccountTypeID {
+		for _, accountTypeID := range result.AccountTypeIDs {
 			accountTypes, err := store.GetAccountTypesForAccount(context.Background(), account.ID)
 			require.NoError(t, err)
 			require.NotContains(t, accountTypes, accountTypeID)

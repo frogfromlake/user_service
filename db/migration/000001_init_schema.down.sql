@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS "user_svc"."AccountTypes_Accounts" CASCADE;
 DROP TABLE IF EXISTS "user_svc"."AccountTypes" CASCADE;
 DROP TABLE IF EXISTS "user_svc"."Accounts" CASCADE;
 

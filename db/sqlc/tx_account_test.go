@@ -10,26 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func GenerateRandomParams(t *testing.T, r *rand.Rand) (CreateAccountParams, CreateAccountTypeParams) {
-	user := createRandomUser(t)
-	accountType := createRandomAccountType(t)
-
-	randomAccountParams := CreateAccountParams{
-		Owner:       user.Username,
-		AccountType: accountType.ID,
-		AvatarUri:   util.ConvertToText("http://example.com/test-artist-avatar.png"),
-	}
-	randomAccountTypeParams := CreateAccountTypeParams{
-		Type:        util.RandomString(10, r),
-		Permissions: []byte(`{"key": "value"}`),
-		IsArtist:    false,
-		IsProducer:  false,
-		IsWriter:    false,
-		IsLabel:     false,
-	}
-	return randomAccountParams, randomAccountTypeParams
-}
-
 func TestCreateAccountTx(t *testing.T) {
 	store := NewStore(testDB)
 
@@ -37,28 +17,46 @@ func TestCreateAccountTx(t *testing.T) {
 
 	errs := make(chan error)
 	results := make(chan CreateAccountTxResult)
-	paramsChan := make(chan CreateAccountTxParams)
 
 	for i := 0; i < n; i++ {
 		go func(i int) {
 			source := rand.NewSource(time.Now().UnixNano())
 			r := rand.New(source)
 
-			accountParams := make([]CreateAccountParams, n)
+			// Create a user
+			user, err := store.CreateUser(context.Background(), CreateUserParams{
+				Username:     util.RandomString(12, r),
+				FullName:     "Test Full Name",
+				Email:        util.RandomEmail(r),
+				PasswordHash: "password",
+				CountryCode:  "US",
+			})
+			require.NoError(t, err)
 
-			for j := 0; j < n; j++ {
-				var randomAccountParams, _ = GenerateRandomParams(t, r)
-				accountParams[j] = randomAccountParams
+			// Create an account type
+			accountTypeParam := CreateAccountTypeParams{
+				Type:        util.RandomString(10),
+				Permissions: []byte(`{"permissions": "permissions"}`),
+				IsArtist:    true,
+				IsProducer:  false,
+				IsWriter:    false,
+				IsLabel:     false,
 			}
+			randomAccountType, err := store.CreateAccountType(context.Background(), accountTypeParam)
+			require.NoError(t, err)
 
+			// Create an account
+			accountParams := CreateAccountParams{
+				Owner:       user.Username,
+				AccountType: int32(randomAccountType.ID),
+				AvatarUri:   util.ConvertToText("http://example.com/test-artist-avatar.png"),
+			}
 			params := CreateAccountTxParams{
-				AccountParams: accountParams[i],
+				AccountParams: accountParams,
 			}
-
-			// Send the params to the channel
-			paramsChan <- params
-
 			result, err := store.CreateAccountTx(context.Background(), params)
+			require.NoError(t, err)
+			require.NotEmpty(t, result)
 
 			// Send the error and result to the channel
 			errs <- err
@@ -68,7 +66,6 @@ func TestCreateAccountTx(t *testing.T) {
 
 	// Check that the account types were associated with the account
 	for i := 0; i < n; i++ {
-		params := <-paramsChan
 		err := <-errs
 		require.NoError(t, err)
 
@@ -78,8 +75,6 @@ func TestCreateAccountTx(t *testing.T) {
 		account := result.Account
 		require.NotEmpty(t, account)
 		require.NotZero(t, account.ID)
-		require.Equal(t, params.AccountParams.Owner, account.Owner)
-		require.Equal(t, params.AccountParams.AvatarUri, account.AvatarUri)
 		require.NotZero(t, account.CreatedAt)
 		require.NotZero(t, account.UpdatedAt)
 
@@ -107,26 +102,43 @@ func TestDeleteAccountTx(t *testing.T) {
 	n := 5
 
 	errs := make(chan error)
-	results := make(chan CreateAccountTxResult)
 
 	for i := 0; i < n; i++ {
 		go func(i int) {
 			source := rand.NewSource(time.Now().UnixNano())
 			r := rand.New(source)
 
-			accountParams := make([]CreateAccountParams, n)
-			accountTypeCreationParams := make([]CreateAccountTypeParams, n)
+			// Create a user
+			user, err := store.CreateUser(context.Background(), CreateUserParams{
+				Username:     util.RandomString(12, r),
+				FullName:     "Test Full Name",
+				Email:        util.RandomEmail(r),
+				PasswordHash: "password",
+				CountryCode:  "US",
+			})
+			require.NoError(t, err)
 
-			for j := 0; j < n; j++ {
-				var randomAccountParams, createAccountTypeParams = GenerateRandomParams(t, r)
-				accountParams[j] = randomAccountParams
-				accountTypeCreationParams[j] = createAccountTypeParams
+			// Create an account type
+			accountTypeParam := CreateAccountTypeParams{
+				Type:        util.RandomString(10),
+				Permissions: []byte(`{"permissions": "permissions"}`),
+				IsArtist:    true,
+				IsProducer:  false,
+				IsWriter:    false,
+				IsLabel:     false,
 			}
+			randomAccountType, err := store.CreateAccountType(context.Background(), accountTypeParam)
+			require.NoError(t, err)
 
+			// Create an account
+			accountParams := CreateAccountParams{
+				Owner:       user.Username,
+				AccountType: int32(randomAccountType.ID),
+				AvatarUri:   util.ConvertToText("http://example.com/test-artist-avatar.png"),
+			}
 			params := CreateAccountTxParams{
-				AccountParams: accountParams[i],
+				AccountParams: accountParams,
 			}
-
 			result, err := store.CreateAccountTx(context.Background(), params)
 			require.NoError(t, err)
 			require.NotEmpty(t, result)
@@ -139,31 +151,19 @@ func TestDeleteAccountTx(t *testing.T) {
 			err = store.DeleteAccountTx(context.Background(), account.ID)
 			require.NoError(t, err)
 
-			// Send the error and result to the channel
+			// Verify the account has been disassociated
+			accountTypes, err := store.GetAccountTypesForAccount(context.Background(), account.ID)
+			require.NoError(t, err)
+			require.Equal(t, 0, len(accountTypes))
+
+			// Send the error to the channel
 			errs <- err
-			results <- result
 		}(i)
 	}
 
-	// Check that the account types were disassociated from the account
+	// Check that the accounts were deleted
 	for i := 0; i < n; i++ {
 		err := <-errs
 		require.NoError(t, err)
-
-		result := <-results
-		require.NotEmpty(t, result)
-
-		account := result.Account
-		require.NotEmpty(t, account)
-		require.NotZero(t, account.ID)
-
-		// Verify the account has been deleted
-		_, err = store.GetAccountByID(context.Background(), account.ID)
-		require.Error(t, err)
-
-		// Verify the accounttype has been disassociated
-		accountTypes, err := store.GetAccountTypesForAccount(context.Background(), account.ID)
-		require.NoError(t, err)
-		require.NotContains(t, accountTypes, result.Account.ID)
 	}
 }

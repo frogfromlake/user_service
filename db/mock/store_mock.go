@@ -100,6 +100,21 @@ func (mr *MockStoreMockRecorder) CreateAccountType(ctx, arg any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAccountType", reflect.TypeOf((*MockStore)(nil).CreateAccountType), ctx, arg)
 }
 
+// CreateUser mocks base method.
+func (m *MockStore) CreateUser(ctx context.Context, arg db.CreateUserParams) (db.CreateUserRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUser", ctx, arg)
+	ret0, _ := ret[0].(db.CreateUserRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateUser indicates an expected call of CreateUser.
+func (mr *MockStoreMockRecorder) CreateUser(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockStore)(nil).CreateUser), ctx, arg)
+}
+
 // DeleteAccount mocks base method.
 func (m *MockStore) DeleteAccount(ctx context.Context, id int64) error {
 	m.ctrl.T.Helper()
@@ -129,7 +144,7 @@ func (mr *MockStoreMockRecorder) DeleteAccountTx(ctx, accountID any) *gomock.Cal
 }
 
 // DeleteAccountType mocks base method.
-func (m *MockStore) DeleteAccountType(ctx context.Context, id int64) error {
+func (m *MockStore) DeleteAccountType(ctx context.Context, id int32) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteAccountType", ctx, id)
 	ret0, _ := ret[0].(error)
@@ -173,7 +188,7 @@ func (mr *MockStoreMockRecorder) GetAccountByOwner(ctx, owner any) *gomock.Call 
 }
 
 // GetAccountType mocks base method.
-func (m *MockStore) GetAccountType(ctx context.Context, id int64) (db.UserSvcAccountType, error) {
+func (m *MockStore) GetAccountType(ctx context.Context, id int32) (db.UserSvcAccountType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccountType", ctx, id)
 	ret0, _ := ret[0].(db.UserSvcAccountType)
@@ -203,7 +218,7 @@ func (mr *MockStoreMockRecorder) GetAccountTypesForAccount(ctx, accountsID any) 
 }
 
 // GetAccountsForAccountType mocks base method.
-func (m *MockStore) GetAccountsForAccountType(ctx context.Context, accounttypesID int64) ([]db.UserSvcAccount, error) {
+func (m *MockStore) GetAccountsForAccountType(ctx context.Context, accounttypesID int32) ([]db.UserSvcAccount, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccountsForAccountType", ctx, accounttypesID)
 	ret0, _ := ret[0].([]db.UserSvcAccount)
@@ -215,6 +230,21 @@ func (m *MockStore) GetAccountsForAccountType(ctx context.Context, accounttypesI
 func (mr *MockStoreMockRecorder) GetAccountsForAccountType(ctx, accounttypesID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountsForAccountType", reflect.TypeOf((*MockStore)(nil).GetAccountsForAccountType), ctx, accounttypesID)
+}
+
+// GetUserByUsername mocks base method.
+func (m *MockStore) GetUserByUsername(ctx context.Context, username string) (db.GetUserByUsernameRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByUsername", ctx, username)
+	ret0, _ := ret[0].(db.GetUserByUsernameRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByUsername indicates an expected call of GetUserByUsername.
+func (mr *MockStoreMockRecorder) GetUserByUsername(ctx, username any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByUsername", reflect.TypeOf((*MockStore)(nil).GetUserByUsername), ctx, username)
 }
 
 // ListAccountTypes mocks base method.
@@ -290,7 +320,7 @@ func (mr *MockStoreMockRecorder) RemoveAllRelationshipsForAccountAccountType(ctx
 }
 
 // RemoveAllRelationshipsForAccountTypeAccount mocks base method.
-func (m *MockStore) RemoveAllRelationshipsForAccountTypeAccount(ctx context.Context, accounttypesID int64) error {
+func (m *MockStore) RemoveAllRelationshipsForAccountTypeAccount(ctx context.Context, accounttypesID int32) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveAllRelationshipsForAccountTypeAccount", ctx, accounttypesID)
 	ret0, _ := ret[0].(error)

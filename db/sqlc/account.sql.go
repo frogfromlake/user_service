@@ -14,33 +14,37 @@ import (
 const createAccount = `-- name: CreateAccount :one
 INSERT INTO "user_svc"."Accounts" (
  owner,
- avatar_url
+ account_type,
+ avatar_uri
 ) VALUES (
- $1, $2
+ $1, $2, $3
 )
-RETURNING id, owner, avatar_url, created_at, updated_at
+RETURNING id, owner, account_type, avatar_uri, created_at, updated_at
 `
 
 type CreateAccountParams struct {
-	Owner     string      `json:"owner"`
-	AvatarUrl pgtype.Text `json:"avatar_url"`
+	Owner       string      `json:"owner"`
+	AccountType int32       `json:"account_type"`
+	AvatarUri   pgtype.Text `json:"avatar_uri"`
 }
 
 type CreateAccountRow struct {
-	ID        int64              `json:"id"`
-	Owner     string             `json:"owner"`
-	AvatarUrl pgtype.Text        `json:"avatar_url"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	AccountType int32              `json:"account_type"`
+	AvatarUri   pgtype.Text        `json:"avatar_uri"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (CreateAccountRow, error) {
-	row := q.db.QueryRow(ctx, createAccount, arg.Owner, arg.AvatarUrl)
+	row := q.db.QueryRow(ctx, createAccount, arg.Owner, arg.AccountType, arg.AvatarUri)
 	var i CreateAccountRow
 	err := row.Scan(
 		&i.ID,
 		&i.Owner,
-		&i.AvatarUrl,
+		&i.AccountType,
+		&i.AvatarUri,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -48,36 +52,17 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (C
 }
 
 const deleteAccount = `-- name: DeleteAccount :exec
-
 DELETE FROM "user_svc"."Accounts"
 WHERE id = $1
 `
 
-// -- name: UpdateAccountPassword :one
-// UPDATE "user_svc"."Accounts"
-// SET
-//
-//	password_hash = COALESCE($2, password_hash)
-//
-// WHERE id = $1
-// RETURNING id, username, created_at, updated_at;
 func (q *Queries) DeleteAccount(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, deleteAccount, id)
 	return err
 }
 
 const getAccountByID = `-- name: GetAccountByID :one
-SELECT
-id,
-owner,
-avatar_url,
-plays,
-likes,
-follows,
-shares,
-created_at,
-updated_at
-FROM "user_svc"."Accounts"
+SELECT id, account_type, owner, avatar_uri, plays, likes, follows, shares, created_at, updated_at FROM "user_svc"."Accounts"
 WHERE id = $1 LIMIT 1
 `
 
@@ -86,8 +71,9 @@ func (q *Queries) GetAccountByID(ctx context.Context, id int64) (UserSvcAccount,
 	var i UserSvcAccount
 	err := row.Scan(
 		&i.ID,
+		&i.AccountType,
 		&i.Owner,
-		&i.AvatarUrl,
+		&i.AvatarUri,
 		&i.Plays,
 		&i.Likes,
 		&i.Follows,
@@ -99,17 +85,7 @@ func (q *Queries) GetAccountByID(ctx context.Context, id int64) (UserSvcAccount,
 }
 
 const getAccountByOwner = `-- name: GetAccountByOwner :one
-SELECT
-id,
-owner,
-avatar_url,
-plays,
-likes,
-follows,
-shares,
-created_at,
-updated_at
-FROM "user_svc"."Accounts"
+SELECT id, account_type, owner, avatar_uri, plays, likes, follows, shares, created_at, updated_at FROM "user_svc"."Accounts"
 WHERE owner = $1 LIMIT 1
 `
 
@@ -118,8 +94,9 @@ func (q *Queries) GetAccountByOwner(ctx context.Context, owner string) (UserSvcA
 	var i UserSvcAccount
 	err := row.Scan(
 		&i.ID,
+		&i.AccountType,
 		&i.Owner,
-		&i.AvatarUrl,
+		&i.AvatarUri,
 		&i.Plays,
 		&i.Likes,
 		&i.Follows,
@@ -131,7 +108,7 @@ func (q *Queries) GetAccountByOwner(ctx context.Context, owner string) (UserSvcA
 }
 
 const listAccounts = `-- name: ListAccounts :many
-SELECT id, owner, created_at, updated_at FROM "user_svc"."Accounts"
+SELECT id, owner, account_type, created_at, updated_at FROM "user_svc"."Accounts"
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -143,10 +120,11 @@ type ListAccountsParams struct {
 }
 
 type ListAccountsRow struct {
-	ID        int64              `json:"id"`
-	Owner     string             `json:"owner"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	AccountType int32              `json:"account_type"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error) {
@@ -161,6 +139,7 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]L
 		if err := rows.Scan(
 			&i.ID,
 			&i.Owner,
+			&i.AccountType,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -178,31 +157,34 @@ const updateAccount = `-- name: UpdateAccount :one
 UPDATE "user_svc"."Accounts"
 SET
  owner = COALESCE($2, owner),
- avatar_url = COALESCE($3, avatar_url),
- plays = COALESCE($4, plays),
- likes = COALESCE($5, likes),
- follows = COALESCE($6, follows),
- shares = COALESCE($7, shares),
+ account_type = COALESCE($3, account_type),
+ avatar_uri = COALESCE($4, avatar_uri),
+ plays = COALESCE($5, plays),
+ likes = COALESCE($6, likes),
+ follows = COALESCE($7, follows),
+ shares = COALESCE($8, shares),
  updated_at = NOW()
 WHERE id = $1
-RETURNING id, owner, avatar_url, plays, likes, follows, shares, created_at, updated_at
+RETURNING id, account_type, owner, avatar_uri, plays, likes, follows, shares, created_at, updated_at
 `
 
 type UpdateAccountParams struct {
-	ID        int64       `json:"id"`
-	Owner     string      `json:"owner"`
-	AvatarUrl pgtype.Text `json:"avatar_url"`
-	Plays     int64       `json:"plays"`
-	Likes     int64       `json:"likes"`
-	Follows   int64       `json:"follows"`
-	Shares    int64       `json:"shares"`
+	ID          int64       `json:"id"`
+	Owner       string      `json:"owner"`
+	AccountType int32       `json:"account_type"`
+	AvatarUri   pgtype.Text `json:"avatar_uri"`
+	Plays       int64       `json:"plays"`
+	Likes       int64       `json:"likes"`
+	Follows     int64       `json:"follows"`
+	Shares      int64       `json:"shares"`
 }
 
 func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (UserSvcAccount, error) {
 	row := q.db.QueryRow(ctx, updateAccount,
 		arg.ID,
 		arg.Owner,
-		arg.AvatarUrl,
+		arg.AccountType,
+		arg.AvatarUri,
 		arg.Plays,
 		arg.Likes,
 		arg.Follows,
@@ -211,8 +193,9 @@ func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (U
 	var i UserSvcAccount
 	err := row.Scan(
 		&i.ID,
+		&i.AccountType,
 		&i.Owner,
-		&i.AvatarUrl,
+		&i.AvatarUri,
 		&i.Plays,
 		&i.Likes,
 		&i.Follows,

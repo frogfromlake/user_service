@@ -9,19 +9,20 @@ import (
 )
 
 type UserSvcAccount struct {
-	ID        int64              `json:"id"`
-	Owner     string             `json:"owner"`
-	AvatarUrl pgtype.Text        `json:"avatar_url"`
-	Plays     int64              `json:"plays"`
-	Likes     int64              `json:"likes"`
-	Follows   int64              `json:"follows"`
-	Shares    int64              `json:"shares"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID          int64              `json:"id"`
+	AccountType int32              `json:"account_type"`
+	Owner       string             `json:"owner"`
+	AvatarUri   pgtype.Text        `json:"avatar_uri"`
+	Plays       int64              `json:"plays"`
+	Likes       int64              `json:"likes"`
+	Follows     int64              `json:"follows"`
+	Shares      int64              `json:"shares"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
 type UserSvcAccountType struct {
-	ID          int64              `json:"id"`
+	ID          int32              `json:"id"`
 	Type        string             `json:"type"`
 	Permissions []byte             `json:"permissions"`
 	IsArtist    bool               `json:"is_artist"`
@@ -33,7 +34,7 @@ type UserSvcAccountType struct {
 }
 
 type UserSvcAccountTypesAccount struct {
-	AccountTypesID int64 `json:"AccountTypes_id"`
+	AccountTypesID int32 `json:"AccountTypes_id"`
 	AccountsID     int64 `json:"Accounts_id"`
 }
 

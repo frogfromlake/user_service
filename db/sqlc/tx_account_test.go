@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"log"
 	"math/rand"
 	"testing"
 	"time"
@@ -11,14 +10,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func GenerateRandomParams(r *rand.Rand) (CreateAccountParams, CreateAccountTypeParams) {
+func GenerateRandomParams(t *testing.T, r *rand.Rand) (CreateAccountParams, CreateAccountTypeParams) {
+	user := createRandomUser(t)
+	accountType := createRandomAccountType(t)
+
 	randomAccountParams := CreateAccountParams{
-		Owner:     util.RandomString(10, r),
-		AvatarUrl: util.ConvertToText("http://example.com/test-artist-avatar.png"),
+		Owner:       user.Username,
+		AccountType: accountType.ID,
+		AvatarUri:   util.ConvertToText("http://example.com/test-artist-avatar.png"),
 	}
 	randomAccountTypeParams := CreateAccountTypeParams{
 		Type:        util.RandomString(10, r),
-		Permissions: []byte(`{"can upload": "false"}`),
+		Permissions: []byte(`{"key": "value"}`),
 		IsArtist:    false,
 		IsProducer:  false,
 		IsWriter:    false,
@@ -42,25 +45,14 @@ func TestCreateAccountTx(t *testing.T) {
 			r := rand.New(source)
 
 			accountParams := make([]CreateAccountParams, n)
-			accountTypeCreationParams := make([]CreateAccountTypeParams, n)
-			accountTypeParams := make([]int64, n)
 
 			for j := 0; j < n; j++ {
-				var randomAccountParams, randomAccountTypeParams = GenerateRandomParams(r)
+				var randomAccountParams, _ = GenerateRandomParams(t, r)
 				accountParams[j] = randomAccountParams
-				accountTypeCreationParams[j] = randomAccountTypeParams
-				accountTypeParams[j] = util.RandomInt(1, 100, r)
-			}
-
-			// Create the account type
-			accountType, err := store.CreateAccountType(context.Background(), accountTypeCreationParams[0])
-			if err != nil {
-				log.Fatalf("failed to create account type: %v", err)
 			}
 
 			params := CreateAccountTxParams{
 				AccountParams: accountParams[i],
-				AccountTypeIDs: []int64{accountType.ID},
 			}
 
 			// Send the params to the channel
@@ -87,7 +79,7 @@ func TestCreateAccountTx(t *testing.T) {
 		require.NotEmpty(t, account)
 		require.NotZero(t, account.ID)
 		require.Equal(t, params.AccountParams.Owner, account.Owner)
-		require.Equal(t, params.AccountParams.AvatarUrl, account.AvatarUrl)
+		require.Equal(t, params.AccountParams.AvatarUri, account.AvatarUri)
 		require.NotZero(t, account.CreatedAt)
 		require.NotZero(t, account.UpdatedAt)
 
@@ -95,26 +87,17 @@ func TestCreateAccountTx(t *testing.T) {
 		_, err = store.GetAccountByID(context.Background(), account.ID)
 		require.NoError(t, err)
 
-		// Verify the account types have been associated with the account
-		for index, accountTypeID := range result.AccountTypeIDs {
-			fetchedAccountType, err := store.GetAccountType(context.Background(), accountTypeID)
-			require.NoError(t, err)
-			require.NotEmpty(t, fetchedAccountType)
-			require.NotZero(t, fetchedAccountType.ID)
+		// Verify the relationship from the account side
+		accountTypes, err := store.GetAccountTypesForAccount(context.Background(), account.ID)
+		require.NoError(t, err)
+		require.Equal(t, 1, len(accountTypes))
+		require.Equal(t, result.Account.AccountType, accountTypes[0].ID)
 
-			// Verify the relationship from the account side
-			accountTypes, err := store.GetAccountTypesForAccount(context.Background(), account.ID)
-			require.NoError(t, err)
-			require.Len(t, accountTypes, len(params.AccountTypeIDs))
-			require.Equal(t, accountTypeID, accountTypes[index].ID)
-
-			// Verify the relationship from the account type side
-			accounts, err := store.GetAccountsForAccountType(context.Background(), accountTypeID)
-			require.NoError(t, err)
-			for i, account := range accounts {
-				require.Equal(t, account.ID, accounts[i].ID)
-			}
-		}
+		// Verify the relationship from the account type side
+		accounts, err := store.GetAccountsForAccountType(context.Background(), accountTypes[0].ID)
+		require.NoError(t, err)
+		require.Equal(t, 1, len(accounts))
+		require.Equal(t, account.ID, accounts[0].ID)
 	}
 }
 
@@ -133,24 +116,15 @@ func TestDeleteAccountTx(t *testing.T) {
 
 			accountParams := make([]CreateAccountParams, n)
 			accountTypeCreationParams := make([]CreateAccountTypeParams, n)
-			accountTypeParams := make([]int64, n)
 
 			for j := 0; j < n; j++ {
-				var randomAccountParams, randomAccountTypeParams = GenerateRandomParams(r)
+				var randomAccountParams, createAccountTypeParams = GenerateRandomParams(t, r)
 				accountParams[j] = randomAccountParams
-				accountTypeCreationParams[j] = randomAccountTypeParams
-				accountTypeParams[j] = util.RandomInt(1, 100, r)
-			}
-
-			// Create the account type
-			accountType, err := store.CreateAccountType(context.Background(), accountTypeCreationParams[0])
-			if err != nil {
-				log.Fatalf("failed to create account type: %v", err)
+				accountTypeCreationParams[j] = createAccountTypeParams
 			}
 
 			params := CreateAccountTxParams{
 				AccountParams: accountParams[i],
-				AccountTypeIDs: []int64{accountType.ID},
 			}
 
 			result, err := store.CreateAccountTx(context.Background(), params)
@@ -187,11 +161,9 @@ func TestDeleteAccountTx(t *testing.T) {
 		_, err = store.GetAccountByID(context.Background(), account.ID)
 		require.Error(t, err)
 
-		// Verify the account types have been disassociated
-		for _, accountTypeID := range result.AccountTypeIDs {
-			accountTypes, err := store.GetAccountTypesForAccount(context.Background(), account.ID)
-			require.NoError(t, err)
-			require.NotContains(t, accountTypes, accountTypeID)
-		}
+		// Verify the accounttype has been disassociated
+		accountTypes, err := store.GetAccountTypesForAccount(context.Background(), account.ID)
+		require.NoError(t, err)
+		require.NotContains(t, accountTypes, result.Account.ID)
 	}
 }

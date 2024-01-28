@@ -5,24 +5,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAddAccountTypeToAccount(t *testing.T) {
 	accountType := createRandomAccountType(t)
-	account := createRandomAccount(t, util.RandomPasswordHash())
+	account := createRandomAccount(t)
 
 	tests := []struct {
 		name           string
 		AccountsID     int64
-		AccountTypesID int64
+		AccountTypesID int32
 		expectedErr    bool
 	}{
 		{
 			name:           "Normal operation",
-			AccountTypesID: accountType.ID,
 			AccountsID:     account.ID,
+			AccountTypesID: accountType.ID,
 			expectedErr:    false,
 		},
 		{
@@ -38,7 +37,7 @@ func TestAddAccountTypeToAccount(t *testing.T) {
 			expectedErr:    true,
 		},
 		{
-			name:           "account is already in the accountType's discography",
+			name:           "uniqueViolation",
 			AccountsID:     account.ID,
 			AccountTypesID: accountType.ID,
 			expectedErr:    true,
@@ -65,7 +64,7 @@ func TestAddAccountTypeToAccount(t *testing.T) {
 
 func TestGetAccountTypesForAccount(t *testing.T) {
 	accountType := createRandomAccountType(t)
-	account := createRandomAccount(t, util.RandomPasswordHash())
+	account := createRandomAccount(t)
 	err := testQueries.AddAccountTypeToAccount(context.Background(), AddAccountTypeToAccountParams{
 		AccountsID:     account.ID,
 		AccountTypesID: accountType.ID,
@@ -75,15 +74,17 @@ func TestGetAccountTypesForAccount(t *testing.T) {
 	accountTypes, err := testQueries.GetAccountTypesForAccount(context.Background(), account.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, accountTypes)
-	require.Equal(t, accountType.ID, accountTypes[0].ID)
-	require.Equal(t, accountType.Type, accountTypes[0].Type)
-	require.WithinDuration(t, accountType.CreatedAt.Time, accountTypes[0].CreatedAt.Time, time.Second)
-	require.WithinDuration(t, accountType.UpdatedAt.Time, accountTypes[0].UpdatedAt.Time, time.Second)
+	for i, accountType := range accountTypes {
+		require.NotEmpty(t, accountType)
+		require.Equal(t, accountType.ID, accountTypes[i].ID)
+		require.WithinDuration(t, accountType.CreatedAt.Time, accountTypes[i].CreatedAt.Time, time.Second)
+		require.WithinDuration(t, accountType.UpdatedAt.Time, accountTypes[i].UpdatedAt.Time, time.Second)
+	}
 }
 
 func TestGetAccountTypeIDsForAccount(t *testing.T) {
 	accountType := createRandomAccountType(t)
-	account := createRandomAccount(t, util.RandomPasswordHash())
+	account := createRandomAccount(t)
 	err := testQueries.AddAccountTypeToAccount(context.Background(), AddAccountTypeToAccountParams{
 		AccountsID:     account.ID,
 		AccountTypesID: accountType.ID,
@@ -93,14 +94,17 @@ func TestGetAccountTypeIDsForAccount(t *testing.T) {
 	accountTypes, err := testQueries.GetAccountTypesForAccount(context.Background(), account.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, accountTypes)
-	require.Equal(t, accountType.ID, accountTypes[0].ID)
-	require.WithinDuration(t, accountType.CreatedAt.Time, accountTypes[0].CreatedAt.Time, time.Second)
-	require.WithinDuration(t, accountType.UpdatedAt.Time, accountTypes[0].UpdatedAt.Time, time.Second)
+	for i, accountType := range accountTypes {
+		require.NotEmpty(t, accountType)
+		require.Equal(t, accountType.ID, accountTypes[i].ID)
+		require.WithinDuration(t, accountType.CreatedAt.Time, accountTypes[i].CreatedAt.Time, time.Second)
+		require.WithinDuration(t, accountType.UpdatedAt.Time, accountTypes[i].UpdatedAt.Time, time.Second)
+	}
 }
 
 func TestGetAccountsForAccountType(t *testing.T) {
 	accountType := createRandomAccountType(t)
-	account := createRandomAccount(t, util.RandomPasswordHash())
+	account := createRandomAccount(t)
 	err := testQueries.AddAccountTypeToAccount(context.Background(), AddAccountTypeToAccountParams{
 		AccountsID:     account.ID,
 		AccountTypesID: accountType.ID,
@@ -110,20 +114,23 @@ func TestGetAccountsForAccountType(t *testing.T) {
 	accounts, err := testQueries.GetAccountsForAccountType(context.Background(), accountType.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, accounts)
-	require.Equal(t, account.ID, accounts[0].ID)
-	require.Equal(t, account.Owner, accounts[0].Owner)
-	require.Equal(t, account.AvatarUrl, accounts[0].AvatarUrl)
-	require.Zero(t, accounts[0].Plays)
-	require.Zero(t, accounts[0].Likes)
-	require.Zero(t, accounts[0].Follows)
-	require.Zero(t, accounts[0].Shares)
-	require.WithinDuration(t, account.CreatedAt.Time, accounts[0].CreatedAt.Time, time.Second)
-	require.WithinDuration(t, account.UpdatedAt.Time, accounts[0].UpdatedAt.Time, time.Second)
+	for i, account := range accounts {
+		require.NotEmpty(t, account)
+		require.Equal(t, account.ID, accounts[i].ID)
+		require.Equal(t, account.Owner, accounts[i].Owner)
+		require.Equal(t, account.AvatarUri, accounts[i].AvatarUri)
+		require.Zero(t, accounts[i].Plays)
+		require.Zero(t, accounts[i].Likes)
+		require.Zero(t, accounts[i].Follows)
+		require.Zero(t, accounts[i].Shares)
+		require.WithinDuration(t, account.CreatedAt.Time, accounts[i].CreatedAt.Time, time.Second)
+		require.WithinDuration(t, account.UpdatedAt.Time, accounts[i].UpdatedAt.Time, time.Second)
+	}
 }
 
 func TestRemoveAccountTypeFromAccount(t *testing.T) {
 	accountType := createRandomAccountType(t)
-	account := createRandomAccount(t, util.RandomPasswordHash())
+	account := createRandomAccount(t)
 	arg := AddAccountTypeToAccountParams{
 		AccountsID:     account.ID,
 		AccountTypesID: accountType.ID,
@@ -143,7 +150,7 @@ func TestRemoveAccountTypeFromAccount(t *testing.T) {
 
 func TestRemoveAllRelationshipsForAccountAccountType(t *testing.T) {
 	accountType := createRandomAccountType(t)
-	account := createRandomAccount(t, util.RandomPasswordHash())
+	account := createRandomAccount(t)
 	arg := AddAccountTypeToAccountParams{
 		AccountsID:     account.ID,
 		AccountTypesID: accountType.ID,
@@ -161,7 +168,7 @@ func TestRemoveAllRelationshipsForAccountAccountType(t *testing.T) {
 
 func TestRemoveAllRelationshipsForAccountTypeAccount(t *testing.T) {
 	accountType := createRandomAccountType(t)
-	account := createRandomAccount(t, util.RandomPasswordHash())
+	account := createRandomAccount(t)
 	arg := AddAccountTypeToAccountParams{
 		AccountsID:     account.ID,
 		AccountTypesID: accountType.ID,

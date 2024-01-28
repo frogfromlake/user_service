@@ -16,7 +16,7 @@ VALUES ($1, $2)
 
 type AddAccountTypeToAccountParams struct {
 	AccountsID     int64 `json:"Accounts_id"`
-	AccountTypesID int64 `json:"AccountTypes_id"`
+	AccountTypesID int32 `json:"AccountTypes_id"`
 }
 
 func (q *Queries) AddAccountTypeToAccount(ctx context.Context, arg AddAccountTypeToAccountParams) error {
@@ -61,12 +61,12 @@ func (q *Queries) GetAccountTypesForAccount(ctx context.Context, accountsID int6
 }
 
 const getAccountsForAccountType = `-- name: GetAccountsForAccountType :many
-SELECT ac.id, ac.owner, ac.avatar_url, ac.plays, ac.likes, ac.follows, ac.shares, ac.created_at, ac.updated_at FROM "user_svc"."Accounts" ac
+SELECT ac.id, ac.account_type, ac.owner, ac.avatar_uri, ac.plays, ac.likes, ac.follows, ac.shares, ac.created_at, ac.updated_at FROM "user_svc"."Accounts" ac
 JOIN "user_svc"."AccountTypes_Accounts" aat ON ac.id = aat."Accounts_id"
 WHERE aat."AccountTypes_id" = $1
 `
 
-func (q *Queries) GetAccountsForAccountType(ctx context.Context, accounttypesID int64) ([]UserSvcAccount, error) {
+func (q *Queries) GetAccountsForAccountType(ctx context.Context, accounttypesID int32) ([]UserSvcAccount, error) {
 	rows, err := q.db.Query(ctx, getAccountsForAccountType, accounttypesID)
 	if err != nil {
 		return nil, err
@@ -77,8 +77,9 @@ func (q *Queries) GetAccountsForAccountType(ctx context.Context, accounttypesID 
 		var i UserSvcAccount
 		if err := rows.Scan(
 			&i.ID,
+			&i.AccountType,
 			&i.Owner,
-			&i.AvatarUrl,
+			&i.AvatarUri,
 			&i.Plays,
 			&i.Likes,
 			&i.Follows,
@@ -103,7 +104,7 @@ WHERE "Accounts_id" = $1 AND "AccountTypes_id" = $2
 
 type RemoveAccountTypeFromAccountParams struct {
 	AccountsID     int64 `json:"Accounts_id"`
-	AccountTypesID int64 `json:"AccountTypes_id"`
+	AccountTypesID int32 `json:"AccountTypes_id"`
 }
 
 func (q *Queries) RemoveAccountTypeFromAccount(ctx context.Context, arg RemoveAccountTypeFromAccountParams) error {
@@ -126,7 +127,7 @@ DELETE FROM "user_svc"."AccountTypes_Accounts"
 WHERE "AccountTypes_id" = $1
 `
 
-func (q *Queries) RemoveAllRelationshipsForAccountTypeAccount(ctx context.Context, accounttypesID int64) error {
+func (q *Queries) RemoveAllRelationshipsForAccountTypeAccount(ctx context.Context, accounttypesID int32) error {
 	_, err := q.db.Exec(ctx, removeAllRelationshipsForAccountTypeAccount, accounttypesID)
 	return err
 }

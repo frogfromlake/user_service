@@ -61,7 +61,7 @@ DELETE FROM "user_svc"."AccountTypes"
 WHERE id = $1
 `
 
-func (q *Queries) DeleteAccountType(ctx context.Context, id int64) error {
+func (q *Queries) DeleteAccountType(ctx context.Context, id int32) error {
 	_, err := q.db.Exec(ctx, deleteAccountType, id)
 	return err
 }
@@ -71,7 +71,7 @@ SELECT id, type, permissions, is_artist, is_producer, is_writer, is_label, creat
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetAccountType(ctx context.Context, id int64) (UserSvcAccountType, error) {
+func (q *Queries) GetAccountType(ctx context.Context, id int32) (UserSvcAccountType, error) {
 	row := q.db.QueryRow(ctx, getAccountType, id)
 	var i UserSvcAccountType
 	err := row.Scan(
@@ -145,7 +145,7 @@ RETURNING id, type, permissions, is_artist, is_producer, is_writer, is_label, cr
 `
 
 type UpdateAccountTypeParams struct {
-	ID          int64  `json:"id"`
+	ID          int32  `json:"id"`
 	Type        string `json:"type"`
 	Permissions []byte `json:"permissions"`
 	IsArtist    bool   `json:"is_artist"`

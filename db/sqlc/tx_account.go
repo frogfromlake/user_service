@@ -5,18 +5,15 @@ import (
 )
 
 type CreateAccountTxParams struct {
-	AccountTypeIDs []int64
 	AccountParams CreateAccountParams
 }
 
 type CreateAccountTxResult struct {
-	AccountTypeIDs []int64
-	Account       *CreateAccountRow
+	Account *CreateAccountRow
 }
 
-// CreateAccountTx creates a new account and it with one ore more account types.
+// CreateAccountTx creates a new account and associates it with an account types.
 // Returns the created account.
-// TODO: Add other necessary associations: account preferences, account playback history, account subscriptions, etc.
 func (store *SQLStore) CreateAccountTx(ctx context.Context, params CreateAccountTxParams) (CreateAccountTxResult, error) {
 	var result CreateAccountTxResult
 
@@ -29,16 +26,14 @@ func (store *SQLStore) CreateAccountTx(ctx context.Context, params CreateAccount
 		result.Account = &account
 
 		// Associate the account with the account types
-		for _, accountTypeID := range params.AccountTypeIDs {
-			err = q.AddAccountTypeToAccount(ctx, AddAccountTypeToAccountParams{
-				AccountsID:     account.ID,
-				AccountTypesID: accountTypeID,
-			})
-			if err != nil {
-				return err
-			}
+		err = q.AddAccountTypeToAccount(ctx, AddAccountTypeToAccountParams{
+			AccountsID:     account.ID,
+			AccountTypesID: account.AccountType,
+		})
+		if err != nil {
+			return err
 		}
-		result.AccountTypeIDs = params.AccountTypeIDs
+		result.Account.AccountType = params.AccountParams.AccountType
 
 		return nil
 	})
@@ -54,7 +49,7 @@ func (store *SQLStore) CreateAccountTx(ctx context.Context, params CreateAccount
 // Returns the created account.
 func (store *SQLStore) DeleteAccountTx(ctx context.Context, accountID int64) error {
 	err := store.ExecTx(ctx, func(q *Queries) error {
-		// Delete all associations between the account and account types
+		// Remove all associations between the account and account types
 		err := q.RemoveAllRelationshipsForAccountAccountType(ctx, accountID)
 		if err != nil {
 			return err

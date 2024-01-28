@@ -10,10 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomAccount(t *testing.T, passwordHash string) CreateAccountRow {
+func createRandomAccount(t *testing.T) CreateAccountRow {
+	user := createRandomUser(t)
+	accountType := createRandomAccountType(t)
 	arg := CreateAccountParams{
-		Owner:     util.RandomUsername(),
-		AvatarUrl:    util.ConvertToText("http://example.com/test-account-avatar.png"),
+		Owner:       user.Username,
+		AccountType: accountType.ID,
+		AvatarUri:   util.ConvertToText("http://example.com/test-account-avatar.png"),
 	}
 
 	account, err := testQueries.CreateAccount(context.Background(), arg)
@@ -21,7 +24,7 @@ func createRandomAccount(t *testing.T, passwordHash string) CreateAccountRow {
 	require.NotEmpty(t, account)
 	require.NotZero(t, account.ID)
 	require.Equal(t, arg.Owner, account.Owner)
-	require.Equal(t, arg.AvatarUrl, account.AvatarUrl)
+	require.Equal(t, arg.AvatarUri, account.AvatarUri)
 	require.WithinDuration(t, time.Now(), account.CreatedAt.Time, time.Second)
 	require.WithinDuration(t, time.Now(), account.UpdatedAt.Time, time.Second)
 
@@ -29,11 +32,11 @@ func createRandomAccount(t *testing.T, passwordHash string) CreateAccountRow {
 }
 
 func TestCreateAccount(t *testing.T) {
-	createRandomAccount(t, util.RandomPasswordHash())
+	createRandomAccount(t)
 }
 
 func TestDeleteAccount(t *testing.T) {
-	account := createRandomAccount(t, util.RandomPasswordHash())
+	account := createRandomAccount(t)
 
 	err := testQueries.DeleteAccount(context.Background(), account.ID)
 	require.NoError(t, err)
@@ -44,31 +47,27 @@ func TestDeleteAccount(t *testing.T) {
 }
 
 func TestGetAccountByID(t *testing.T) {
-	passwordHash := util.RandomPasswordHash()
-
-	account := createRandomAccount(t, passwordHash)
+	account := createRandomAccount(t)
 	fetchedAccount, err := testQueries.GetAccountByID(context.Background(), account.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, fetchedAccount)
 
 	require.Equal(t, account.ID, fetchedAccount.ID)
 	require.Equal(t, account.Owner, fetchedAccount.Owner)
-	require.NotEmpty(t, fetchedAccount.AvatarUrl)
+	require.NotEmpty(t, fetchedAccount.AvatarUri)
 	require.WithinDuration(t, account.CreatedAt.Time, fetchedAccount.CreatedAt.Time, time.Second)
 	require.WithinDuration(t, account.UpdatedAt.Time, fetchedAccount.UpdatedAt.Time, time.Second)
 }
 
-func TestGetAccountByUsername(t *testing.T) {
-	passwordHash := util.RandomPasswordHash()
-
-	account := createRandomAccount(t, passwordHash)
+func TestGetAccountByOwner(t *testing.T) {
+	account := createRandomAccount(t)
 	fetchedAccount, err := testQueries.GetAccountByOwner(context.Background(), account.Owner)
 	require.NoError(t, err)
 	require.NotEmpty(t, fetchedAccount)
 
 	require.Equal(t, account.ID, fetchedAccount.ID)
 	require.Equal(t, account.Owner, fetchedAccount.Owner)
-	require.Equal(t, account.AvatarUrl, fetchedAccount.AvatarUrl)
+	require.Equal(t, account.AvatarUri, fetchedAccount.AvatarUri)
 	require.WithinDuration(t, account.CreatedAt.Time, fetchedAccount.CreatedAt.Time, time.Second)
 	require.WithinDuration(t, account.UpdatedAt.Time, fetchedAccount.UpdatedAt.Time, time.Second)
 }
@@ -80,7 +79,7 @@ func TestListAccounts(t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		createRandomAccount(t, util.RandomPasswordHash())
+		createRandomAccount(t)
 	}
 
 	testCases := []struct {
@@ -151,15 +150,16 @@ func TestListAccounts(t *testing.T) {
 }
 
 func TestUpdateAccount(t *testing.T) {
-	account := createRandomAccount(t, util.RandomPasswordHash())
+	account := createRandomAccount(t)
 	arg := UpdateAccountParams{
 		ID:          account.ID,
-		Owner:    util.RandomUsername(),
-		AvatarUrl:   util.ConvertToText("http://example.com/test-account-avatar.png"),
-		Plays:      100,
-		Likes:      100,
-		Follows:    100,
-		Shares:     100,
+		Owner:       account.Owner,
+		AccountType: account.AccountType,
+		AvatarUri:   util.ConvertToText("http://example.com/test-account-avatar.png"),
+		Plays:       100,
+		Likes:       100,
+		Follows:     100,
+		Shares:      100,
 	}
 
 	updatedAccount, err := testQueries.UpdateAccount(context.Background(), arg)
@@ -168,7 +168,7 @@ func TestUpdateAccount(t *testing.T) {
 
 	require.Equal(t, account.ID, updatedAccount.ID)
 	require.Equal(t, arg.Owner, updatedAccount.Owner)
-	require.Equal(t, arg.AvatarUrl, updatedAccount.AvatarUrl)
+	require.Equal(t, arg.AvatarUri, updatedAccount.AvatarUri)
 	require.Equal(t, arg.Plays, updatedAccount.Plays)
 	require.Equal(t, arg.Likes, updatedAccount.Likes)
 	require.Equal(t, arg.Follows, updatedAccount.Follows)

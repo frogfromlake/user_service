@@ -26,16 +26,36 @@ func NewServer(store db.Store) *Server {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("acctype", validAccountTypes)
 	}
-
+	
 	router.GET("/readiness", server.readinessCheck)
 
+	router.POST("/users", server.createUser)
+	router.GET("/users/id/:id", server.getUserByID)
+	router.GET("/users/id", server.handleMissingID)
+	router.GET("/users/username/:username", server.getUserByUsername)
+	router.GET("/users/username", server.handleMissingUsername)
+	router.GET("/users/list", server.listUsers)
+	router.PUT("/users/update/:id", server.updateUser)
+	router.PUT("/users/update", server.handleMissingID)
+	router.PUT("/users/update/email/:id", server.updateUserEmail)
+	router.PUT("/users/update/email", server.handleMissingID)
+	router.PUT("/users/update/username/:id", server.updateUsername)
+	router.PUT("/users/update/username", server.handleMissingUsername)
+	router.PUT("/users/update/password/:id", server.updateUserPassword)
+	router.PUT("/users/update/password", server.handleMissingID)
+	router.DELETE("/users/delete/:id", server.deleteUser)
+	router.DELETE("/users/delete", server.handleMissingID)
+
 	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:id", server.getAccountByID)
+	router.GET("/accounts/id/:id", server.getAccountByID)
+	router.GET("/accounts/id", server.handleMissingID)
 	router.GET("/accounts/owner/:owner", server.getAccountByOwner)
-	router.GET("/accounts/owner", server.handleMissingUsername)
-	router.GET("/accounts", server.listAccount)
-	router.PUT("/accounts/:id", server.updateAccount)
-	router.DELETE("/accounts/:id", server.deleteAccount)
+	router.GET("/accounts/owner", server.handleMissingOwner)
+	router.GET("/accounts/list", server.listAccount)
+	router.PUT("/accounts/update/:id", server.updateAccount)
+	router.PUT("/accounts/update", server.handleMissingID)
+	router.DELETE("/accounts/delete/:id", server.deleteAccount)
+	router.DELETE("/accounts/delete", server.handleMissingID)
 
 	server.router = router
 	return server

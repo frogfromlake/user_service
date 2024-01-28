@@ -2,7 +2,7 @@ package api
 
 import (
 	"database/sql"
-	"fmt"
+	"errors"
 	"net/http"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
@@ -49,11 +49,17 @@ func (server *Server) createAccount(ctx *gin.Context) {
 
 	account, err := server.store.CreateAccountTx(ctx, arg)
 	if err != nil {
-		if pqError, ok := err.(*pgconn.PgError); ok {
-			if pqError.ConstraintName == "Accounts_account_type_key" || pqError.ConstraintName == "Accounts_owner_fkey" {
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case "23505": // unique_violation
+				ctx.JSON(http.StatusConflict, errorResponse(err))
+			case "23503": // foreign_key_violation
+				ctx.JSON(http.StatusConflict, errorResponse(err))
+			default:
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			}
+			return
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -65,7 +71,6 @@ func (server *Server) createAccount(ctx *gin.Context) {
 type getAccountByIDRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
 }
-
 type getAccountByIDResponse struct {
 	Account      db.UserSvcAccount
 	AccountTypes []db.UserSvcAccountType
@@ -98,10 +103,6 @@ func (server *Server) getAccountByID(ctx *gin.Context) {
 	res.AccountTypes = accountTypes
 
 	ctx.JSON(http.StatusOK, res)
-}
-
-func (server *Server) handleMissingUsername(ctx *gin.Context) {
-	ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("missing owner in request")))
 }
 
 type getAccountByOwnerRequest struct {
@@ -169,7 +170,7 @@ func (server *Server) listAccount(ctx *gin.Context) {
 }
 
 // TODO: should be able to update account type
-type updateAccountURI struct {
+type updateAccountUri struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
 }
 
@@ -183,7 +184,7 @@ type updateAccountRequest struct {
 }
 
 func (server *Server) updateAccount(ctx *gin.Context) {
-	var uri updateAccountURI
+	var uri updateAccountUri
 	var req updateAccountRequest
 
 	if err := ctx.ShouldBindUri(&uri); err != nil {

@@ -226,7 +226,7 @@ func TestGetAccountByIdAPI(t *testing.T) {
 			recorder := httptest.NewRecorder()
 
 			// build request
-			url := fmt.Sprintf("/accounts/%d", tc.accountID)
+			url := fmt.Sprintf("/accounts/id/%d", tc.accountID)
 			request := httptest.NewRequest("GET", url, nil)
 
 			// send request
@@ -456,7 +456,7 @@ func TestListAccountsAPI(t *testing.T) {
 			server := NewServer(store)
 			recorder := httptest.NewRecorder()
 
-			url := "/accounts"
+			url := "/accounts/list"
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
@@ -580,7 +580,7 @@ func TestUpdateAccountAPI(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := fmt.Sprintf("/accounts/%d", tc.body["id"])
+			url := fmt.Sprintf("/accounts/update/%d", tc.body["id"])
 			request := httptest.NewRequest("PUT", url, bytes.NewReader(data))
 			require.NoError(t, err)
 
@@ -683,7 +683,7 @@ func TestDeleteAccountAPI(t *testing.T) {
 			server := NewServer(store)
 			recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/accounts/%d", tc.accountID)
+			url := fmt.Sprintf("/accounts/delete/%d", tc.accountID)
 			request := httptest.NewRequest("DELETE", url, nil)
 
 			server.router.ServeHTTP(recorder, request)

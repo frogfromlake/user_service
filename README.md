@@ -31,7 +31,7 @@ Currently working on: Providing API
 5. **Strengthen Unit Tests:** Custom gomock matcher
 8. **Implement Login User API:** PASETO + Auth Middleware (Gin)
 6. **Middleware:** Authentication middleware, authorization rules gin
-7. **Storing sensitive Data:** Hashing with Bcrypt
+7. **Storing sensitive Data:** Hashing with Argon2 ✅
 8. **Refactoring:** Unifying codebase, improve security of codebase and
    improve performance of db interactions and api ✔️
 

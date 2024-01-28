@@ -39,7 +39,7 @@ type UserSvcAccountTypesAccount struct {
 }
 
 type UserSvcUser struct {
-	ID                pgtype.Int8        `json:"id"`
+	ID                int64              `json:"id"`
 	Username          string             `json:"username"`
 	FullName          string             `json:"full_name"`
 	Email             string             `json:"email"`

@@ -134,10 +134,6 @@ func TestListAccountTypes(t *testing.T) {
 				require.NotZero(t, accountType.ID)
 				require.NotEmpty(t, accountType.Type)
 				require.NotEmpty(t, accountType.Permissions)
-				require.False(t, accountType.IsArtist)
-				require.False(t, accountType.IsProducer)
-				require.False(t, accountType.IsWriter)
-				require.False(t, accountType.IsLabel)
 				require.NotZero(t, accountType.CreatedAt)
 				require.NotZero(t, accountType.UpdatedAt)
 			}

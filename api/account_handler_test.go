@@ -21,18 +21,18 @@ import (
 
 func createAccountParamsToBody(params db.CreateAccountTxParams) gin.H {
 	return gin.H{
-		"account_type_ids": params.AccountTypeIDs,
-		"owner":            params.AccountParams.Owner,
-		"avatar_uri":       params.AccountParams.AvatarUrl,
+		"owner":         params.AccountParams.Owner,
+		"account_type": params.AccountParams.AccountType,
+		"avatar_uri":    params.AccountParams.AvatarUri,
 	}
 }
 
 func createRandomAccountParamsAndReturns() (db.CreateAccountTxParams, db.CreateAccountTxResult) {
 	createAccTxParams := db.CreateAccountTxParams{
-		AccountTypeIDs: []int64{1, 2},
 		AccountParams: db.CreateAccountParams{
-			Owner:     util.RandomUsername(),
-			AvatarUrl: util.ConvertToText("http://example.com/avatar.png"),
+			Owner:       util.RandomUsername(),
+			AccountType: 1,
+			AvatarUri:   util.ConvertToText("http://example.com/avatar.png"),
 		},
 	}
 
@@ -40,11 +40,10 @@ func createRandomAccountParamsAndReturns() (db.CreateAccountTxParams, db.CreateA
 		Account: &db.CreateAccountRow{
 			ID:        util.RandomInt(1, 1000),
 			Owner:     createAccTxParams.AccountParams.Owner,
-			AvatarUrl: createAccTxParams.AccountParams.AvatarUrl,
+			AvatarUri: createAccTxParams.AccountParams.AvatarUri,
 			CreatedAt: util.ConvertToTimestamptz(util.RandomDate()),
 			UpdatedAt: util.ConvertToTimestamptz(util.RandomDate()),
 		},
-		AccountTypeIDs: []int64{1, 2},
 	}
 	return createAccTxParams, createAccTxReturn
 }
@@ -477,7 +476,7 @@ func UpdateAccountParamsToBody(params db.UpdateAccountParams) gin.H {
 	return gin.H{
 		"id":         params.ID,
 		"username":   params.Owner,
-		"avatar_url": params.AvatarUrl,
+		"avatar_url": params.AvatarUri,
 		"plays":      params.Plays,
 		"likes":      params.Likes,
 		"follows":    params.Follows,
@@ -490,7 +489,7 @@ func TestUpdateAccountAPI(t *testing.T) {
 	updateAccParams := db.UpdateAccountParams{
 		ID:        account.ID,
 		Owner:     util.RandomUsername(),
-		AvatarUrl: util.ConvertToText("http://example.com/avatar.png"),
+		AvatarUri: util.ConvertToText("http://example.com/avatar.png"),
 		Plays:     1,
 		Likes:     1,
 		Follows:   1,
@@ -697,7 +696,7 @@ func randomAccount() db.UserSvcAccount {
 	return db.UserSvcAccount{
 		ID:        util.RandomInt(1, 1000),
 		Owner:     util.RandomUsername(),
-		AvatarUrl: util.ConvertToText("http://example.com/avatar.png"),
+		AvatarUri: util.ConvertToText("http://example.com/avatar.png"),
 		Plays:     0,
 		Likes:     0,
 		Follows:   0,
@@ -724,7 +723,7 @@ func randomAccountFromID() db.UserSvcAccount {
 	return db.UserSvcAccount{
 		ID:        util.RandomInt(1, 1000),
 		Owner:     util.RandomUsername(),
-		AvatarUrl: util.ConvertToText("http://example.com/avatar.png"),
+		AvatarUri: util.ConvertToText("http://example.com/avatar.png"),
 		Plays:     0,
 		Likes:     0,
 		Follows:   0,

@@ -63,14 +63,14 @@ func InitializeDatabase(store db.Store) error {
 	}
 
 	// Convert accountTypesInDB into a map for faster lookup
-	accountTypesMap := make(map[int64]bool)
+	accountTypesMap := make(map[int32]bool)
 	for _, accountTypeInDB := range accountTypesInDB {
 		accountTypesMap[accountTypeInDB.ID] = true
 	}
 
 	var errs []error
 	for _, accountType := range accountTypes {
-		if !accountTypesMap[accountType.ID] {
+		if !accountTypesMap[int32(accountType.ID)] {
 			_, err := store.CreateAccountType(context.Background(), db.CreateAccountTypeParams{
 				Type:        accountType.Type,
 				Permissions: accountType.Permissions,

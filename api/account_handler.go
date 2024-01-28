@@ -6,7 +6,9 @@ import (
 	"net/http"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
+	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -25,9 +27,9 @@ TODO:
 2. Adding or deleting account types:
 */
 type createAccountRequest struct {
-	AccountTypeIDs []int64     `json:"account_type_ids" binding:"required,min=1,acctype"`
-	Owner          string      `json:"owner" binding:"required,min=3"`
-	AvatarUri      pgtype.Text `json:"avatar_uri"` // tag: uri
+	Owner       string `json:"owner" binding:"required,min=3"`
+	AccountType int32  `json:"account_type" binding:"required,min=1,acctype"`
+	AvatarUri   string `json:"avatar_uri" binding:"uri"`
 }
 
 func (server *Server) createAccount(ctx *gin.Context) {
@@ -38,15 +40,21 @@ func (server *Server) createAccount(ctx *gin.Context) {
 	}
 
 	arg := db.CreateAccountTxParams{
-		AccountTypeIDs: req.AccountTypeIDs,
 		AccountParams: db.CreateAccountParams{
-			Owner:     req.Owner,
-			AvatarUrl: req.AvatarUri,
+			Owner:       req.Owner,
+			AccountType: req.AccountType,
+			AvatarUri:   util.ConvertToText(req.AvatarUri),
 		},
 	}
 
 	account, err := server.store.CreateAccountTx(ctx, arg)
 	if err != nil {
+		if pqError, ok := err.(*pgconn.PgError); ok {
+			if pqError.ConstraintName == "Accounts_account_type_key" || pqError.ConstraintName == "Accounts_owner_fkey" {
+				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				return
+			}
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -167,7 +175,7 @@ type updateAccountURI struct {
 
 type updateAccountRequest struct {
 	Owner     string      `json:"username" binding:"omitempty,min=3"`
-	AvatarUrl pgtype.Text `json:"avatar_url" binding:"omitempty"`
+	AvatarUri pgtype.Text `json:"avatar_url" binding:"omitempty"`
 	Plays     int64       `json:"plays" binding:"omitempty"`
 	Likes     int64       `json:"likes" binding:"omitempty"`
 	Follows   int64       `json:"follows" binding:"omitempty"`
@@ -191,7 +199,7 @@ func (server *Server) updateAccount(ctx *gin.Context) {
 	arg := db.UpdateAccountParams{
 		ID:        uri.ID,
 		Owner:     req.Owner,
-		AvatarUrl: req.AvatarUrl,
+		AvatarUri: req.AvatarUri,
 		Plays:     req.Plays,
 		Likes:     req.Likes,
 		Follows:   req.Follows,
@@ -206,41 +214,6 @@ func (server *Server) updateAccount(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, account)
 }
-
-// type updateAccountPasswordURI struct {
-// 	ID int64 `uri:"id" binding:"required,min=1"`
-// }
-
-// type updateAccountPasswordRequest struct {
-// 	PasswordHash string `json:"password_hash" binding:"required,min=8"`
-// }
-
-// func (server *Server) updateAccountPassword(ctx *gin.Context) {
-// 	var uri updateAccountPasswordURI
-// 	var req updateAccountPasswordRequest
-
-// 	if err := ctx.ShouldBindUri(&uri); err != nil {
-// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-// 		return
-// 	}
-
-// 	if err := ctx.ShouldBindJSON(&req); err != nil {
-// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-// 		return
-// 	}
-
-// 	arg := db.UpdateAccountPasswordParams{
-// 		ID: uri.ID,
-// 	}
-
-// 	account, err := server.store.UpdateAccountPassword(ctx, arg)
-// 	if err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-// 		return
-// 	}
-
-// 	ctx.JSON(http.StatusOK, account)
-// }
 
 type deleteAccountRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`

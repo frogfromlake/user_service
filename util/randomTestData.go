@@ -69,7 +69,7 @@ func RandomEmail(r ...*rand.Rand) string {
 // RandomPasswordHash generates a random password hash
 // If an optional *rand.Rand instance is provided, it is used to generate the random password hash.
 // Otherwise, a new *rand.Rand instance is created using the current time as a seed.
-func RandomPasswordHash(r ...*rand.Rand) string {
+func RandomPassword(r ...*rand.Rand) string {
 	return RandomString(8, r...)
 }
 

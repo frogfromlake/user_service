@@ -16,7 +16,7 @@ const (
 )
 
 type AccountType struct {
-	ID          int64
+	ID          int32
 	Type        string
 	Permissions []byte
 	IsArtist    bool

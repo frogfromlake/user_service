@@ -1,6 +1,6 @@
 CREATE TABLE "user_svc"."Users" (
-  "id" bigserial,
-  "username" varchar PRIMARY KEY NOT NULL,
+  "id" bigserial PRIMARY KEY,
+  "username" varchar UNIQUE NOT NULL,
   "full_name" varchar NOT NULL,
   "email" varchar UNIQUE NOT NULL,
   "password_hash" varchar NOT NULL,

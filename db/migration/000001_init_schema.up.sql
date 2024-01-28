@@ -2,8 +2,9 @@ CREATE SCHEMA "user_svc";
 
 CREATE TABLE "user_svc"."Accounts" (
   "id" bigserial PRIMARY KEY,
+  "account_type" int UNIQUE NOT NULL,
   "owner" varchar NOT NULL,
-  "avatar_url" varchar,
+  "avatar_uri" varchar,
   "plays" bigint NOT NULL DEFAULT 0,
   "likes" bigint NOT NULL DEFAULT 0,
   "follows" bigint NOT NULL DEFAULT 0,
@@ -13,7 +14,7 @@ CREATE TABLE "user_svc"."Accounts" (
 );
 
 CREATE TABLE "user_svc"."AccountTypes" (
-  "id" bigserial PRIMARY KEY,
+  "id" serial PRIMARY KEY,
   "type" varchar UNIQUE NOT NULL,
   "permissions" jsonb NOT NULL,
   "is_artist" boolean NOT NULL DEFAULT false,
@@ -30,9 +31,8 @@ CREATE INDEX "idx_acc_owner" ON "user_svc"."Accounts" ("owner");
 
 CREATE INDEX "idx_accType_id" ON "user_svc"."AccountTypes" ("id");
 
-
 CREATE TABLE "user_svc"."AccountTypes_Accounts" (
-  "AccountTypes_id" bigserial,
+  "AccountTypes_id" serial,
   "Accounts_id" bigserial,
   PRIMARY KEY ("AccountTypes_id", "Accounts_id")
 );
@@ -41,3 +41,4 @@ ALTER TABLE "user_svc"."AccountTypes_Accounts" ADD FOREIGN KEY ("AccountTypes_id
 
 ALTER TABLE "user_svc"."AccountTypes_Accounts" ADD FOREIGN KEY ("Accounts_id") REFERENCES "user_svc"."Accounts" ("id");
 
+ALTER TABLE "user_svc"."Accounts" ADD CONSTRAINT "unique_account" UNIQUE ("owner", "account_type");

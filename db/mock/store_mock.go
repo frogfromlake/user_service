@@ -101,10 +101,10 @@ func (mr *MockStoreMockRecorder) CreateAccountType(ctx, arg any) *gomock.Call {
 }
 
 // CreateUser mocks base method.
-func (m *MockStore) CreateUser(ctx context.Context, arg db.CreateUserParams) (db.CreateUserRow, error) {
+func (m *MockStore) CreateUser(ctx context.Context, arg db.CreateUserParams) (db.UserSvcUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", ctx, arg)
-	ret0, _ := ret[0].(db.CreateUserRow)
+	ret0, _ := ret[0].(db.UserSvcUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -247,10 +247,10 @@ func (mr *MockStoreMockRecorder) GetAccountsForAccountType(ctx, accounttypesID a
 }
 
 // GetUserByID mocks base method.
-func (m *MockStore) GetUserByID(ctx context.Context, id int64) (db.GetUserByIDRow, error) {
+func (m *MockStore) GetUserByID(ctx context.Context, id int64) (db.UserSvcUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserByID", ctx, id)
-	ret0, _ := ret[0].(db.GetUserByIDRow)
+	ret0, _ := ret[0].(db.UserSvcUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -262,10 +262,10 @@ func (mr *MockStoreMockRecorder) GetUserByID(ctx, id any) *gomock.Call {
 }
 
 // GetUserByUsername mocks base method.
-func (m *MockStore) GetUserByUsername(ctx context.Context, username string) (db.GetUserByUsernameRow, error) {
+func (m *MockStore) GetUserByUsername(ctx context.Context, username string) (db.UserSvcUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserByUsername", ctx, username)
-	ret0, _ := ret[0].(db.GetUserByUsernameRow)
+	ret0, _ := ret[0].(db.UserSvcUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

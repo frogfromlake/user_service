@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // Server serves HTTP requests for the streamfair backend service.
@@ -26,7 +27,7 @@ func NewServer(store db.Store) *Server {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("acctype", validAccountTypes)
 	}
-	
+
 	router.GET("/readiness", server.readinessCheck)
 
 	router.POST("/users", server.createUser)
@@ -114,5 +115,19 @@ func InitializeDatabase(store db.Store) error {
 }
 
 func errorResponse(err error) gin.H {
-	return gin.H{"error": err.Error()}
+    switch err := err.(type) {
+    case *pgconn.PgError:
+        // Handle pgconn.PgError
+        switch err.Code {
+        case "23505": // unique_violation
+            return gin.H{"error": fmt.Sprintf("Unique violation error: %v: %v", err.Message, err.Hint)}
+        case "23503": // foreign_key_violation
+            return gin.H{"error": fmt.Sprintf("Foreign key violation error: %v: %v", err.Message, err.Hint)}
+        default:
+            return gin.H{"error": fmt.Sprintf("error: %v", err.Message)}
+        }
+    default:
+        // Handle other types of errors
+        return gin.H{"error": err.Error()}
+    }
 }

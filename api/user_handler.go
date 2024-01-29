@@ -10,6 +10,7 @@ import (
 	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type createUserRequest struct {
@@ -18,6 +19,18 @@ type createUserRequest struct {
 	Email       string `json:"email" binding:"required,email"`
 	Password    string `json:"password" binding:"required,min=8,max=64"`
 	CountryCode string `json:"country_code" binding:"required,iso3166_1_alpha2"`
+}
+type createUserResponse struct {
+	ID                int64              `json:"id"`
+	Username          string             `json:"username"`
+	FullName          string             `json:"full_name"`
+	Email             string             `json:"email"`
+	CountryCode       string             `json:"country_code"`
+	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
+	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
+	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (server *Server) createUser(ctx *gin.Context) {
@@ -33,12 +46,14 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 	hashedPassword := base64.StdEncoding.EncodeToString(byteHash.Hash)
-
+	passwordSalt := base64.StdEncoding.EncodeToString(byteHash.Salt)
+	
 	arg := db.CreateUserParams{
 		Username:     req.Username,
 		FullName:     req.FullName,
 		Email:        req.Email,
 		PasswordHash: hashedPassword,
+		PasswordSalt: passwordSalt,
 		CountryCode:  req.CountryCode,
 	}
 
@@ -59,12 +74,35 @@ func (server *Server) createUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	ctx.JSON(http.StatusOK, user)
+	rsp := createUserResponse{
+		ID:                user.ID,
+		Username:          user.Username,
+		FullName:          user.FullName,
+		Email:             user.Email,
+		CountryCode:       user.CountryCode,
+		UsernameChangedAt: user.UsernameChangedAt,
+		EmailChangedAt:    user.EmailChangedAt,
+		PasswordChangedAt: user.PasswordChangedAt,
+		CreatedAt:         user.CreatedAt,
+		UpdatedAt:         user.UpdatedAt,
+	}
+	ctx.JSON(http.StatusOK, rsp)
 }
 
 type getUserByIDRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
+}
+type getUserByIDResponse struct {
+	ID                int64              `json:"id"`
+	Username          string             `json:"username"`
+	FullName          string             `json:"full_name"`
+	Email             string             `json:"email"`
+	CountryCode       string             `json:"country_code"`
+	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
+	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
+	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (server *Server) getUserByID(ctx *gin.Context) {
@@ -83,12 +121,35 @@ func (server *Server) getUserByID(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	ctx.JSON(http.StatusOK, user)
+	rsp := getUserByIDResponse{
+		ID:                user.ID,
+		Username:          user.Username,
+		FullName:          user.FullName,
+		Email:             user.Email,
+		CountryCode:       user.CountryCode,
+		UsernameChangedAt: user.UsernameChangedAt,
+		EmailChangedAt:    user.EmailChangedAt,
+		PasswordChangedAt: user.PasswordChangedAt,
+		CreatedAt:         user.CreatedAt,
+		UpdatedAt:         user.UpdatedAt,
+	}
+	ctx.JSON(http.StatusOK, rsp)
 }
 
 type getUserByUsernameRequest struct {
 	Username string `uri:"username" binding:"required,min=3"`
+}
+type getUserByUsernameResponse struct {
+	ID                int64              `json:"id"`
+	Username          string             `json:"username"`
+	FullName          string             `json:"full_name"`
+	Email             string             `json:"email"`
+	CountryCode       string             `json:"country_code"`
+	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
+	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
+	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (server *Server) getUserByUsername(ctx *gin.Context) {
@@ -107,8 +168,19 @@ func (server *Server) getUserByUsername(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-
-	ctx.JSON(http.StatusOK, user)
+	rsp := getUserByUsernameResponse{
+		ID:                user.ID,
+		Username:          user.Username,
+		FullName:          user.FullName,
+		Email:             user.Email,
+		CountryCode:       user.CountryCode,
+		UsernameChangedAt: user.UsernameChangedAt,
+		EmailChangedAt:    user.EmailChangedAt,
+		PasswordChangedAt: user.PasswordChangedAt,
+		CreatedAt:         user.CreatedAt,
+		UpdatedAt:         user.UpdatedAt,
+	}
+	ctx.JSON(http.StatusOK, rsp)
 }
 
 type listUsersRequest struct {
@@ -268,10 +340,12 @@ func (server *Server) updateUserPassword(ctx *gin.Context) {
 		return
 	}
 	hashedPassword := base64.StdEncoding.EncodeToString(byteHash.Hash)
+	passwordSalt := base64.StdEncoding.EncodeToString(byteHash.Salt)
 
 	arg := db.UpdateUserPasswordParams{
 		ID:           uri.ID,
 		PasswordHash: hashedPassword,
+		PasswordSalt: passwordSalt,
 	}
 
 	user, err := server.store.UpdateUserPassword(ctx, arg)
@@ -282,7 +356,6 @@ func (server *Server) updateUserPassword(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, user)
 }
-
 
 type deleteUserRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`

@@ -4,40 +4,19 @@ INSERT INTO "user_svc"."Users" (
  full_name,
  email,
  password_hash,
+ password_salt,
  country_code
 ) VALUES (
- $1, $2, $3, $4, $5
+ $1, $2, $3, $4, $5 , $6
 )
-RETURNING id, username, full_name, email, country_code, created_at;
+RETURNING *;
 
 -- name: GetUserByUsername :one
-SELECT
- id,
- username,
- full_name,
- email,
- country_code,
- username_changed_at,
- email_changed_at,
- password_changed_at,
- created_at,
- updated_at
-FROM "user_svc"."Users"
+SELECT * FROM "user_svc"."Users"
 WHERE username = $1 LIMIT 1;
 
 -- name: GetUserByID :one
-SELECT
- id,
- username,
- full_name,
- email,
- country_code,
- username_changed_at,
- email_changed_at,
- password_changed_at,
- created_at,
- updated_at
-FROM "user_svc"."Users"
+SELECT * FROM "user_svc"."Users"
 WHERE id = $1 LIMIT 1;
 
 -- name: ListUsers :many
@@ -65,10 +44,11 @@ RETURNING email, email_changed_at, updated_at;
 -- name: UpdateUserPassword :one
 UPDATE "user_svc"."Users"
 SET password_hash = COALESCE($2, password_hash),
+    password_salt = COALESCE($3, password_salt),
     password_changed_at = NOW(),
     updated_at = NOW()
 WHERE id = $1
-RETURNING password_hash, password_changed_at, updated_at;
+RETURNING password_hash, password_salt, password_changed_at, updated_at;
 
 -- name: UpdateUsername :one
 UPDATE "user_svc"."Users"

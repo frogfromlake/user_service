@@ -4,6 +4,7 @@ CREATE TABLE "user_svc"."Users" (
   "full_name" varchar NOT NULL,
   "email" varchar UNIQUE NOT NULL,
   "password_hash" varchar NOT NULL,
+  "password_salt" varchar NOT NULL,
   "country_code" varchar NOT NULL,
   "username_changed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
   "email_changed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',

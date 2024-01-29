@@ -10,9 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomUser(t *testing.T) CreateUserRow {
+func createRandomUser(t *testing.T) UserSvcUser {
 	byteHash, err := util.HashPassword(util.RandomPassword())
 	hashedPassword := base64.StdEncoding.EncodeToString(byteHash.Hash)
+	passwordSalt := base64.StdEncoding.EncodeToString(byteHash.Salt)
 	require.NoError(t, err)
 
 	arg := CreateUserParams{
@@ -20,6 +21,7 @@ func createRandomUser(t *testing.T) CreateUserRow {
 		FullName:     util.RandomString(12),
 		Email:        util.RandomEmail(),
 		PasswordHash: hashedPassword,
+		PasswordSalt: passwordSalt,
 		CountryCode:  util.RandomCountryCode(),
 	}
 
@@ -30,32 +32,20 @@ func createRandomUser(t *testing.T) CreateUserRow {
 	require.Equal(t, arg.Username, user.Username)
 	require.Equal(t, arg.FullName, user.FullName)
 	require.Equal(t, arg.Email, user.Email)
+	require.NotEmpty(t, user.PasswordHash)
+	require.NotEmpty(t, user.PasswordSalt)
 	require.Equal(t, arg.CountryCode, user.CountryCode)
+	require.True(t, user.UsernameChangedAt.Time.IsZero())
+	require.True(t, user.EmailChangedAt.Time.IsZero())
+	require.True(t, user.PasswordChangedAt.Time.IsZero())
 	require.WithinDuration(t, time.Now(), user.CreatedAt.Time, time.Second)
+	require.WithinDuration(t, time.Now(), user.UpdatedAt.Time, time.Second)
 
 	return user
 }
 
 func TestCreateUser(t *testing.T) {
 	createRandomUser(t)
-}
-
-func TestGetUserByUsername(t *testing.T) {
-	user := createRandomUser(t)
-
-	fetchedUser, err := testQueries.GetUserByUsername(context.Background(), user.Username)
-	require.NoError(t, err)
-	require.NotEmpty(t, fetchedUser)
-	require.Equal(t, user.ID, fetchedUser.ID)
-	require.Equal(t, user.Username, fetchedUser.Username)
-	require.Equal(t, user.FullName, fetchedUser.FullName)
-	require.Equal(t, user.Email, fetchedUser.Email)
-	require.Equal(t, user.CountryCode, fetchedUser.CountryCode)
-	require.True(t, fetchedUser.UsernameChangedAt.Time.IsZero())
-	require.True(t, fetchedUser.EmailChangedAt.Time.IsZero())
-	require.True(t, fetchedUser.PasswordChangedAt.Time.IsZero())
-	require.WithinDuration(t, user.CreatedAt.Time, fetchedUser.CreatedAt.Time, time.Second)
-	require.WithinDuration(t, time.Now(), fetchedUser.UpdatedAt.Time, time.Second)
 }
 
 func TestGetUserByID(t *testing.T) {
@@ -68,6 +58,28 @@ func TestGetUserByID(t *testing.T) {
 	require.Equal(t, user.Username, fetchedUser.Username)
 	require.Equal(t, user.FullName, fetchedUser.FullName)
 	require.Equal(t, user.Email, fetchedUser.Email)
+	require.NotEmpty(t, fetchedUser.PasswordHash)
+	require.NotEmpty(t, fetchedUser.PasswordSalt)
+	require.Equal(t, user.CountryCode, fetchedUser.CountryCode)
+	require.True(t, fetchedUser.UsernameChangedAt.Time.IsZero())
+	require.True(t, fetchedUser.EmailChangedAt.Time.IsZero())
+	require.True(t, fetchedUser.PasswordChangedAt.Time.IsZero())
+	require.WithinDuration(t, user.CreatedAt.Time, fetchedUser.CreatedAt.Time, time.Second)
+	require.WithinDuration(t, time.Now(), fetchedUser.UpdatedAt.Time, time.Second)
+}
+
+func TestGetUserByUsername(t *testing.T) {
+	user := createRandomUser(t)
+
+	fetchedUser, err := testQueries.GetUserByUsername(context.Background(), user.Username)
+	require.NoError(t, err)
+	require.NotEmpty(t, fetchedUser)
+	require.Equal(t, user.ID, fetchedUser.ID)
+	require.Equal(t, user.Username, fetchedUser.Username)
+	require.Equal(t, user.FullName, fetchedUser.FullName)
+	require.Equal(t, user.Email, fetchedUser.Email)
+	require.NotEmpty(t, fetchedUser.PasswordHash)
+	require.NotEmpty(t, fetchedUser.PasswordSalt)
 	require.Equal(t, user.CountryCode, fetchedUser.CountryCode)
 	require.True(t, fetchedUser.UsernameChangedAt.Time.IsZero())
 	require.True(t, fetchedUser.EmailChangedAt.Time.IsZero())
@@ -135,17 +147,20 @@ func TestUpdateUserPassword(t *testing.T) {
 
 	byteHash, err := util.HashPassword(util.RandomPassword())
 	hashedPassword := base64.StdEncoding.EncodeToString(byteHash.Hash)
+	passwordSalt := base64.StdEncoding.EncodeToString(byteHash.Salt)
 	require.NoError(t, err)
 
 	arg := UpdateUserPasswordParams{
 		ID: user.ID,
 		PasswordHash: hashedPassword,
+		PasswordSalt: passwordSalt,
 	}
 
 	updatedUser, err := testQueries.UpdateUserPassword(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, updatedUser)
 	require.NotEmpty(t, updatedUser.PasswordHash)
+	require.NotEmpty(t, updatedUser.PasswordSalt)
 	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt.Time, time.Minute)
 	require.WithinDuration(t, time.Now(), updatedUser.PasswordChangedAt.Time, time.Minute)
 }

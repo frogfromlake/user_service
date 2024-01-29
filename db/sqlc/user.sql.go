@@ -17,11 +17,12 @@ INSERT INTO "user_svc"."Users" (
  full_name,
  email,
  password_hash,
+ password_salt,
  country_code
 ) VALUES (
- $1, $2, $3, $4, $5
+ $1, $2, $3, $4, $5 , $6
 )
-RETURNING id, username, full_name, email, country_code, created_at
+RETURNING id, username, full_name, email, password_hash, password_salt, country_code, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -29,34 +30,33 @@ type CreateUserParams struct {
 	FullName     string `json:"full_name"`
 	Email        string `json:"email"`
 	PasswordHash string `json:"password_hash"`
+	PasswordSalt string `json:"password_salt"`
 	CountryCode  string `json:"country_code"`
 }
 
-type CreateUserRow struct {
-	ID          int64              `json:"id"`
-	Username    string             `json:"username"`
-	FullName    string             `json:"full_name"`
-	Email       string             `json:"email"`
-	CountryCode string             `json:"country_code"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-}
-
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (UserSvcUser, error) {
 	row := q.db.QueryRow(ctx, createUser,
 		arg.Username,
 		arg.FullName,
 		arg.Email,
 		arg.PasswordHash,
+		arg.PasswordSalt,
 		arg.CountryCode,
 	)
-	var i CreateUserRow
+	var i UserSvcUser
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
 		&i.FullName,
 		&i.Email,
+		&i.PasswordHash,
+		&i.PasswordSalt,
 		&i.CountryCode,
+		&i.UsernameChangedAt,
+		&i.EmailChangedAt,
+		&i.PasswordChangedAt,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -72,42 +72,20 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT
- id,
- username,
- full_name,
- email,
- country_code,
- username_changed_at,
- email_changed_at,
- password_changed_at,
- created_at,
- updated_at
-FROM "user_svc"."Users"
+SELECT id, username, full_name, email, password_hash, password_salt, country_code, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at FROM "user_svc"."Users"
 WHERE id = $1 LIMIT 1
 `
 
-type GetUserByIDRow struct {
-	ID                int64              `json:"id"`
-	Username          string             `json:"username"`
-	FullName          string             `json:"full_name"`
-	Email             string             `json:"email"`
-	CountryCode       string             `json:"country_code"`
-	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
-	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
-	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error) {
+func (q *Queries) GetUserByID(ctx context.Context, id int64) (UserSvcUser, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
-	var i GetUserByIDRow
+	var i UserSvcUser
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
 		&i.FullName,
 		&i.Email,
+		&i.PasswordHash,
+		&i.PasswordSalt,
 		&i.CountryCode,
 		&i.UsernameChangedAt,
 		&i.EmailChangedAt,
@@ -119,42 +97,20 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, er
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT
- id,
- username,
- full_name,
- email,
- country_code,
- username_changed_at,
- email_changed_at,
- password_changed_at,
- created_at,
- updated_at
-FROM "user_svc"."Users"
+SELECT id, username, full_name, email, password_hash, password_salt, country_code, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at FROM "user_svc"."Users"
 WHERE username = $1 LIMIT 1
 `
 
-type GetUserByUsernameRow struct {
-	ID                int64              `json:"id"`
-	Username          string             `json:"username"`
-	FullName          string             `json:"full_name"`
-	Email             string             `json:"email"`
-	CountryCode       string             `json:"country_code"`
-	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
-	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
-	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) GetUserByUsername(ctx context.Context, username string) (GetUserByUsernameRow, error) {
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (UserSvcUser, error) {
 	row := q.db.QueryRow(ctx, getUserByUsername, username)
-	var i GetUserByUsernameRow
+	var i UserSvcUser
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
 		&i.FullName,
 		&i.Email,
+		&i.PasswordHash,
+		&i.PasswordSalt,
 		&i.CountryCode,
 		&i.UsernameChangedAt,
 		&i.EmailChangedAt,
@@ -281,27 +237,35 @@ func (q *Queries) UpdateUserEmail(ctx context.Context, arg UpdateUserEmailParams
 const updateUserPassword = `-- name: UpdateUserPassword :one
 UPDATE "user_svc"."Users"
 SET password_hash = COALESCE($2, password_hash),
+    password_salt = COALESCE($3, password_salt),
     password_changed_at = NOW(),
     updated_at = NOW()
 WHERE id = $1
-RETURNING password_hash, password_changed_at, updated_at
+RETURNING password_hash, password_salt, password_changed_at, updated_at
 `
 
 type UpdateUserPasswordParams struct {
 	ID           int64  `json:"id"`
 	PasswordHash string `json:"password_hash"`
+	PasswordSalt string `json:"password_salt"`
 }
 
 type UpdateUserPasswordRow struct {
 	PasswordHash      string             `json:"password_hash"`
+	PasswordSalt      string             `json:"password_salt"`
 	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (UpdateUserPasswordRow, error) {
-	row := q.db.QueryRow(ctx, updateUserPassword, arg.ID, arg.PasswordHash)
+	row := q.db.QueryRow(ctx, updateUserPassword, arg.ID, arg.PasswordHash, arg.PasswordSalt)
 	var i UpdateUserPasswordRow
-	err := row.Scan(&i.PasswordHash, &i.PasswordChangedAt, &i.UpdatedAt)
+	err := row.Scan(
+		&i.PasswordHash,
+		&i.PasswordSalt,
+		&i.PasswordChangedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }
 

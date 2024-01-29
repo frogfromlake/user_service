@@ -12,7 +12,7 @@ type Querier interface {
 	AddAccountTypeToAccount(ctx context.Context, arg AddAccountTypeToAccountParams) error
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (CreateAccountRow, error)
 	CreateAccountType(ctx context.Context, arg CreateAccountTypeParams) (UserSvcAccountType, error)
-	CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (UserSvcUser, error)
 	DeleteAccount(ctx context.Context, id int64) error
 	DeleteAccountType(ctx context.Context, id int32) error
 	DeleteUser(ctx context.Context, id int64) error
@@ -21,8 +21,8 @@ type Querier interface {
 	GetAccountType(ctx context.Context, id int32) (UserSvcAccountType, error)
 	GetAccountTypesForAccount(ctx context.Context, accountsID int64) ([]UserSvcAccountType, error)
 	GetAccountsForAccountType(ctx context.Context, accounttypesID int32) ([]UserSvcAccount, error)
-	GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error)
-	GetUserByUsername(ctx context.Context, username string) (GetUserByUsernameRow, error)
+	GetUserByID(ctx context.Context, id int64) (UserSvcUser, error)
+	GetUserByUsername(ctx context.Context, username string) (UserSvcUser, error)
 	ListAccountTypes(ctx context.Context, arg ListAccountTypesParams) ([]UserSvcAccountType, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error)

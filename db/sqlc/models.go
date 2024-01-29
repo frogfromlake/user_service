@@ -44,6 +44,7 @@ type UserSvcUser struct {
 	FullName          string             `json:"full_name"`
 	Email             string             `json:"email"`
 	PasswordHash      string             `json:"password_hash"`
+	PasswordSalt      string             `json:"password_salt"`
 	CountryCode       string             `json:"country_code"`
 	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
 	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`

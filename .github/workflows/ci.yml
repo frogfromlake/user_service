@@ -21,6 +21,8 @@ jobs:
     env:
       APP_DB_SOURCE_USER_SERVICE: ${{ secrets.DB_SOURCE_USER_SERVICE }}
       APP_SERVER_ADDRESS_USER_SERVICE: ${{ secrets.SERVER_ADDRESS_USER_SERVICE }}
+      APP_ACCESS_TOKEN_DURATION: ${{ secrets.ACCESS_TOKEN_DURATION }}
+      APP_REFRESH_TOKEN_DURATION: ${{ secrets.REFRESH_TOKEN_DURATION }}
     services:
       postgres:
         image: postgres:16

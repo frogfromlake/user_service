@@ -18,20 +18,24 @@ INSERT INTO "user_svc"."Users" (
  email,
  password_hash,
  password_salt,
- country_code
+ country_code,
+ role_id,
+ status
 ) VALUES (
- $1, $2, $3, $4, $5 , $6
+ $1, $2, $3, $4, $5 , $6, $7, $8
 )
-RETURNING id, username, full_name, email, password_hash, password_salt, country_code, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at
+RETURNING id, username, full_name, email, password_hash, password_salt, country_code, role_id, status, last_login_at, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	Username     string `json:"username"`
-	FullName     string `json:"full_name"`
-	Email        string `json:"email"`
-	PasswordHash string `json:"password_hash"`
-	PasswordSalt string `json:"password_salt"`
-	CountryCode  string `json:"country_code"`
+	Username     string      `json:"username"`
+	FullName     string      `json:"full_name"`
+	Email        string      `json:"email"`
+	PasswordHash string      `json:"password_hash"`
+	PasswordSalt string      `json:"password_salt"`
+	CountryCode  string      `json:"country_code"`
+	RoleID       pgtype.Int8 `json:"role_id"`
+	Status       pgtype.Text `json:"status"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (UserSvcUser, error) {
@@ -42,6 +46,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (UserSvc
 		arg.PasswordHash,
 		arg.PasswordSalt,
 		arg.CountryCode,
+		arg.RoleID,
+		arg.Status,
 	)
 	var i UserSvcUser
 	err := row.Scan(
@@ -52,6 +58,9 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (UserSvc
 		&i.PasswordHash,
 		&i.PasswordSalt,
 		&i.CountryCode,
+		&i.RoleID,
+		&i.Status,
+		&i.LastLoginAt,
 		&i.UsernameChangedAt,
 		&i.EmailChangedAt,
 		&i.PasswordChangedAt,
@@ -72,7 +81,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, username, full_name, email, password_hash, password_salt, country_code, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at FROM "user_svc"."Users"
+SELECT id, username, full_name, email, password_hash, password_salt, country_code, role_id, status, last_login_at, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at FROM "user_svc"."Users"
 WHERE id = $1 LIMIT 1
 `
 
@@ -87,6 +96,9 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (UserSvcUser, error
 		&i.PasswordHash,
 		&i.PasswordSalt,
 		&i.CountryCode,
+		&i.RoleID,
+		&i.Status,
+		&i.LastLoginAt,
 		&i.UsernameChangedAt,
 		&i.EmailChangedAt,
 		&i.PasswordChangedAt,
@@ -97,7 +109,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (UserSvcUser, error
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, full_name, email, password_hash, password_salt, country_code, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at FROM "user_svc"."Users"
+SELECT id, username, full_name, email, password_hash, password_salt, country_code, role_id, status, last_login_at, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at FROM "user_svc"."Users"
 WHERE username = $1 LIMIT 1
 `
 
@@ -112,6 +124,9 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (UserS
 		&i.PasswordHash,
 		&i.PasswordSalt,
 		&i.CountryCode,
+		&i.RoleID,
+		&i.Status,
+		&i.LastLoginAt,
 		&i.UsernameChangedAt,
 		&i.EmailChangedAt,
 		&i.PasswordChangedAt,
@@ -128,6 +143,9 @@ SELECT
  full_name,
  email,
  country_code,
+ role_id,
+ status,
+ last_login_at,
  created_at,
  updated_at
 FROM "user_svc"."Users"
@@ -147,6 +165,9 @@ type ListUsersRow struct {
 	FullName    string             `json:"full_name"`
 	Email       string             `json:"email"`
 	CountryCode string             `json:"country_code"`
+	RoleID      pgtype.Int8        `json:"role_id"`
+	Status      pgtype.Text        `json:"status"`
+	LastLoginAt pgtype.Timestamptz `json:"last_login_at"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
@@ -166,6 +187,9 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUse
 			&i.FullName,
 			&i.Email,
 			&i.CountryCode,
+			&i.RoleID,
+			&i.Status,
+			&i.LastLoginAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -181,29 +205,54 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUse
 
 const updateUser = `-- name: UpdateUser :one
 UPDATE "user_svc"."Users"
-SET full_name = COALESCE($2, full_name),
-    country_code = COALESCE($3, country_code),
+SET username = COALESCE($2, username),
+    full_name = COALESCE($3, full_name),
+    country_code = COALESCE($4, country_code),
+    role_id = COALESCE($5, role_id),
+    status = COALESCE($6, status),
     updated_at = NOW()
 WHERE id = $1
-RETURNING full_name, country_code, updated_at
+RETURNING username, full_name, country_code, role_id, status, last_login_at, updated_at
 `
 
 type UpdateUserParams struct {
-	ID          int64  `json:"id"`
-	FullName    string `json:"full_name"`
-	CountryCode string `json:"country_code"`
+	ID          int64       `json:"id"`
+	Username    string      `json:"username"`
+	FullName    string      `json:"full_name"`
+	CountryCode string      `json:"country_code"`
+	RoleID      pgtype.Int8 `json:"role_id"`
+	Status      pgtype.Text `json:"status"`
 }
 
 type UpdateUserRow struct {
+	Username    string             `json:"username"`
 	FullName    string             `json:"full_name"`
 	CountryCode string             `json:"country_code"`
+	RoleID      pgtype.Int8        `json:"role_id"`
+	Status      pgtype.Text        `json:"status"`
+	LastLoginAt pgtype.Timestamptz `json:"last_login_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {
-	row := q.db.QueryRow(ctx, updateUser, arg.ID, arg.FullName, arg.CountryCode)
+	row := q.db.QueryRow(ctx, updateUser,
+		arg.ID,
+		arg.Username,
+		arg.FullName,
+		arg.CountryCode,
+		arg.RoleID,
+		arg.Status,
+	)
 	var i UpdateUserRow
-	err := row.Scan(&i.FullName, &i.CountryCode, &i.UpdatedAt)
+	err := row.Scan(
+		&i.Username,
+		&i.FullName,
+		&i.CountryCode,
+		&i.RoleID,
+		&i.Status,
+		&i.LastLoginAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }
 

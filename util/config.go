@@ -1,12 +1,18 @@
 package util
 
-import "github.com/spf13/viper"
+import (
+	"time"
+
+	"github.com/spf13/viper"
+)
 
 // Config is a struct that holds all configurations for the application.
 // The values are read by viper from a config file or environment variables.
 type Config struct {
-	DBSource      string `mapstructure:"DB_SOURCE_USER_SERVICE"`
-	ServerAddress string `mapstructure:"SERVER_ADDRESS_USER_SERVICE"`
+	DBSource            string        `mapstructure:"DB_SOURCE_USER_SERVICE"`
+	ServerAddress       string        `mapstructure:"SERVER_ADDRESS_USER_SERVICE"`
+	TokenSymmetricKey   string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	AccessTokenDuration time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 }
 
 // LoadConfig loads the configuration from the given path.
@@ -23,7 +29,13 @@ func LoadConfig(path string) (config Config, err error) {
 	if serverAddress := viper.GetString("SERVER_ADDRESS_USER_SERVICE"); serverAddress != "" {
 		config.ServerAddress = serverAddress
 	}
-
+	if tokenSymmetricKey := viper.GetString("TOKEN_SYMMETRIC_KEY"); tokenSymmetricKey != "" {
+		config.TokenSymmetricKey = tokenSymmetricKey
+	}
+	if accessTokenDuration := viper.GetDuration("ACCESS_TOKEN_DURATION"); accessTokenDuration != 0 {
+		config.AccessTokenDuration = accessTokenDuration
+	}
+	
 	// If environment variables are not set, attempt to load from the config file
 	if config.DBSource == "" || config.ServerAddress == "" {
 		viper.AddConfigPath(path)

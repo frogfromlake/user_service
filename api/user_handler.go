@@ -19,18 +19,41 @@ type createUserRequest struct {
 	Email       string `json:"email" binding:"required,email"`
 	Password    string `json:"password" binding:"required,min=8,max=64"`
 	CountryCode string `json:"country_code" binding:"required,iso3166_1_alpha2"`
+	RoleID      int64  `json:"role_id" binding:"required,min=1,max=3"`
+	Status      string `json:"status" binding:"required,oneof=active inactive"`
 }
-type createUserResponse struct {
+type userResponse struct {
 	ID                int64              `json:"id"`
 	Username          string             `json:"username"`
 	FullName          string             `json:"full_name"`
 	Email             string             `json:"email"`
 	CountryCode       string             `json:"country_code"`
+	RoleID            int64              `json:"role_id"`
+	Status            string             `json:"status"`
+	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
 	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
 	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
 	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
 	CreatedAt         pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+}
+
+func newUserResponse(user db.UserSvcUser) userResponse {
+	return userResponse{
+		ID:                user.ID,
+		Username:          user.Username,
+		FullName:          user.FullName,
+		Email:             user.Email,
+		CountryCode:       user.CountryCode,
+		RoleID:            user.RoleID.Int64,
+		Status:            user.Status.String,
+		LastLoginAt:       user.LastLoginAt,
+		UsernameChangedAt: user.UsernameChangedAt,
+		EmailChangedAt:    user.EmailChangedAt,
+		PasswordChangedAt: user.PasswordChangedAt,
+		CreatedAt:         user.CreatedAt,
+		UpdatedAt:         user.UpdatedAt,
+	}
 }
 
 func (server *Server) createUser(ctx *gin.Context) {
@@ -47,7 +70,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 	}
 	hashedPassword := base64.StdEncoding.EncodeToString(byteHash.Hash)
 	passwordSalt := base64.StdEncoding.EncodeToString(byteHash.Salt)
-	
+
 	arg := db.CreateUserParams{
 		Username:     req.Username,
 		FullName:     req.FullName,
@@ -55,6 +78,8 @@ func (server *Server) createUser(ctx *gin.Context) {
 		PasswordHash: hashedPassword,
 		PasswordSalt: passwordSalt,
 		CountryCode:  req.CountryCode,
+		RoleID:       util.ConvertToInt8(req.RoleID),
+		Status:       util.ConvertToText(req.Status),
 	}
 
 	user, err := server.store.CreateUser(ctx, arg)
@@ -74,18 +99,8 @@ func (server *Server) createUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	rsp := createUserResponse{
-		ID:                user.ID,
-		Username:          user.Username,
-		FullName:          user.FullName,
-		Email:             user.Email,
-		CountryCode:       user.CountryCode,
-		UsernameChangedAt: user.UsernameChangedAt,
-		EmailChangedAt:    user.EmailChangedAt,
-		PasswordChangedAt: user.PasswordChangedAt,
-		CreatedAt:         user.CreatedAt,
-		UpdatedAt:         user.UpdatedAt,
-	}
+
+	rsp := newUserResponse(user)
 	ctx.JSON(http.StatusOK, rsp)
 }
 
@@ -98,6 +113,9 @@ type getUserByIDResponse struct {
 	FullName          string             `json:"full_name"`
 	Email             string             `json:"email"`
 	CountryCode       string             `json:"country_code"`
+	RoleID            int64              `json:"role_id" binding:"required,min=1,max=3"`
+	Status            string             `json:"status" binding:"required,oneof=active inactive"`
+	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
 	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
 	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
 	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
@@ -127,6 +145,9 @@ func (server *Server) getUserByID(ctx *gin.Context) {
 		FullName:          user.FullName,
 		Email:             user.Email,
 		CountryCode:       user.CountryCode,
+		RoleID:            user.RoleID.Int64,
+		Status:            user.Status.String,
+		LastLoginAt:       user.LastLoginAt,
 		UsernameChangedAt: user.UsernameChangedAt,
 		EmailChangedAt:    user.EmailChangedAt,
 		PasswordChangedAt: user.PasswordChangedAt,
@@ -145,6 +166,9 @@ type getUserByUsernameResponse struct {
 	FullName          string             `json:"full_name"`
 	Email             string             `json:"email"`
 	CountryCode       string             `json:"country_code"`
+	RoleID            int64              `json:"role_id"`
+	Status            string             `json:"status"`
+	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
 	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
 	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
 	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
@@ -174,6 +198,9 @@ func (server *Server) getUserByUsername(ctx *gin.Context) {
 		FullName:          user.FullName,
 		Email:             user.Email,
 		CountryCode:       user.CountryCode,
+		RoleID:            user.RoleID.Int64,
+		Status:            user.Status.String,
+		LastLoginAt:       user.LastLoginAt,
 		UsernameChangedAt: user.UsernameChangedAt,
 		EmailChangedAt:    user.EmailChangedAt,
 		PasswordChangedAt: user.PasswordChangedAt,
@@ -216,6 +243,8 @@ type updateUserRequest struct {
 	Username    string `json:"username" binding:"omitempty,min=3"`
 	FullName    string `json:"full_name" binding:"omitempty"`
 	CountryCode string `json:"country_code" binding:"omitempty,iso3166_1_alpha2"`
+	RoleID      int64  `json:"role_id" binding:"omitempty,min=1,max=3"`
+	Status      string `json:"status" binding:"omitempty,oneof=active inactive"`
 }
 
 func (server *Server) updateUser(ctx *gin.Context) {
@@ -233,8 +262,11 @@ func (server *Server) updateUser(ctx *gin.Context) {
 
 	arg := db.UpdateUserParams{
 		ID:          uri.ID,
+		Username:    req.Username,
 		FullName:    req.FullName,
 		CountryCode: req.CountryCode,
+		RoleID:      util.ConvertToInt8(req.RoleID),
+		Status:      util.ConvertToText(req.Status),
 	}
 
 	user, err := server.store.UpdateUser(ctx, arg)
@@ -272,40 +304,6 @@ func (server *Server) updateUserEmail(ctx *gin.Context) {
 	}
 
 	user, err := server.store.UpdateUserEmail(ctx, arg)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, user)
-}
-
-type updateUsernameUri struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
-}
-type updateUsernameRequest struct {
-	Username string `json:"username" binding:"required,min=3"`
-}
-
-func (server *Server) updateUsername(ctx *gin.Context) {
-	var uri updateUsernameUri
-	var req updateUsernameRequest
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	arg := db.UpdateUsernameParams{
-		ID:       uri.ID,
-		Username: req.Username,
-	}
-
-	user, err := server.store.UpdateUsername(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -357,6 +355,40 @@ func (server *Server) updateUserPassword(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, user)
 }
 
+type updateUsernameUri struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+type updateUsernameRequest struct {
+	Username string `json:"username" binding:"required,min=3"`
+}
+
+func (server *Server) updateUsername(ctx *gin.Context) {
+	var uri updateUsernameUri
+	var req updateUsernameRequest
+	if err := ctx.ShouldBindUri(&uri); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateUsernameParams{
+		ID:       uri.ID,
+		Username: req.Username,
+	}
+
+	user, err := server.store.UpdateUsername(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, user)
+}
+
 type deleteUserRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
 }
@@ -382,3 +414,70 @@ func (server *Server) deleteUser(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "user deleted successfully!"})
 }
+
+// type loginUserRequest struct {
+// 	Username string `json:"username" binding:"required,min=3"`
+// 	Password string `json:"password" binding:"required,min=8,max=64"`
+// 	RoleID   int64  `json:"role_id" binding:"required,min=1,max=5"`
+// }
+
+// type loginUserResponse struct {
+// 	AccessToken string       `json:"access_token"`
+// 	User        userResponse `json:"user"`
+// }
+
+// func (server *Server) loginUser(ctx *gin.Context) {
+// 	var req loginUserRequest
+// 	if err := ctx.ShouldBindJSON(&req); err != nil {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// 		return
+// 	}
+
+// 	user, err := server.store.GetUserByUsername(ctx, req.Username)
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			ctx.JSON(http.StatusNotFound, errorResponse(err))
+// 			return
+// 		}
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
+
+// 	byteHash, err := base64.StdEncoding.DecodeString(user.PasswordHash)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
+// 	byteSalt, err := base64.StdEncoding.DecodeString(user.PasswordSalt)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
+
+// 	err = util.ComparePassword(byteHash, byteSalt, req.Password)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+// 		return
+// 	}
+
+// 	// Implement role based access control.
+// 	if user.RoleID.Int64 != req.RoleID {
+// 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+// 		return
+// 	}
+
+// 	accessToken, err := server.localTokenMaker.CreateLocalToken(
+// 		user.Username,
+// 		server.config.AccessTokenDuration,
+// 	)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
+
+// 	rsp := loginUserResponse{
+// 		AccessToken: accessToken,
+// 		User:        newUserResponse(user),
+// 	}
+// 	ctx.JSON(http.StatusOK, rsp)
+// }

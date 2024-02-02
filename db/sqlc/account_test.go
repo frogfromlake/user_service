@@ -78,41 +78,41 @@ func TestListAccounts(t *testing.T) {
 		Message: "OFFSET must not be negative",
 	}
 
+	var lastAccount CreateAccountRow
 	for i := 0; i < 10; i++ {
-		createRandomAccount(t)
+		lastAccount = createRandomAccount(t)
 	}
 
 	testCases := []struct {
 		Name        string
 		Params      ListAccountsParams
-		ExpectedLen int
 		ExpectedErr error
 	}{
 		{
 			Name: "ValidLimitAndOffset",
 			Params: ListAccountsParams{
+				Owner:  lastAccount.Owner,
 				Limit:  5,
-				Offset: 5,
+				Offset: 0,
 			},
-			ExpectedLen: 5,
 			ExpectedErr: nil,
 		},
 		{
 			Name: "InvalidLimit",
 			Params: ListAccountsParams{
+				Owner:  lastAccount.Owner,
 				Limit:  0,
-				Offset: 5,
+				Offset: 0,
 			},
-			ExpectedLen: 0,
 			ExpectedErr: nil,
 		},
 		{
 			Name: "InvalidOffset",
 			Params: ListAccountsParams{
+				Owner:  lastAccount.Owner,
 				Limit:  5,
 				Offset: -1,
 			},
-			ExpectedLen: 0,
 			ExpectedErr: ErrNegativeOffset,
 		},
 	}
@@ -136,14 +136,16 @@ func TestListAccounts(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			require.Len(t, accounts, tc.ExpectedLen)
+			if tc.Name != "InvalidLimit" {
+				require.NotEmpty(t, accounts)
+			}
 
 			for _, account := range accounts {
-				require.NotEmpty(t, account)
 				require.NotZero(t, account.ID)
 				require.NotEmpty(t, account.Owner)
 				require.NotZero(t, account.CreatedAt)
 				require.NotZero(t, account.UpdatedAt)
+				require.Equal(t, lastAccount.Owner, account.Owner)
 			}
 		})
 	}

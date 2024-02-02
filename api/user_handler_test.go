@@ -36,6 +36,8 @@ func TestCreateUserAPI(t *testing.T) {
 				"email":        user.Email,
 				"password":     password,
 				"country_code": user.CountryCode,
+				"role_id":      user.RoleID,
+				"status":       user.Status,
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				arg := db.CreateUserParams{
@@ -43,6 +45,8 @@ func TestCreateUserAPI(t *testing.T) {
 					FullName:    user.FullName,
 					Email:       user.Email,
 					CountryCode: user.CountryCode,
+					RoleID:      user.RoleID,
+					Status:      user.Status,
 				}
 				store.EXPECT().
 					CreateUser(gomock.Any(), EqCreateUserParams(arg, password)).
@@ -62,6 +66,8 @@ func TestCreateUserAPI(t *testing.T) {
 				"email":        user.Email,
 				"password":     password,
 				"country_code": user.CountryCode,
+				"role_id":      user.RoleID,
+				"status":       user.Status,
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
@@ -81,6 +87,8 @@ func TestCreateUserAPI(t *testing.T) {
 				"email":        user.Email,
 				"password":     password,
 				"country_code": user.CountryCode,
+				"role_id":      user.RoleID,
+				"status":       user.Status,
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
@@ -100,6 +108,8 @@ func TestCreateUserAPI(t *testing.T) {
 				"email":        user.Email,
 				"password":     password,
 				"country_code": user.CountryCode,
+				"role_id":      user.RoleID,
+				"status":       user.Status,
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
@@ -118,6 +128,8 @@ func TestCreateUserAPI(t *testing.T) {
 				"email":        "invalid_email",
 				"password":     password,
 				"country_code": user.CountryCode,
+				"role_id":      user.RoleID,
+				"status":       user.Status,
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
@@ -136,6 +148,8 @@ func TestCreateUserAPI(t *testing.T) {
 				"email":        user.Email,
 				"password":     "123",
 				"country_code": user.CountryCode,
+				"role_id":      user.RoleID,
+				"status":       user.Status,
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
@@ -156,7 +170,7 @@ func TestCreateUserAPI(t *testing.T) {
 			store := mock_db.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			data, err := json.Marshal(tc.body)
@@ -185,6 +199,8 @@ func randomUser(t *testing.T) (user db.UserSvcUser, password string) {
 		Email:        util.RandomEmail(),
 		PasswordHash: hashedPassword,
 		CountryCode:  util.RandomCountryCode(),
+		RoleID:       util.ConvertToInt8(util.RandomInt(1, 3)),
+		Status:       util.ConvertToText("active"),
 	}
 	return
 }
@@ -202,4 +218,6 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.UserSvcUser)
 	require.Equal(t, user.Email, gotUser.Email)
 	require.Empty(t, gotUser.PasswordHash)
 	require.Equal(t, user.CountryCode, gotUser.CountryCode)
+	require.Equal(t, user.RoleID, gotUser.RoleID)
+	require.Equal(t, user.Status, gotUser.Status)
 }

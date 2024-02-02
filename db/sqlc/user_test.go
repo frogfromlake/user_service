@@ -23,6 +23,8 @@ func createRandomUser(t *testing.T) UserSvcUser {
 		PasswordHash: hashedPassword,
 		PasswordSalt: passwordSalt,
 		CountryCode:  util.RandomCountryCode(),
+		RoleID:       util.ConvertToInt8(util.RandomInt(1, 3)),
+		Status:       util.ConvertToText(util.RandomString(12)),
 	}
 
 	user, err := testQueries.CreateUser(context.Background(), arg)
@@ -35,6 +37,9 @@ func createRandomUser(t *testing.T) UserSvcUser {
 	require.NotEmpty(t, user.PasswordHash)
 	require.NotEmpty(t, user.PasswordSalt)
 	require.Equal(t, arg.CountryCode, user.CountryCode)
+	require.Equal(t, arg.RoleID, user.RoleID)
+	require.Equal(t, arg.Status, user.Status)
+	require.True(t, user.LastLoginAt.Time.IsZero())
 	require.True(t, user.UsernameChangedAt.Time.IsZero())
 	require.True(t, user.EmailChangedAt.Time.IsZero())
 	require.True(t, user.PasswordChangedAt.Time.IsZero())
@@ -61,6 +66,9 @@ func TestGetUserByID(t *testing.T) {
 	require.NotEmpty(t, fetchedUser.PasswordHash)
 	require.NotEmpty(t, fetchedUser.PasswordSalt)
 	require.Equal(t, user.CountryCode, fetchedUser.CountryCode)
+	require.Equal(t, user.RoleID, fetchedUser.RoleID)
+	require.Equal(t, user.Status, fetchedUser.Status)
+	require.True(t, fetchedUser.LastLoginAt.Time.IsZero())
 	require.True(t, fetchedUser.UsernameChangedAt.Time.IsZero())
 	require.True(t, fetchedUser.EmailChangedAt.Time.IsZero())
 	require.True(t, fetchedUser.PasswordChangedAt.Time.IsZero())
@@ -81,6 +89,9 @@ func TestGetUserByUsername(t *testing.T) {
 	require.NotEmpty(t, fetchedUser.PasswordHash)
 	require.NotEmpty(t, fetchedUser.PasswordSalt)
 	require.Equal(t, user.CountryCode, fetchedUser.CountryCode)
+	require.Equal(t, user.RoleID, fetchedUser.RoleID)
+	require.Equal(t, user.Status, fetchedUser.Status)
+	require.True(t, fetchedUser.LastLoginAt.Time.IsZero())
 	require.True(t, fetchedUser.UsernameChangedAt.Time.IsZero())
 	require.True(t, fetchedUser.EmailChangedAt.Time.IsZero())
 	require.True(t, fetchedUser.PasswordChangedAt.Time.IsZero())
@@ -120,6 +131,9 @@ func TestListUser(t *testing.T) {
 		require.NotEmpty(t, user.FullName)
 		require.NotEmpty(t, user.Email)
 		require.NotEmpty(t, user.CountryCode)
+		require.NotZero(t, user.RoleID)
+		require.NotEmpty(t, user.Status)
+		require.NotZero(t, user.LastLoginAt.Time)
 		require.NotZero(t, user.CreatedAt.Time)
 		require.NotZero(t, user.UpdatedAt.Time)
 	}
@@ -129,16 +143,19 @@ func TestUpdateUser(t *testing.T) {
 	user := createRandomUser(t)
 
 	arg := UpdateUserParams{
-		ID: user.ID,
-		FullName: util.RandomString(12),
-		CountryCode: util.RandomCountryCode(),
+		ID:          user.ID,
+		Username:    util.RandomUsername(),
+		FullName:    util.RandomString(12),
+		Status:      util.ConvertToText(util.RandomString(12)),
 	}
 
 	updatedUser, err := testQueries.UpdateUser(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, updatedUser)
-	require.Equal(t, arg.FullName, updatedUser.FullName)
-	require.Equal(t, user.CountryCode, updatedUser.CountryCode)
+	require.NotEqual(t, user.Username, updatedUser.Username)
+	require.NotEqual(t, user.FullName, updatedUser.FullName)
+	require.NotEqual(t, user.Status, updatedUser.Status)
+	require.True(t, user.LastLoginAt.Time.IsZero())
 	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt.Time, time.Minute)
 }
 
@@ -151,7 +168,7 @@ func TestUpdateUserPassword(t *testing.T) {
 	require.NoError(t, err)
 
 	arg := UpdateUserPasswordParams{
-		ID: user.ID,
+		ID:           user.ID,
 		PasswordHash: hashedPassword,
 		PasswordSalt: passwordSalt,
 	}
@@ -169,7 +186,7 @@ func TestUpdateUserEmail(t *testing.T) {
 	user := createRandomUser(t)
 
 	arg := UpdateUserEmailParams{
-		ID: user.ID,
+		ID:    user.ID,
 		Email: util.RandomEmail(),
 	}
 
@@ -185,7 +202,7 @@ func TestUpdateUsername(t *testing.T) {
 	user := createRandomUser(t)
 
 	arg := UpdateUsernameParams{
-		ID: user.ID,
+		ID:       user.ID,
 		Username: util.RandomString(12),
 	}
 

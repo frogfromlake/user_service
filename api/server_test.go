@@ -63,7 +63,7 @@ func TestStartServer(t *testing.T) {
 				mockStore.EXPECT().CreateAccountType(gomock.Any(), gomock.Any()).AnyTimes().Return(db.UserSvcAccountType{}, nil)
 			}
 
-			server := NewServer(mockStore)
+			server := newTestServer(t, mockStore)
 			port, err := getRandomPort()
 			if tc.invalidPort {
 				port = -1

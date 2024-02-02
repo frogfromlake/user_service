@@ -5,9 +5,11 @@ INSERT INTO "user_svc"."Users" (
  email,
  password_hash,
  password_salt,
- country_code
+ country_code,
+ role_id,
+ status
 ) VALUES (
- $1, $2, $3, $4, $5 , $6
+ $1, $2, $3, $4, $5 , $6, $7, $8
 )
 RETURNING *;
 
@@ -26,6 +28,9 @@ SELECT
  full_name,
  email,
  country_code,
+ role_id,
+ status,
+ last_login_at,
  created_at,
  updated_at
 FROM "user_svc"."Users"
@@ -60,11 +65,14 @@ RETURNING username, username_changed_at, updated_at;
 
 -- name: UpdateUser :one
 UPDATE "user_svc"."Users"
-SET full_name = COALESCE($2, full_name),
-    country_code = COALESCE($3, country_code),
+SET username = COALESCE($2, username),
+    full_name = COALESCE($3, full_name),
+    country_code = COALESCE($4, country_code),
+    role_id = COALESCE($5, role_id),
+    status = COALESCE($6, status),
     updated_at = NOW()
 WHERE id = $1
-RETURNING full_name, country_code, updated_at;
+RETURNING username, full_name, country_code, role_id, status, last_login_at, updated_at;
 
 -- name: DeleteUser :exec
 DELETE FROM "user_svc"."Users"

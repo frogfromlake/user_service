@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
+	"github.com/Streamfair/streamfair_user_svc/token"
 	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -27,7 +28,6 @@ TODO:
 2. Adding or deleting account types:
 */
 type createAccountRequest struct {
-	Owner       string `json:"owner" binding:"required,min=3"`
 	AccountType int32  `json:"account_type" binding:"required,min=1,acctype"`
 	AvatarUri   string `json:"avatar_uri" binding:"uri"`
 }
@@ -39,9 +39,10 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	arg := db.CreateAccountTxParams{
 		AccountParams: db.CreateAccountParams{
-			Owner:       req.Owner,
+			Owner:       authPayload.Username,
 			AccountType: req.AccountType,
 			AvatarUri:   util.ConvertToText(req.AvatarUri),
 		},
@@ -102,6 +103,13 @@ func (server *Server) getAccountByID(ctx *gin.Context) {
 	}
 	res.AccountTypes = accountTypes
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if account.Owner != authPayload.Username {
+		err := errors.New("account doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, res)
 }
 
@@ -140,6 +148,13 @@ func (server *Server) getAccountByOwner(ctx *gin.Context) {
 	}
 	res.AccountTypes = accountTypes
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if account.Owner != authPayload.Username {
+		err := errors.New("account doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, res)
 }
 
@@ -155,7 +170,9 @@ func (server *Server) listAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	arg := db.ListAccountsParams{
+		Owner: authPayload.Username,
 		Limit:  req.PageSize,
 		Offset: (req.PageID - 1) * req.PageSize,
 	}
@@ -175,7 +192,6 @@ type updateAccountUri struct {
 }
 
 type updateAccountRequest struct {
-	Owner     string      `json:"username" binding:"omitempty,min=3"`
 	AvatarUri pgtype.Text `json:"avatar_url" binding:"omitempty"`
 	Plays     int64       `json:"plays" binding:"omitempty"`
 	Likes     int64       `json:"likes" binding:"omitempty"`
@@ -197,9 +213,10 @@ func (server *Server) updateAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	arg := db.UpdateAccountParams{
 		ID:        uri.ID,
-		Owner:     req.Owner,
+		Owner:     authPayload.Username,
 		AvatarUri: req.AvatarUri,
 		Plays:     req.Plays,
 		Likes:     req.Likes,
@@ -227,9 +244,16 @@ func (server *Server) deleteAccount(ctx *gin.Context) {
 		return
 	}
 
-	_, err := server.store.GetAccountByID(ctx, req.ID)
+	account, err := server.store.GetAccountByID(ctx, req.ID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if account.Owner != authPayload.Username {
+		err := errors.New("account doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 

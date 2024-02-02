@@ -29,8 +29,11 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
-	server := api.NewServer(store)
-
+	server, err := api.NewServer(config, store)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "server: error while creating server: %v\n", err)
+	}
+	
 	err = server.StartServer(config.ServerAddress)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "server: error while starting server: %v\n", err)

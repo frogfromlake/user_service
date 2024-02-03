@@ -7,8 +7,9 @@ package db
 
 import (
 	"context"
+	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
 const createSession = `-- name: CreateSession :one
@@ -27,13 +28,13 @@ RETURNING id, username, refresh_token, user_agent, client_ip, is_blocked, expire
 `
 
 type CreateSessionParams struct {
-	ID           pgtype.UUID        `json:"id"`
-	Username     string             `json:"username"`
-	RefreshToken string             `json:"refresh_token"`
-	UserAgent    string             `json:"user_agent"`
-	ClientIp     string             `json:"client_ip"`
-	IsBlocked    bool               `json:"is_blocked"`
-	ExpiresAt    pgtype.Timestamptz `json:"expires_at"`
+	ID           uuid.UUID `json:"id"`
+	Username     string    `json:"username"`
+	RefreshToken string    `json:"refresh_token"`
+	UserAgent    string    `json:"user_agent"`
+	ClientIp     string    `json:"client_ip"`
+	IsBlocked    bool      `json:"is_blocked"`
+	ExpiresAt    time.Time `json:"expires_at"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (UserSvcSession, error) {
@@ -65,7 +66,7 @@ SELECT id, username, refresh_token, user_agent, client_ip, is_blocked, expires_a
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetSession(ctx context.Context, id pgtype.UUID) (UserSvcSession, error) {
+func (q *Queries) GetSession(ctx context.Context, id uuid.UUID) (UserSvcSession, error) {
 	row := q.db.QueryRow(ctx, getSession, id)
 	var i UserSvcSession
 	err := row.Scan(

@@ -25,8 +25,8 @@ func createRandomAccount(t *testing.T) CreateAccountRow {
 	require.NotZero(t, account.ID)
 	require.Equal(t, arg.Owner, account.Owner)
 	require.Equal(t, arg.AvatarUri, account.AvatarUri)
-	require.WithinDuration(t, time.Now(), account.CreatedAt.Time, time.Second)
-	require.WithinDuration(t, time.Now(), account.UpdatedAt.Time, time.Second)
+	require.WithinDuration(t, time.Now(), account.CreatedAt, time.Second)
+	require.WithinDuration(t, time.Now(), account.UpdatedAt, time.Second)
 
 	return account
 }
@@ -55,8 +55,8 @@ func TestGetAccountByID(t *testing.T) {
 	require.Equal(t, account.ID, fetchedAccount.ID)
 	require.Equal(t, account.Owner, fetchedAccount.Owner)
 	require.NotEmpty(t, fetchedAccount.AvatarUri)
-	require.WithinDuration(t, account.CreatedAt.Time, fetchedAccount.CreatedAt.Time, time.Second)
-	require.WithinDuration(t, account.UpdatedAt.Time, fetchedAccount.UpdatedAt.Time, time.Second)
+	require.WithinDuration(t, account.CreatedAt, fetchedAccount.CreatedAt, time.Second)
+	require.WithinDuration(t, account.UpdatedAt, fetchedAccount.UpdatedAt, time.Second)
 }
 
 func TestGetAccountByOwner(t *testing.T) {
@@ -68,8 +68,8 @@ func TestGetAccountByOwner(t *testing.T) {
 	require.Equal(t, account.ID, fetchedAccount.ID)
 	require.Equal(t, account.Owner, fetchedAccount.Owner)
 	require.Equal(t, account.AvatarUri, fetchedAccount.AvatarUri)
-	require.WithinDuration(t, account.CreatedAt.Time, fetchedAccount.CreatedAt.Time, time.Second)
-	require.WithinDuration(t, account.UpdatedAt.Time, fetchedAccount.UpdatedAt.Time, time.Second)
+	require.WithinDuration(t, account.CreatedAt, fetchedAccount.CreatedAt, time.Second)
+	require.WithinDuration(t, account.UpdatedAt, fetchedAccount.UpdatedAt, time.Second)
 }
 
 func TestListAccounts(t *testing.T) {
@@ -175,6 +175,6 @@ func TestUpdateAccount(t *testing.T) {
 	require.Equal(t, arg.Likes, updatedAccount.Likes)
 	require.Equal(t, arg.Follows, updatedAccount.Follows)
 	require.Equal(t, arg.Shares, updatedAccount.Shares)
-	require.WithinDuration(t, account.CreatedAt.Time, updatedAccount.CreatedAt.Time, time.Second)
-	require.WithinDuration(t, time.Now(), updatedAccount.UpdatedAt.Time, time.Second)
+	require.WithinDuration(t, account.CreatedAt, updatedAccount.CreatedAt, time.Second)
+	require.WithinDuration(t, time.Now(), updatedAccount.UpdatedAt, time.Second)
 }

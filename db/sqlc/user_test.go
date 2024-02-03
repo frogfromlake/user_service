@@ -39,12 +39,12 @@ func createRandomUser(t *testing.T) UserSvcUser {
 	require.Equal(t, arg.CountryCode, user.CountryCode)
 	require.Equal(t, arg.RoleID, user.RoleID)
 	require.Equal(t, arg.Status, user.Status)
-	require.True(t, user.LastLoginAt.Time.IsZero())
-	require.True(t, user.UsernameChangedAt.Time.IsZero())
-	require.True(t, user.EmailChangedAt.Time.IsZero())
-	require.True(t, user.PasswordChangedAt.Time.IsZero())
-	require.WithinDuration(t, time.Now(), user.CreatedAt.Time, time.Second)
-	require.WithinDuration(t, time.Now(), user.UpdatedAt.Time, time.Second)
+	require.True(t, user.LastLoginAt.IsZero())
+	require.True(t, user.UsernameChangedAt.IsZero())
+	require.True(t, user.EmailChangedAt.IsZero())
+	require.True(t, user.PasswordChangedAt.IsZero())
+	require.WithinDuration(t, time.Now(), user.CreatedAt, time.Second)
+	require.WithinDuration(t, time.Now(), user.UpdatedAt, time.Second)
 
 	return user
 }
@@ -68,12 +68,12 @@ func TestGetUserByID(t *testing.T) {
 	require.Equal(t, user.CountryCode, fetchedUser.CountryCode)
 	require.Equal(t, user.RoleID, fetchedUser.RoleID)
 	require.Equal(t, user.Status, fetchedUser.Status)
-	require.True(t, fetchedUser.LastLoginAt.Time.IsZero())
-	require.True(t, fetchedUser.UsernameChangedAt.Time.IsZero())
-	require.True(t, fetchedUser.EmailChangedAt.Time.IsZero())
-	require.True(t, fetchedUser.PasswordChangedAt.Time.IsZero())
-	require.WithinDuration(t, user.CreatedAt.Time, fetchedUser.CreatedAt.Time, time.Second)
-	require.WithinDuration(t, time.Now(), fetchedUser.UpdatedAt.Time, time.Second)
+	require.True(t, fetchedUser.LastLoginAt.IsZero())
+	require.True(t, fetchedUser.UsernameChangedAt.IsZero())
+	require.True(t, fetchedUser.EmailChangedAt.IsZero())
+	require.True(t, fetchedUser.PasswordChangedAt.IsZero())
+	require.WithinDuration(t, user.CreatedAt, fetchedUser.CreatedAt, time.Second)
+	require.WithinDuration(t, time.Now(), fetchedUser.UpdatedAt, time.Second)
 }
 
 func TestGetUserByUsername(t *testing.T) {
@@ -91,12 +91,12 @@ func TestGetUserByUsername(t *testing.T) {
 	require.Equal(t, user.CountryCode, fetchedUser.CountryCode)
 	require.Equal(t, user.RoleID, fetchedUser.RoleID)
 	require.Equal(t, user.Status, fetchedUser.Status)
-	require.True(t, fetchedUser.LastLoginAt.Time.IsZero())
-	require.True(t, fetchedUser.UsernameChangedAt.Time.IsZero())
-	require.True(t, fetchedUser.EmailChangedAt.Time.IsZero())
-	require.True(t, fetchedUser.PasswordChangedAt.Time.IsZero())
-	require.WithinDuration(t, user.CreatedAt.Time, fetchedUser.CreatedAt.Time, time.Second)
-	require.WithinDuration(t, time.Now(), fetchedUser.UpdatedAt.Time, time.Second)
+	require.True(t, fetchedUser.LastLoginAt.IsZero())
+	require.True(t, fetchedUser.UsernameChangedAt.IsZero())
+	require.True(t, fetchedUser.EmailChangedAt.IsZero())
+	require.True(t, fetchedUser.PasswordChangedAt.IsZero())
+	require.WithinDuration(t, user.CreatedAt, fetchedUser.CreatedAt, time.Second)
+	require.WithinDuration(t, time.Now(), fetchedUser.UpdatedAt, time.Second)
 }
 
 func TestDeleteUser(t *testing.T) {
@@ -133,9 +133,9 @@ func TestListUser(t *testing.T) {
 		require.NotEmpty(t, user.CountryCode)
 		require.NotZero(t, user.RoleID)
 		require.NotEmpty(t, user.Status)
-		require.NotZero(t, user.LastLoginAt.Time)
-		require.NotZero(t, user.CreatedAt.Time)
-		require.NotZero(t, user.UpdatedAt.Time)
+		require.NotZero(t, user.LastLoginAt)
+		require.NotZero(t, user.CreatedAt)
+		require.NotZero(t, user.UpdatedAt)
 	}
 }
 
@@ -155,8 +155,8 @@ func TestUpdateUser(t *testing.T) {
 	require.NotEqual(t, user.Username, updatedUser.Username)
 	require.NotEqual(t, user.FullName, updatedUser.FullName)
 	require.NotEqual(t, user.Status, updatedUser.Status)
-	require.True(t, user.LastLoginAt.Time.IsZero())
-	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt.Time, time.Minute)
+	require.True(t, user.LastLoginAt.IsZero())
+	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt, time.Minute)
 }
 
 func TestUpdateUserPassword(t *testing.T) {
@@ -178,8 +178,8 @@ func TestUpdateUserPassword(t *testing.T) {
 	require.NotEmpty(t, updatedUser)
 	require.NotEmpty(t, updatedUser.PasswordHash)
 	require.NotEmpty(t, updatedUser.PasswordSalt)
-	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt.Time, time.Minute)
-	require.WithinDuration(t, time.Now(), updatedUser.PasswordChangedAt.Time, time.Minute)
+	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt, time.Minute)
+	require.WithinDuration(t, time.Now(), updatedUser.PasswordChangedAt, time.Minute)
 }
 
 func TestUpdateUserEmail(t *testing.T) {
@@ -194,8 +194,8 @@ func TestUpdateUserEmail(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, updatedUser)
 	require.NotEqual(t, user.Email, updatedUser.Email)
-	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt.Time, time.Minute)
-	require.WithinDuration(t, time.Now(), updatedUser.EmailChangedAt.Time, time.Minute)
+	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt, time.Minute)
+	require.WithinDuration(t, time.Now(), updatedUser.EmailChangedAt, time.Minute)
 }
 
 func TestUpdateUsername(t *testing.T) {
@@ -210,6 +210,6 @@ func TestUpdateUsername(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, updatedUser)
 	require.NotEqual(t, user.Username, updatedUser.Username)
-	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt.Time, time.Minute)
-	require.WithinDuration(t, time.Now(), updatedUser.UsernameChangedAt.Time, time.Minute)
+	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt, time.Minute)
+	require.WithinDuration(t, time.Now(), updatedUser.UsernameChangedAt, time.Minute)
 }

@@ -43,8 +43,8 @@ func createRandomAccountParamsAndReturns(owner string) (db.CreateAccountTxParams
 			ID:        util.RandomInt(1, 1000),
 			Owner:     createAccTxParams.AccountParams.Owner,
 			AvatarUri: createAccTxParams.AccountParams.AvatarUri,
-			CreatedAt: util.ConvertToTimestamptz(util.RandomDate()),
-			UpdatedAt: util.ConvertToTimestamptz(util.RandomDate()),
+			CreatedAt: util.RandomDate(),
+			UpdatedAt: util.RandomDate(),
 		},
 	}
 	return createAccTxParams, createAccTxReturn
@@ -938,8 +938,8 @@ func randomAccount(owner string) db.UserSvcAccount {
 		Plays:     0,
 		Likes:     0,
 		Follows:   0,
-		CreatedAt: util.ConvertToTimestamptz(util.RandomDate()),
-		UpdatedAt: util.ConvertToTimestamptz(util.RandomDate()),
+		CreatedAt: util.RandomDate(),
+		UpdatedAt: util.RandomDate(),
 	}
 }
 
@@ -948,8 +948,8 @@ func randomAccountFromList(n int, username string) []db.ListAccountsRow {
 	account := db.ListAccountsRow{
 		ID:        util.RandomInt(1, 1000),
 		Owner:     username,
-		CreatedAt: util.ConvertToTimestamptz(util.RandomDate()),
-		UpdatedAt: util.ConvertToTimestamptz(util.RandomDate()),
+		CreatedAt: util.RandomDate(),
+		UpdatedAt: util.RandomDate(),
 	}
 	for i := 0; i < n; i++ {
 		accounts[i] = account
@@ -966,8 +966,8 @@ func randomAccountFromID(owner string) db.UserSvcAccount {
 		Likes:     0,
 		Follows:   0,
 		Shares:    0,
-		CreatedAt: util.ConvertToTimestamptz(util.RandomDate()),
-		UpdatedAt: util.ConvertToTimestamptz(util.RandomDate()),
+		CreatedAt: util.RandomDate(),
+		UpdatedAt: util.RandomDate(),
 	}
 }
 

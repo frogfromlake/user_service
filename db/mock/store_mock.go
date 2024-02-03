@@ -15,7 +15,7 @@ import (
 	time "time"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
-	pgtype "github.com/jackc/pgx/v5/pgtype"
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -263,7 +263,7 @@ func (mr *MockStoreMockRecorder) GetAccountsForAccountType(ctx, accounttypesID a
 }
 
 // GetSession mocks base method.
-func (m *MockStore) GetSession(ctx context.Context, id pgtype.UUID) (db.UserSvcSession, error) {
+func (m *MockStore) GetSession(ctx context.Context, id uuid.UUID) (db.UserSvcSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSession", ctx, id)
 	ret0, _ := ret[0].(db.UserSvcSession)

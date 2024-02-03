@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,7 +31,7 @@ func (server *Server) renewAccessToken(ctx *gin.Context) {
 		return
 	}
 
-	session, err := server.store.GetSession(ctx, util.ConvertToUUID(refreshPayload.ID.String()))
+	session, err := server.store.GetSession(ctx, refreshPayload.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -60,7 +59,7 @@ func (server *Server) renewAccessToken(ctx *gin.Context) {
 		return
 	}
 
-	if time.Now().After(session.ExpiresAt.Time) {
+	if time.Now().After(session.ExpiresAt) {
 		err := fmt.Errorf("expired session")
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return

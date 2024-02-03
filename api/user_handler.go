@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type createUserRequest struct {
@@ -26,19 +25,19 @@ type createUserRequest struct {
 	Status      string `json:"status" binding:"required,oneof=active inactive"`
 }
 type userResponse struct {
-	ID                int64              `json:"id"`
-	Username          string             `json:"username"`
-	FullName          string             `json:"full_name"`
-	Email             string             `json:"email"`
-	CountryCode       string             `json:"country_code"`
-	RoleID            int64              `json:"role_id"`
-	Status            string             `json:"status"`
-	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
-	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
-	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
-	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	ID                int64     `json:"id"`
+	Username          string    `json:"username"`
+	FullName          string    `json:"full_name"`
+	Email             string    `json:"email"`
+	CountryCode       string    `json:"country_code"`
+	RoleID            int64     `json:"role_id"`
+	Status            string    `json:"status"`
+	LastLoginAt       time.Time `json:"last_login_at"`
+	UsernameChangedAt time.Time `json:"username_changed_at"`
+	EmailChangedAt    time.Time `json:"email_changed_at"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 }
 
 func newUserResponse(user db.UserSvcUser) userResponse {
@@ -111,19 +110,19 @@ type getUserByIDRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
 }
 type getUserByIDResponse struct {
-	ID                int64              `json:"id"`
-	Username          string             `json:"username"`
-	FullName          string             `json:"full_name"`
-	Email             string             `json:"email"`
-	CountryCode       string             `json:"country_code"`
-	RoleID            int64              `json:"role_id" binding:"required,min=1,max=3"`
-	Status            string             `json:"status" binding:"required,oneof=active inactive"`
-	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
-	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
-	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
-	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	ID                int64     `json:"id"`
+	Username          string    `json:"username"`
+	FullName          string    `json:"full_name"`
+	Email             string    `json:"email"`
+	CountryCode       string    `json:"country_code"`
+	RoleID            int64     `json:"role_id" binding:"required,min=1,max=3"`
+	Status            string    `json:"status" binding:"required,oneof=active inactive"`
+	LastLoginAt       time.Time `json:"last_login_at"`
+	UsernameChangedAt time.Time `json:"username_changed_at"`
+	EmailChangedAt    time.Time `json:"email_changed_at"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 }
 
 func (server *Server) getUserByID(ctx *gin.Context) {
@@ -164,19 +163,19 @@ type getUserByUsernameRequest struct {
 	Username string `uri:"username" binding:"required,min=3"`
 }
 type getUserByUsernameResponse struct {
-	ID                int64              `json:"id"`
-	Username          string             `json:"username"`
-	FullName          string             `json:"full_name"`
-	Email             string             `json:"email"`
-	CountryCode       string             `json:"country_code"`
-	RoleID            int64              `json:"role_id"`
-	Status            string             `json:"status"`
-	LastLoginAt       pgtype.Timestamptz `json:"last_login_at"`
-	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
-	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
-	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	ID                int64     `json:"id"`
+	Username          string    `json:"username"`
+	FullName          string    `json:"full_name"`
+	Email             string    `json:"email"`
+	CountryCode       string    `json:"country_code"`
+	RoleID            int64     `json:"role_id"`
+	Status            string    `json:"status"`
+	LastLoginAt       time.Time `json:"last_login_at"`
+	UsernameChangedAt time.Time `json:"username_changed_at"`
+	EmailChangedAt    time.Time `json:"email_changed_at"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 }
 
 func (server *Server) getUserByUsername(ctx *gin.Context) {
@@ -486,13 +485,13 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	}
 
 	session, err := server.store.CreateSession(ctx, db.CreateSessionParams{
-		ID:           util.ConvertToUUID(refreshPayload.ID.String()),
+		ID:           refreshPayload.ID,
 		Username:     user.Username,
 		RefreshToken: refreshToken,
 		UserAgent:    ctx.Request.UserAgent(),
 		ClientIp:     ctx.ClientIP(),
 		IsBlocked:    false,
-		ExpiresAt:    util.ConvertToTimestamptz(refreshPayload.ExpiredAt),
+		ExpiresAt:    refreshPayload.ExpiredAt,
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -500,7 +499,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	}
 
 	rsp := loginUserResponse{
-		SessionID:             uuid.UUID(session.ID.Bytes),
+		SessionID:             session.ID,
 		AccessToken:           accessToken,
 		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
 		RefreshToken:          refreshToken,

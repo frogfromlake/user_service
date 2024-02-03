@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -29,12 +30,12 @@ type CreateAccountParams struct {
 }
 
 type CreateAccountRow struct {
-	ID          int64              `json:"id"`
-	Owner       string             `json:"owner"`
-	AccountType int32              `json:"account_type"`
-	AvatarUri   pgtype.Text        `json:"avatar_uri"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	ID          int64       `json:"id"`
+	Owner       string      `json:"owner"`
+	AccountType int32       `json:"account_type"`
+	AvatarUri   pgtype.Text `json:"avatar_uri"`
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   time.Time   `json:"updated_at"`
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (CreateAccountRow, error) {
@@ -122,11 +123,11 @@ type ListAccountsParams struct {
 }
 
 type ListAccountsRow struct {
-	ID          int64              `json:"id"`
-	Owner       string             `json:"owner"`
-	AccountType int32              `json:"account_type"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	ID          int64     `json:"id"`
+	Owner       string    `json:"owner"`
+	AccountType int32     `json:"account_type"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error) {

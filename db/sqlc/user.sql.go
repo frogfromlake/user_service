@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -160,16 +161,16 @@ type ListUsersParams struct {
 }
 
 type ListUsersRow struct {
-	ID          int64              `json:"id"`
-	Username    string             `json:"username"`
-	FullName    string             `json:"full_name"`
-	Email       string             `json:"email"`
-	CountryCode string             `json:"country_code"`
-	RoleID      pgtype.Int8        `json:"role_id"`
-	Status      pgtype.Text        `json:"status"`
-	LastLoginAt pgtype.Timestamptz `json:"last_login_at"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	ID          int64       `json:"id"`
+	Username    string      `json:"username"`
+	FullName    string      `json:"full_name"`
+	Email       string      `json:"email"`
+	CountryCode string      `json:"country_code"`
+	RoleID      pgtype.Int8 `json:"role_id"`
+	Status      pgtype.Text `json:"status"`
+	LastLoginAt time.Time   `json:"last_login_at"`
+	CreatedAt   time.Time   `json:"created_at"`
+	UpdatedAt   time.Time   `json:"updated_at"`
 }
 
 func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error) {
@@ -225,13 +226,13 @@ type UpdateUserParams struct {
 }
 
 type UpdateUserRow struct {
-	Username    string             `json:"username"`
-	FullName    string             `json:"full_name"`
-	CountryCode string             `json:"country_code"`
-	RoleID      pgtype.Int8        `json:"role_id"`
-	Status      pgtype.Text        `json:"status"`
-	LastLoginAt pgtype.Timestamptz `json:"last_login_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	Username    string      `json:"username"`
+	FullName    string      `json:"full_name"`
+	CountryCode string      `json:"country_code"`
+	RoleID      pgtype.Int8 `json:"role_id"`
+	Status      pgtype.Text `json:"status"`
+	LastLoginAt time.Time   `json:"last_login_at"`
+	UpdatedAt   time.Time   `json:"updated_at"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {
@@ -271,9 +272,9 @@ type UpdateUserEmailParams struct {
 }
 
 type UpdateUserEmailRow struct {
-	Email          string             `json:"email"`
-	EmailChangedAt pgtype.Timestamptz `json:"email_changed_at"`
-	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	Email          string    `json:"email"`
+	EmailChangedAt time.Time `json:"email_changed_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 func (q *Queries) UpdateUserEmail(ctx context.Context, arg UpdateUserEmailParams) (UpdateUserEmailRow, error) {
@@ -300,10 +301,10 @@ type UpdateUserPasswordParams struct {
 }
 
 type UpdateUserPasswordRow struct {
-	PasswordHash      string             `json:"password_hash"`
-	PasswordSalt      string             `json:"password_salt"`
-	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
-	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	PasswordHash      string    `json:"password_hash"`
+	PasswordSalt      string    `json:"password_salt"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 }
 
 func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (UpdateUserPasswordRow, error) {
@@ -333,9 +334,9 @@ type UpdateUsernameParams struct {
 }
 
 type UpdateUsernameRow struct {
-	Username          string             `json:"username"`
-	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
-	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	Username          string    `json:"username"`
+	UsernameChangedAt time.Time `json:"username_changed_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 }
 
 func (q *Queries) UpdateUsername(ctx context.Context, arg UpdateUsernameParams) (UpdateUsernameRow, error) {

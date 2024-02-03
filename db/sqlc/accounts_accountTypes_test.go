@@ -77,8 +77,8 @@ func TestGetAccountTypesForAccount(t *testing.T) {
 	for i, accountType := range accountTypes {
 		require.NotEmpty(t, accountType)
 		require.Equal(t, accountType.ID, accountTypes[i].ID)
-		require.WithinDuration(t, accountType.CreatedAt.Time, accountTypes[i].CreatedAt.Time, time.Second)
-		require.WithinDuration(t, accountType.UpdatedAt.Time, accountTypes[i].UpdatedAt.Time, time.Second)
+		require.WithinDuration(t, accountType.CreatedAt, accountTypes[i].CreatedAt, time.Second)
+		require.WithinDuration(t, accountType.UpdatedAt, accountTypes[i].UpdatedAt, time.Second)
 	}
 }
 
@@ -97,8 +97,8 @@ func TestGetAccountTypeIDsForAccount(t *testing.T) {
 	for i, accountType := range accountTypes {
 		require.NotEmpty(t, accountType)
 		require.Equal(t, accountType.ID, accountTypes[i].ID)
-		require.WithinDuration(t, accountType.CreatedAt.Time, accountTypes[i].CreatedAt.Time, time.Second)
-		require.WithinDuration(t, accountType.UpdatedAt.Time, accountTypes[i].UpdatedAt.Time, time.Second)
+		require.WithinDuration(t, accountType.CreatedAt, accountTypes[i].CreatedAt, time.Second)
+		require.WithinDuration(t, accountType.UpdatedAt, accountTypes[i].UpdatedAt, time.Second)
 	}
 }
 
@@ -123,8 +123,8 @@ func TestGetAccountsForAccountType(t *testing.T) {
 		require.Zero(t, accounts[i].Likes)
 		require.Zero(t, accounts[i].Follows)
 		require.Zero(t, accounts[i].Shares)
-		require.WithinDuration(t, account.CreatedAt.Time, accounts[i].CreatedAt.Time, time.Second)
-		require.WithinDuration(t, account.UpdatedAt.Time, accounts[i].UpdatedAt.Time, time.Second)
+		require.WithinDuration(t, account.CreatedAt, accounts[i].CreatedAt, time.Second)
+		require.WithinDuration(t, account.UpdatedAt, accounts[i].UpdatedAt, time.Second)
 	}
 }
 

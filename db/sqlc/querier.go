@@ -7,7 +7,7 @@ package db
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
 type Querier interface {
@@ -24,7 +24,7 @@ type Querier interface {
 	GetAccountType(ctx context.Context, id int32) (UserSvcAccountType, error)
 	GetAccountTypesForAccount(ctx context.Context, accountsID int64) ([]UserSvcAccountType, error)
 	GetAccountsForAccountType(ctx context.Context, accounttypesID int32) ([]UserSvcAccount, error)
-	GetSession(ctx context.Context, id pgtype.UUID) (UserSvcSession, error)
+	GetSession(ctx context.Context, id uuid.UUID) (UserSvcSession, error)
 	GetUserByID(ctx context.Context, id int64) (UserSvcUser, error)
 	GetUserByUsername(ctx context.Context, username string) (UserSvcUser, error)
 	ListAccountTypes(ctx context.Context, arg ListAccountTypesParams) ([]UserSvcAccountType, error)

@@ -38,6 +38,17 @@ type UserSvcAccountTypesAccount struct {
 	AccountsID     int64 `json:"Accounts_id"`
 }
 
+type UserSvcSession struct {
+	ID           pgtype.UUID        `json:"id"`
+	Username     string             `json:"username"`
+	RefreshToken string             `json:"refresh_token"`
+	UserAgent    string             `json:"user_agent"`
+	ClientIp     string             `json:"client_ip"`
+	IsBlocked    bool               `json:"is_blocked"`
+	ExpiresAt    pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
 type UserSvcUser struct {
 	ID                int64              `json:"id"`
 	Username          string             `json:"username"`

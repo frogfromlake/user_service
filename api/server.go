@@ -24,10 +24,10 @@ type Server struct {
 
 // NewServer creates a new HTTP server and setup routing.
 func NewServer(config util.Config, store db.Store) (*Server, error) {
-	// localTokenMaker, err := token.NewLocalPasetoMaker(config.TokenSymmetricKey)
-	// if err != nil {
-	// 	panic(fmt.Sprintf("Failed to create local token maker: %v", err))
-	// }
+	localTokenMaker, err := token.NewLocalPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create local token maker: %v", err))
+	}
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("acctype", validAccountTypes)
@@ -36,7 +36,7 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 	server := &Server{
 		config:          config,
 		store:           store,
-		// localTokenMaker: localTokenMaker,
+		localTokenMaker: localTokenMaker,
 	}
 
 	server.setupRouter()
@@ -49,7 +49,8 @@ func (server *Server) setupRouter() {
 	router.GET("/readiness", server.readinessCheck)
 
 	router.POST("/users", server.createUser)
-	// router.POST("/users/login", server.loginUser)
+	router.POST("/users/login", server.loginUser)
+	router.POST("/tokens/renew_access", server.renewAccessToken)
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.localTokenMaker))
 

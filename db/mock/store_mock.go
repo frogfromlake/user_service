@@ -15,6 +15,7 @@ import (
 	time "time"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
+	pgtype "github.com/jackc/pgx/v5/pgtype"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -98,6 +99,21 @@ func (m *MockStore) CreateAccountType(ctx context.Context, arg db.CreateAccountT
 func (mr *MockStoreMockRecorder) CreateAccountType(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAccountType", reflect.TypeOf((*MockStore)(nil).CreateAccountType), ctx, arg)
+}
+
+// CreateSession mocks base method.
+func (m *MockStore) CreateSession(ctx context.Context, arg db.CreateSessionParams) (db.UserSvcSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSession", ctx, arg)
+	ret0, _ := ret[0].(db.UserSvcSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSession indicates an expected call of CreateSession.
+func (mr *MockStoreMockRecorder) CreateSession(ctx, arg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSession", reflect.TypeOf((*MockStore)(nil).CreateSession), ctx, arg)
 }
 
 // CreateUser mocks base method.
@@ -244,6 +260,21 @@ func (m *MockStore) GetAccountsForAccountType(ctx context.Context, accounttypesI
 func (mr *MockStoreMockRecorder) GetAccountsForAccountType(ctx, accounttypesID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountsForAccountType", reflect.TypeOf((*MockStore)(nil).GetAccountsForAccountType), ctx, accounttypesID)
+}
+
+// GetSession mocks base method.
+func (m *MockStore) GetSession(ctx context.Context, id pgtype.UUID) (db.UserSvcSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSession", ctx, id)
+	ret0, _ := ret[0].(db.UserSvcSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSession indicates an expected call of GetSession.
+func (mr *MockStoreMockRecorder) GetSession(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSession", reflect.TypeOf((*MockStore)(nil).GetSession), ctx, id)
 }
 
 // GetUserByID mocks base method.

@@ -48,25 +48,45 @@ dbtestout: dbtest
 apitestout: OUT=1
 apitestout: apitest
 
+utiltestout: OUT=1
+utiltestout: utiltest
+
+tokentestout: OUT=1
+tokentestout: tokentest
+
 test:
 	@if [ $(OUT) -eq 1 ]; then \
-		go test -v -cover ./... > tests.log; \
+		go test -v -cover -count=1 ./... > tests.log; \
 	else \
-		go test -v -cover ./... ; \
+		go test -v -cover -count=1 ./... ; \
 	fi
 
 dbtest:
 	@if [ $(OUT) -eq 1 ]; then \
-		go test -v -cover ./db/sqlc > db_tests.log; \
+		go test -v -cover -count=1 ./db/sqlc > db_tests.log; \
 	else \
-		go test -v -cover ./db/sqlc ; \
+		go test -v -cover -count=1 ./db/sqlc ; \
 	fi
 
 apitest:
 	@if [ $(OUT) -eq 1 ]; then \
-		go test -v -cover ./api > api_tests.log; \
+		go test -v -cover -count=1 ./api > api_tests.log; \
 	else \
-		go test -tags=-coverage -v -cover ./api ; \
+		go test -v -cover -count=1 ./api ; \
+	fi
+
+utiltest:
+	@if [ $(OUT) -eq 1 ]; then \
+		go test -v -cover -count=1 ./util > util_tests.log; \
+	else \
+		go test -v -cover -count=1 ./util ; \
+	fi
+
+tokentest:
+	@if [ $(OUT) -eq 1 ]; then \
+		go test -v -cover -count=1 ./token > token_tests.log; \
+	else \
+		go test -v -cover -count=1 ./token ; \
 	fi
 
 coverage_html:
@@ -83,4 +103,4 @@ mock:
 clean:
 	rm -f coverage.out tests.log db_tests.log api_tests.log
 
-.PHONY: createdb dropdb postgres migrateup migrateup1 migratedown migratedown1 sqlc test dbtest apitest testout dbtestout apitestout dbclean server mock clean debug
+.PHONY: createdb dropdb postgres migrateup migrateup1 migratedown migratedown1 sqlc test dbtest apitest testout dbtestout apitestout utiltest utiltestout tokentest tokentestout dbclean server mock clean debug

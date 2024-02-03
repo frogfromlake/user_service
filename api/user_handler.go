@@ -4,11 +4,14 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/http"
+	"time"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -415,69 +418,94 @@ func (server *Server) deleteUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "user deleted successfully!"})
 }
 
-// type loginUserRequest struct {
-// 	Username string `json:"username" binding:"required,min=3"`
-// 	Password string `json:"password" binding:"required,min=8,max=64"`
-// 	RoleID   int64  `json:"role_id" binding:"required,min=1,max=5"`
-// }
+type loginUserRequest struct {
+	Username string `json:"username" binding:"required,min=3"`
+	Password string `json:"password" binding:"required,min=8,max=64"`
+}
 
-// type loginUserResponse struct {
-// 	AccessToken string       `json:"access_token"`
-// 	User        userResponse `json:"user"`
-// }
+type loginUserResponse struct {
+	SessionID             uuid.UUID    `json:"session_id"`
+	AccessToken           string       `json:"access_token"`
+	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
+	RefreshToken          string       `json:"refresh_token"`
+	RefreshTokenExpiresAt time.Time    `json:"refresh_token_expires_at"`
+	User                  userResponse `json:"user"`
+}
 
-// func (server *Server) loginUser(ctx *gin.Context) {
-// 	var req loginUserRequest
-// 	if err := ctx.ShouldBindJSON(&req); err != nil {
-// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-// 		return
-// 	}
+func (server *Server) loginUser(ctx *gin.Context) {
+	var req loginUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
 
-// 	user, err := server.store.GetUserByUsername(ctx, req.Username)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			ctx.JSON(http.StatusNotFound, errorResponse(err))
-// 			return
-// 		}
-// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-// 		return
-// 	}
+	user, err := server.store.GetUserByUsername(ctx, req.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 
-// 	byteHash, err := base64.StdEncoding.DecodeString(user.PasswordHash)
-// 	if err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-// 		return
-// 	}
-// 	byteSalt, err := base64.StdEncoding.DecodeString(user.PasswordSalt)
-// 	if err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-// 		return
-// 	}
+	byteHash, err := base64.StdEncoding.DecodeString(user.PasswordHash)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	byteSalt, err := base64.StdEncoding.DecodeString(user.PasswordSalt)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 
-// 	err = util.ComparePassword(byteHash, byteSalt, req.Password)
-// 	if err != nil {
-// 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-// 		return
-// 	}
+	err = util.ComparePassword(byteHash, byteSalt, req.Password)
+	if err != nil {
+		fmt.Printf("Error in compare pw: %v\n", err)
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
 
-// 	// Implement role based access control.
-// 	if user.RoleID.Int64 != req.RoleID {
-// 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-// 		return
-// 	}
+	accessToken, accessPayload, err := server.localTokenMaker.CreateLocalToken(
+		user.Username,
+		server.config.AccessTokenDuration,
+	)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 
-// 	accessToken, err := server.localTokenMaker.CreateLocalToken(
-// 		user.Username,
-// 		server.config.AccessTokenDuration,
-// 	)
-// 	if err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-// 		return
-// 	}
+	refreshToken, refreshPayload, err := server.localTokenMaker.CreateLocalToken(
+		user.Username,
+		server.config.RefreshTokenDuration,
+	)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 
-// 	rsp := loginUserResponse{
-// 		AccessToken: accessToken,
-// 		User:        newUserResponse(user),
-// 	}
-// 	ctx.JSON(http.StatusOK, rsp)
-// }
+	session, err := server.store.CreateSession(ctx, db.CreateSessionParams{
+		ID:           util.ConvertToUUID(refreshPayload.ID.String()),
+		Username:     user.Username,
+		RefreshToken: refreshToken,
+		UserAgent:    ctx.Request.UserAgent(),
+		ClientIp:     ctx.ClientIP(),
+		IsBlocked:    false,
+		ExpiresAt:    util.ConvertToTimestamptz(refreshPayload.ExpiredAt),
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	rsp := loginUserResponse{
+		SessionID:             uuid.UUID(session.ID.Bytes),
+		AccessToken:           accessToken,
+		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
+		User:                  newUserResponse(user),
+	}
+	ctx.JSON(http.StatusOK, rsp)
+}

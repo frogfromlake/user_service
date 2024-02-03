@@ -56,7 +56,7 @@ func RandomString(n int, r ...*rand.Rand) string {
 // If an optional *rand.Rand instance is provided, it is used to generate the random username.
 // Otherwise, a new *rand.Rand instance is created using the current time as a seed.
 func RandomUsername(r ...*rand.Rand) string {
-	return RandomString(6, r...)
+	return RandomString(8, r...)
 }
 
 // RandomEmail generates a random email

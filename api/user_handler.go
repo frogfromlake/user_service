@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -461,7 +460,6 @@ func (server *Server) loginUser(ctx *gin.Context) {
 
 	err = util.ComparePassword(byteHash, byteSalt, req.Password)
 	if err != nil {
-		fmt.Printf("Error in compare pw: %v\n", err)
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}

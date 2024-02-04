@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	"github.com/Streamfair/streamfair_user_svc/gapi"
 	"github.com/Streamfair/streamfair_user_svc/pb"
 	"github.com/Streamfair/streamfair_user_svc/util"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func main() {
@@ -34,8 +37,9 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
-	// runGinServer(config, store)
+	go runGrpcGatewayServer(config, store)
 	runGrpcServer(config, store)
+
 }
 
 func runGrpcServer(config util.Config, store db.Store) {
@@ -53,10 +57,49 @@ func runGrpcServer(config util.Config, store db.Store) {
 		fmt.Fprintf(os.Stderr, "server: error while creating listener: %v\n", err)
 	}
 
-	log.Printf("server: start gRPC server on %s", listener.Addr().String())
+	log.Printf("start gRPC server on %s", listener.Addr().String())
 	err = grpcServer.Serve(listener)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "server: error while serving gRPC: %v\n", err)
+	}
+}
+
+func runGrpcGatewayServer(config util.Config, store db.Store) {
+	server, err := gapi.NewServer(config, store)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "server: error while creating server: %v\n", err)
+	}
+
+	jsonOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{
+			UseProtoNames: true,
+		},
+		UnmarshalOptions: protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	})
+
+	grpcMux := runtime.NewServeMux(jsonOption)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err = pb.RegisterUserSvcHandlerServer(ctx, grpcMux, server)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "server: error while registering gRPC server: %v\n", err)
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/", grpcMux)
+
+	listener, err := net.Listen("tcp", config.HttpServerAddress)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "server: error while creating listener: %v\n", err)
+	}
+
+	log.Printf("start HTTP Gateway server on %s", listener.Addr().String())
+	err = http.Serve(listener, mux)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "server: error while starting HTTP Gateway server: %v\n", err)
 	}
 }
 

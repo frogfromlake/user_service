@@ -51,7 +51,7 @@ CREATE TABLE "user_svc"."Users" (
 
 CREATE TABLE "user_svc"."Sessions" (
   "id" uuid PRIMARY KEY,
-  "username" varchar UNIQUE NOT NULL,
+  "username" varchar NOT NULL,
   "refresh_token" varchar NOT NULL,
   "user_agent" varchar NOT NULL,
   "client_ip" varchar NOT NULL,
@@ -79,7 +79,5 @@ ALTER TABLE "user_svc"."AccountTypes_Accounts" ADD FOREIGN KEY ("AccountTypes_id
 ALTER TABLE "user_svc"."AccountTypes_Accounts" ADD FOREIGN KEY ("Accounts_id") REFERENCES "user_svc"."Accounts" ("id");
 
 ALTER TABLE "user_svc"."Accounts" ADD CONSTRAINT "unique_account" UNIQUE ("owner", "account_type");
-
--- ALTER TABLE "user_svc"."Accounts" ADD FOREIGN KEY ("owner") REFERENCES "user_svc"."Users" ("username");
 
 ALTER TABLE "user_svc"."Sessions" ADD FOREIGN KEY ("username") REFERENCES "user_svc"."Users" ("username");

@@ -1,16 +1,12 @@
 package api
 
 import (
-	"context"
 	"fmt"
-	"os"
 
-	"github.com/Streamfair/streamfair_user_svc/token"
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
+	"github.com/Streamfair/streamfair_user_svc/token"
 	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -27,10 +23,6 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 	localTokenMaker, err := token.NewLocalPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create local token maker: %v", err))
-	}
-
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("acctype", validAccountTypes)
 	}
 
 	server := &Server{
@@ -70,70 +62,12 @@ func (server *Server) setupRouter() {
 	authRoutes.DELETE("/users/delete/:id", server.deleteUser)
 	authRoutes.DELETE("/users/delete", server.handleMissingID)
 
-	authRoutes.POST("/accounts", server.createAccount)
-	authRoutes.GET("/accounts/id/:id", server.getAccountByID)
-	authRoutes.GET("/accounts/id", server.handleMissingID)
-	authRoutes.GET("/accounts/owner/:owner", server.getAccountByOwner)
-	authRoutes.GET("/accounts/owner", server.handleMissingOwner)
-	authRoutes.GET("/accounts/list", server.listAccount)
-	authRoutes.PUT("/accounts/update/:id", server.updateAccount)
-	authRoutes.PUT("/accounts/update", server.handleMissingID)
-	authRoutes.DELETE("/accounts/delete/:id", server.deleteAccount)
-	authRoutes.DELETE("/accounts/delete", server.handleMissingID)
-
 	server.router = router
 }
 
 // StartServer starts a new HTTP server on the specified address.
 func (server *Server) StartServer(address string) error {
-	if err := InitializeDatabase(server.store); err != nil {
-		fmt.Fprintf(os.Stderr, "database: error while initializing database: %v\n", err)
-		return err
-	}
 	return server.router.Run(address)
-}
-
-// InitializeDatabase creates the initial fixed entries in the database.
-func InitializeDatabase(store db.Store) error {
-	accountTypes := util.GetAccountTypeStruct()
-	arg := db.ListAccountTypesParams{
-		Limit:  int32(len(accountTypes)),
-		Offset: 0,
-	}
-	accountTypesInDB, err := store.ListAccountTypes(context.Background(), arg)
-	if err != nil {
-		return err
-	}
-
-	// Convert accountTypesInDB into a map for faster lookup
-	accountTypesMap := make(map[int32]bool)
-	for _, accountTypeInDB := range accountTypesInDB {
-		accountTypesMap[accountTypeInDB.ID] = true
-	}
-
-	var errs []error
-	for _, accountType := range accountTypes {
-		if !accountTypesMap[int32(accountType.ID)] {
-			_, err := store.CreateAccountType(context.Background(), db.CreateAccountTypeParams{
-				Type:        accountType.Type,
-				Permissions: accountType.Permissions,
-				IsArtist:    accountType.IsArtist,
-				IsProducer:  accountType.IsProducer,
-				IsWriter:    accountType.IsWriter,
-				IsLabel:     accountType.IsLabel,
-			})
-			if err != nil {
-				errs = append(errs, err)
-			}
-		}
-	}
-
-	if len(errs) > 0 {
-		return fmt.Errorf("%q", errs)
-	}
-
-	fmt.Println("Database initialized.")
-	return nil
 }
 
 func errorResponse(err error) gin.H {

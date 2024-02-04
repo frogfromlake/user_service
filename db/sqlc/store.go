@@ -13,8 +13,6 @@ import (
 type Store interface {
 	Querier
 	Ping(ctx context.Context, timeout time.Duration) error
-	CreateAccountTx(ctx context.Context, params CreateAccountTxParams) (CreateAccountTxResult, error)
-	DeleteAccountTx(ctx context.Context, accountID int64) error
 }
 
 // DB access layer: SQLStore provides all functions to execute SQL queries and transactions

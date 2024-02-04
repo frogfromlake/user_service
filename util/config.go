@@ -10,7 +10,8 @@ import (
 // The values are read by viper from a config file or environment variables.
 type Config struct {
 	DBSource             string        `mapstructure:"DB_SOURCE_USER_SERVICE"`
-	ServerAddress        string        `mapstructure:"SERVER_ADDRESS_USER_SERVICE"`
+	HttpServerAddress    string        `mapstructure:"HTTP_SERVER_ADDRESS_USER_SERVICE"`
+	GrpcServerAddress    string        `mapstructure:"GRPC_SERVER_ADDRESS_USER_SERVICE"`
 	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
@@ -27,8 +28,11 @@ func LoadConfig(path string) (config Config, err error) {
 	if dbSource := viper.GetString("DB_SOURCE_USER_SERVICE"); dbSource != "" {
 		config.DBSource = dbSource
 	}
-	if serverAddress := viper.GetString("SERVER_ADDRESS_USER_SERVICE"); serverAddress != "" {
-		config.ServerAddress = serverAddress
+	if httpServerAddress := viper.GetString("HTTP_SERVER_ADDRESS_USER_SERVICE"); httpServerAddress != "" {
+		config.HttpServerAddress = httpServerAddress
+	}
+	if grpcServerAddress := viper.GetString("GRPC_SERVER_ADDRESS_USER_SERVICE"); grpcServerAddress != "" {
+		config.GrpcServerAddress = grpcServerAddress
 	}
 	if tokenSymmetricKey := viper.GetString("TOKEN_SYMMETRIC_KEY"); tokenSymmetricKey != "" {
 		config.TokenSymmetricKey = tokenSymmetricKey
@@ -41,7 +45,7 @@ func LoadConfig(path string) (config Config, err error) {
 	}
 
 	// If environment variables are not set, attempt to load from the config file
-	if config.DBSource == "" || config.ServerAddress == "" {
+	if config.DBSource == "" || config.HttpServerAddress == "" || config.GrpcServerAddress == "" {
 		viper.AddConfigPath(path)
 		viper.SetConfigName("app")
 		viper.SetConfigType("env")

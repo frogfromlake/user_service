@@ -14,7 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-// Server serves HTTP requests for the streamfair backend service.
+// Server serves HTTP requests for the streamfair user management service.
 type Server struct {
 	config          util.Config
 	store           db.Store

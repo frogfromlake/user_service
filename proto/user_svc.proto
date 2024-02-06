@@ -8,7 +8,7 @@ import "rpc_login_user.proto";
 
 option go_package = "github.com/Streamfair/streamfair_user_svc/pb";
 
-service UserSvc {
+service UserService {
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
         option (google.api.http) = {
             post: "/v1/create_user"

@@ -49,7 +49,7 @@ func runGrpcServer(config util.Config, store db.Store) {
 	}
 
 	grpcServer := grpc.NewServer()
-	pb.RegisterUserSvcServer(grpcServer, server)
+	pb.RegisterUserServiceServer(grpcServer, server)
 	reflection.Register(grpcServer)
 
 	listener, err := net.Listen("tcp", config.GrpcServerAddress)
@@ -83,7 +83,7 @@ func runGrpcGatewayServer(config util.Config, store db.Store) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = pb.RegisterUserSvcHandlerServer(ctx, grpcMux, server)
+	err = pb.RegisterUserServiceHandlerServer(ctx, grpcMux, server)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "server: error while registering gRPC server: %v\n", err)
 	}

@@ -14,21 +14,9 @@ createmigration:
 	@echo "Creating migration..."
 	migrate create -ext sql -dir db/migration -seq init_schema
 
-migrateup:
-	@echo "Migrating up..."
-	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/streamfair_user_service_db?sslmode=disable" -verbose up
-
-migrateup1:
-	@echo "Migrating up..."
-	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/streamfair_user_service_db?sslmode=disable" -verbose up 1
-
-migratedown:
-	@echo "Migrating down..."
-	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/streamfair_user_service_db?sslmode=disable" -verbose down
-
-migratedown1:
-	@echo "Migrating down..."
-	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/streamfair_user_service_db?sslmode=disable" -verbose down 1
+migrateup migrateup1 migratedown migratedown1:
+	@echo "Migrating..."
+	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/streamfair_user_service_db?sslmode=disable" -verbose $(if $(filter migrateup1 migratedown1,$@),$(subst migrate,,$@),) $(if $(filter migrateup migratedown,$@),up,down) $(if $(filter migrateup1 migratedown1,$@),1,)
 
 dbclean: migratedown migrateup
 	clear
@@ -111,6 +99,6 @@ proto:
 		proto/*.proto
 
 evans:
-	evans --host localhost --port 9090 -r repl
+	evans --host localhost --port 9092 -r repl
 
 .PHONY: createdb dropdb postgres migrateup migrateup1 migratedown migratedown1 sqlc test dbtest apitest testout dbtestout apitestout utiltest utiltestout tokentest tokentestout dbclean server mock clean debug proto evans

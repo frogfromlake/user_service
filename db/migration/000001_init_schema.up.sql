@@ -29,8 +29,6 @@ CREATE TABLE "user_svc"."Sessions" (
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-CREATE INDEX "idx_accType_id" ON "user_svc"."AccountTypes" ("id");
-
 CREATE INDEX "idx_user_id" ON "user_svc"."Users" ("id");
 
 CREATE INDEX "idx_user_username" ON "user_svc"."Users" ("username");

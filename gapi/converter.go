@@ -2,7 +2,7 @@ package gapi
 
 import (
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
-	"github.com/Streamfair/streamfair_user_svc/pb"
+	pb "github.com/Streamfair/streamfair_user_svc/pb/user"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

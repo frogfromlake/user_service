@@ -1,6 +1,6 @@
 # Variables
-GRPC_PORT :=   9092
-HTTP_PORT :=   5432
+GRPC_PORT :=   9094
+DB_PORT :=   5436
 DB_CONTAINER_NAME := db_user_service
 DB_NAME := streamfair_user_service_db
 DB_USER := root
@@ -9,13 +9,14 @@ DB_HOST := localhost
 
 PROTO_DIR := proto
 PB_DIR := pb
+USER_DIR := user
 
 OUT ?=   0
 
 # Targets
 postgres:
 	@echo "Starting ${DB_CONTAINER_NAME}..."
-	docker run --name ${DB_CONTAINER_NAME} -p ${HTTP_PORT}:5432 -e POSTGRES_USER=${DB_USER} -e POSTGRES_PASSWORD=${DB_PASSWORD} -d postgres:16-alpine
+	docker run --name ${DB_CONTAINER_NAME} -p ${DB_PORT}:5432 -e POSTGRES_USER=${DB_USER} -e POSTGRES_PASSWORD=${DB_PASSWORD} -d postgres:16-alpine
 
 createdb:
 	@echo "Creating database..."
@@ -31,7 +32,7 @@ createmigration:
 
 migrateup migrateup1 migratedown migratedown1:
 	@echo "Migrating..."
-	migrate -path db/migration -database "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${HTTP_PORT}/${DB_NAME}?sslmode=disable" -verbose $(if $(filter migrateup1 migratedown1,$@),$(subst migrate,,$@),) $(if $(filter migrateup migratedown,$@),up,down) $(if $(filter migrateup1 migratedown1,$@),1,)
+	migrate -path db/migration -database "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable" -verbose $(if $(filter migrateup1 migratedown1,$@),$(subst migrate,,$@),) $(if $(filter migrateup migratedown,$@),up,down) $(if $(filter migrateup1 migratedown1,$@),1,)
 
 dbclean: migratedown migrateup
 	clear
@@ -88,14 +89,28 @@ mock:
 clean:
 	rm -f coverage.out tests.log db_tests.log api_tests.log util_tests.log token_tests.log
 
-proto:
+proto: proto_core
+
+proto_core: clean_pb proto_user
 	protoc --proto_path=${PROTO_DIR} --go_out=${PB_DIR} --go_opt=paths=source_relative \
 		--go-grpc_out=${PB_DIR} --go-grpc_opt=paths=source_relative \
 		--grpc-gateway_out=${PB_DIR} --grpc-gateway_opt=paths=source_relative \
 		${PROTO_DIR}/*.proto
 
+proto_user: clean_user_dir
+	protoc --proto_path=${PROTO_DIR} --go_out=${PB_DIR} --go_opt=paths=source_relative \
+		--go-grpc_out=${PB_DIR} --go-grpc_opt=paths=source_relative \
+		--grpc-gateway_out=${PB_DIR} --grpc-gateway_opt=paths=source_relative \
+		${PROTO_DIR}/$(USER_DIR)/*.proto
+
+clean_pb:
+	rm -f $(PB_DIR)/*.go
+
+clean_user_dir:
+	rm -f $(USER_DIR)/*.go
+
 evans:
 	evans --host ${DB_HOST} --port ${GRPC_PORT} -r repl
 
 # PHONY Targets
-.PHONY: postgres createdb dropdb createmigration migrateup migrateup1 migratedown migratedown1 sqlc test dbtest apitest utiltest tokentest coverage_html server mock clean proto evans
+.PHONY: postgres createdb dropdb createmigration migrateup migrateup1 migratedown migratedown1 sqlc test dbtest apitest utiltest tokentest coverage_html server mock clean proto evans proto_core proto_user clean_pb clean_user_dir

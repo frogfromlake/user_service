@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, Streamfair User Service!")
+	fmt.Println("Hello, Streamfair User Management Service!")
 	config, err := util.LoadConfig(".")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "config: error while loading config: %v\n", err)
@@ -49,7 +49,7 @@ func runGrpcServer(config util.Config, store db.Store) {
 	}
 
 	grpcServer := grpc.NewServer()
-	pb.RegisterUserServiceServer(grpcServer, server)
+	pb.RegisterUserManagementServiceServer(grpcServer, server)
 	reflection.Register(grpcServer)
 
 	listener, err := net.Listen("tcp", config.GrpcServerAddress)
@@ -83,7 +83,7 @@ func runGrpcGatewayServer(config util.Config, store db.Store) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = pb.RegisterUserServiceHandlerServer(ctx, grpcMux, server)
+	err = pb.RegisterUserManagementServiceHandlerServer(ctx, grpcMux, server)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "server: error while registering gRPC server: %v\n", err)
 	}

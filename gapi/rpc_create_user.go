@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
-	"github.com/Streamfair/streamfair_user_svc/pb"
+	pb "github.com/Streamfair/streamfair_user_svc/pb/user"
 	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/grpc/codes"

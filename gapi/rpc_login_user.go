@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
-	"github.com/Streamfair/streamfair_user_svc/pb"
+	pb "github.com/Streamfair/streamfair_user_svc/pb/user"
 	"github.com/Streamfair/streamfair_user_svc/util"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

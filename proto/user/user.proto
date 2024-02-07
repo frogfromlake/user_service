@@ -4,7 +4,7 @@ package pb;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/Streamfair/streamfair_user_svc/pb";
+option go_package = "github.com/Streamfair/streamfair_user_svc/pb/user";
 
 message User {
      int64                     id = 1;

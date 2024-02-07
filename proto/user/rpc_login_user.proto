@@ -3,9 +3,9 @@ syntax = "proto3";
 package pb;
 
 import "google/protobuf/timestamp.proto";
-import "user.proto";
+import "user/user.proto";
 
-option go_package = "github.com/Streamfair/streamfair_user_svc/pb";
+option go_package = "github.com/Streamfair/streamfair_user_svc/pb/user";
 
 message LoginUserRequest {
      string username = 1;

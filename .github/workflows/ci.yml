@@ -25,6 +25,7 @@ jobs:
       APP_TOKEN_SYMMETRIC_KEY: ${{ secrets.TOKEN_SYMMETRIC_KEY }}
       APP_ACCESS_TOKEN_DURATION: ${{ secrets.ACCESS_TOKEN_DURATION }}
       APP_REFRESH_TOKEN_DURATION: ${{ secrets.REFRESH_TOKEN_DURATION }}
+
     services:
       postgres:
         image: postgres:16
@@ -52,6 +53,6 @@ jobs:
 
     - name: Run migrations
       run: make migrateup
-      
+
     - name: Test
       run: make test

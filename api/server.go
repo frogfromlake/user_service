@@ -70,6 +70,13 @@ func (server *Server) StartServer(address string) error {
 	return server.router.Run(address)
 }
 
+// func (server *Server) RunGinServer(config util.Config, store db.Store) {
+// 	err := server.StartServer(config.HttpServerAddress)
+// 	if err != nil {
+// 		fmt.Fprintf(os.Stderr, "server: error while starting server: %v\n", err)
+// 	}
+// }
+
 func errorResponse(err error) gin.H {
 	switch err := err.(type) {
 	case *pgconn.PgError:

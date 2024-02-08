@@ -75,6 +75,16 @@ tokentest:
 		go test -v -cover -count=1 ./token ; \
 	fi
 
+servertest:
+	@if [ $(OUT) -eq  1 ]; then \
+		go test -v -cover -count=1 ./gapi > server_tests.log; \
+	else \
+		go test -v -cover -count=1 ./gapi ; \
+	fi
+
+clean:
+	rm -f coverage.out *_tests.log
+
 coverage_html:
 	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
@@ -85,9 +95,6 @@ server:
 
 mock:
 	mockgen -source=db/sqlc/store.go -destination=db/mock/store_mock.go
-
-clean:
-	rm -f coverage.out tests.log db_tests.log api_tests.log util_tests.log token_tests.log
 
 proto: proto_core
 
@@ -113,4 +120,4 @@ evans:
 	evans --host ${DB_HOST} --port ${GRPC_PORT} -r repl
 
 # PHONY Targets
-.PHONY: postgres createdb dropdb createmigration migrateup migrateup1 migratedown migratedown1 sqlc test dbtest apitest utiltest tokentest coverage_html server mock clean proto evans proto_core proto_user clean_pb clean_user_dir
+.PHONY: postgres createdb dropdb createmigration migrateup migrateup1 migratedown migratedown1 sqlc test dbtest apitest utiltest tokentest coverage_html server mock clean proto evans proto_core proto_user clean_pb clean_user_dir servertest dbclean

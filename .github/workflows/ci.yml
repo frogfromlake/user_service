@@ -56,8 +56,7 @@ jobs:
 
     - name: Stop and Disable mono-xsp4
       run: |
-        sudo systemctl stop mono-xsp4.service || true
-        sudo systemctl disable mono-xsp4.service || true
+        run: pkill -f 'mono.*xsp4.*--port  8084' || true
         run: sudo lsof -i -P -n | grep 8084 || true
 
     - name: Test

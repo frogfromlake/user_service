@@ -1,5 +1,5 @@
 # Variables
-GRPC_PORT := 9095
+GRPC_PORT := 9094
 DB_PORT := 5436
 DB_CONTAINER_NAME := db_user_service
 DB_NAME := streamfair_user_service_db

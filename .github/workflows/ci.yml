@@ -53,5 +53,10 @@ jobs:
     - name: Run migrations
       run: make migrateup
 
+    - name: Debug bound port
+      run: |
+        sudo netstat -tuln | grep ':9094'
+        sudo lsof -i :9094
+
     - name: Test
       run: make test

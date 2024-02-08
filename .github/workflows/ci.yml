@@ -54,5 +54,8 @@ jobs:
     - name: Run migrations
       run: make migrateup
 
+    - name: Check for conflicts
+      run: sudo lsof -i -P -n | grep 8084
+
     - name: Test
       run: make test

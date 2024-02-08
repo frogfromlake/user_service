@@ -39,7 +39,7 @@ jobs:
     steps:
     - name: Kill lingering processes
       run: |
-        lsof -i :9094
+        lsof -i :9094 || true
   
     - uses: actions/checkout@v4
 

@@ -56,9 +56,12 @@ jobs:
 
     - name: Stop and Disable mono-xsp4
       run: |
-        sudo lsof -i -P -n | grep 8084 || true
-        sudo kill $(lsof -t -i :8084) || true
-        sudo lsof -i -P -n | grep 8084 || true
-
+        PID=$(sudo lsof -t -i:8084)
+        if [[ ! -z $PID ]]; then
+          sudo kill $PID || true
+        fi
+        update-rc.d mono-xsp4 disable || true
+        sudo lsof -i -P -n | grep  8084 || true
+    
     - name: Test
       run: make test

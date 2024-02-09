@@ -55,11 +55,7 @@ jobs:
       run: make migrateup
 
     - name: Stop and Disable mono-xsp4
-      run: |
-        PID=$(sudo lsof -t -i:8084)
-        if [[ ! -z $PID ]]; then
-          sudo kill $PID || true
-        fi
+      run: sudo kill -9 $(sudo lsof -t -i:8084)
     
     - name: Test
       run: make test

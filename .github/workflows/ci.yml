@@ -56,9 +56,9 @@ jobs:
 
     - name: Stop and Disable mono-xsp4
       run: |
-        run: sudo lsof -i -P -n | grep 8084 || true
-        kill $(lsof -t -i :8084) || true
-        run: sudo lsof -i -P -n | grep 8084 || true
+        sudo lsof -i -P -n | grep 8084 || true
+        sudo kill $(lsof -t -i :8084) || true
+        sudo lsof -i -P -n | grep 8084 || true
 
     - name: Test
       run: make test

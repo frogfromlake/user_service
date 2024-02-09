@@ -60,8 +60,6 @@ jobs:
         if [[ ! -z $PID ]]; then
           sudo kill $PID || true
         fi
-        update-rc.d mono-xsp4 disable || true
-        sudo lsof -i -P -n | grep  8084 || true
     
     - name: Test
       run: make test

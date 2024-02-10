@@ -22,7 +22,7 @@ import (
 // Server serves gRPC requests for the streamfair user management service.
 type Server struct {
 	grpcServer *grpc.Server
-	pb.UnimplementedUserManagementServiceServer
+	pb.UnimplementedUserServiceServer
 	config          util.Config
 	store           db.Store
 	healthSrv       *health.Server
@@ -51,7 +51,7 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 
 // RunGrpcServer runs a gRPC server on the given address.
 func (server *Server) RunGrpcServer() error {
-	pb.RegisterUserManagementServiceServer(server.grpcServer, server)
+	pb.RegisterUserServiceServer(server.grpcServer, server)
 	reflection.Register(server.grpcServer)
 
 	// Set the initial health status to SERVING when the server starts.
@@ -89,7 +89,7 @@ func (server *Server) RunGrpcGatewayServer() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := pb.RegisterUserManagementServiceHandlerServer(ctx, grpcMux, server)
+	err := pb.RegisterUserServiceHandlerServer(ctx, grpcMux, server)
 	if err != nil {
 		return fmt.Errorf("server: error while registering gRPC server: %v", err)
 	}

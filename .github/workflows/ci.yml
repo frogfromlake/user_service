@@ -22,8 +22,10 @@ jobs:
       APP_DB_SOURCE_USER_SERVICE: ${{ secrets.DB_SOURCE_USER_SERVICE }}
       APP_HTTP_SERVER_ADDRESS_USER_SERVICE: ${{ secrets.HTTP_SERVER_ADDRESS_USER_SERVICE }}
       APP_GRPC_SERVER_ADDRESS_USER_SERVICE: ${{ secrets.GRPC_SERVER_ADDRESS_USER_SERVICE }}
+      APP_TOKEN_SYMMETRIC_KEY: ${{ secrets.TOKEN_SYMMETRIC_KEY }}
       APP_ACCESS_TOKEN_DURATION: ${{ secrets.ACCESS_TOKEN_DURATION }}
       APP_REFRESH_TOKEN_DURATION: ${{ secrets.REFRESH_TOKEN_DURATION }}
+
     services:
       postgres:
         image: postgres:16
@@ -36,13 +38,12 @@ jobs:
         options: >-
           --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
-
     - uses: actions/checkout@v4
 
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.21.6'
+        go-version: ^1.22
 
     - name: Install golang-migrate
       run: |
@@ -53,5 +54,8 @@ jobs:
     - name: Run migrations
       run: make migrateup
 
+    - name: Stop and Disable mono-xsp4
+      run: sudo kill -9 $(sudo lsof -t -i:8084)
+    
     - name: Test
       run: make test

@@ -1,7 +1,7 @@
 ###  VARIABLES  ###
 # Docker Network
 ## ADJUST FOR EACH SERVICE ##
-DOCKER_NETWORK := streamfair_user_svc_network
+DOCKER_NETWORK := db_access_network
 
 # Service Container
 ## ADJUST FOR EACH SERVICE ##

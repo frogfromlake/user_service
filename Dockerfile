@@ -15,7 +15,6 @@ COPY --from=build /streamfair_user_svc/user_svc .
 # Copy the downloaded migration binary from the build stage
 COPY --from=build /streamfair_user_svc/migrate ./migrate
 
-COPY app.env .
 COPY start.sh .
 COPY wait-for.sh .
 COPY db/migration ./migration

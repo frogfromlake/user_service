@@ -19,7 +19,7 @@ type Config struct {
 
 // LoadConfig loads the configuration from the given path.
 func LoadConfig(path string) (config Config, err error) {
-	viper.SetEnvPrefix("APP")
+	// viper.SetEnvPrefix("APP")
 	// AutomaticEnv makes Viper check if environment variables match any of the existing keys.
 	// If matching env vars are found, they are loaded into Viper.
 	viper.AutomaticEnv()

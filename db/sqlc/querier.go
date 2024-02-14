@@ -16,12 +16,9 @@ type Querier interface {
 	DeleteUser(ctx context.Context, id int64) error
 	GetSession(ctx context.Context, id uuid.UUID) (UserSvcSession, error)
 	GetUserByID(ctx context.Context, id int64) (UserSvcUser, error)
-	GetUserByUsername(ctx context.Context, username string) (UserSvcUser, error)
+	GetUserByValue(ctx context.Context, username string) (UserSvcUser, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error)
-	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
-	UpdateUserEmail(ctx context.Context, arg UpdateUserEmailParams) (UpdateUserEmailRow, error)
-	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (UpdateUserPasswordRow, error)
-	UpdateUsername(ctx context.Context, arg UpdateUsernameParams) (UpdateUsernameRow, error)
+	UpdateUser(ctx context.Context, arg UpdateUserParams) (UserSvcUser, error)
 }
 
 var _ Querier = (*Queries)(nil)

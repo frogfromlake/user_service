@@ -79,7 +79,7 @@ func TestGetUserByID(t *testing.T) {
 func TestGetUserByUsername(t *testing.T) {
 	user := createRandomUser(t)
 
-	fetchedUser, err := testQueries.GetUserByUsername(context.Background(), user.Username)
+	fetchedUser, err := testQueries.GetUserByValue(context.Background(), user.Username)
 	require.NoError(t, err)
 	require.NotEmpty(t, fetchedUser)
 	require.Equal(t, user.ID, fetchedUser.ID)
@@ -143,10 +143,12 @@ func TestUpdateUser(t *testing.T) {
 	user := createRandomUser(t)
 
 	arg := UpdateUserParams{
-		ID:          user.ID,
-		Username:    util.RandomUsername(),
-		FullName:    util.RandomString(12),
-		Status:      util.ConvertToText(util.RandomString(12)),
+		Username: util.ConvertToText(util.RandomUsername()),
+		FullName: util.ConvertToText(util.RandomString(12)),
+		Email:    util.ConvertToText(util.RandomEmail()),
+		PasswordHash: util.ConvertToText(base64.StdEncoding.EncodeToString([]byte(util.RandomString(32)))),
+		Status: util.ConvertToText("active"),
+		ID: util.ConvertToInt8(user.ID),
 	}
 
 	updatedUser, err := testQueries.UpdateUser(context.Background(), arg)
@@ -154,62 +156,9 @@ func TestUpdateUser(t *testing.T) {
 	require.NotEmpty(t, updatedUser)
 	require.NotEqual(t, user.Username, updatedUser.Username)
 	require.NotEqual(t, user.FullName, updatedUser.FullName)
+	require.NotEqual(t, user.Email, updatedUser.Email)
+	require.NotEqual(t, user.PasswordHash, updatedUser.PasswordHash)
 	require.NotEqual(t, user.Status, updatedUser.Status)
 	require.True(t, user.LastLoginAt.IsZero())
 	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt, time.Minute)
-}
-
-func TestUpdateUserPassword(t *testing.T) {
-	user := createRandomUser(t)
-
-	byteHash, err := util.HashPassword(util.RandomPassword())
-	hashedPassword := base64.StdEncoding.EncodeToString(byteHash.Hash)
-	passwordSalt := base64.StdEncoding.EncodeToString(byteHash.Salt)
-	require.NoError(t, err)
-
-	arg := UpdateUserPasswordParams{
-		ID:           user.ID,
-		PasswordHash: hashedPassword,
-		PasswordSalt: passwordSalt,
-	}
-
-	updatedUser, err := testQueries.UpdateUserPassword(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, updatedUser)
-	require.NotEmpty(t, updatedUser.PasswordHash)
-	require.NotEmpty(t, updatedUser.PasswordSalt)
-	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt, time.Minute)
-	require.WithinDuration(t, time.Now(), updatedUser.PasswordChangedAt, time.Minute)
-}
-
-func TestUpdateUserEmail(t *testing.T) {
-	user := createRandomUser(t)
-
-	arg := UpdateUserEmailParams{
-		ID:    user.ID,
-		Email: util.RandomEmail(),
-	}
-
-	updatedUser, err := testQueries.UpdateUserEmail(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, updatedUser)
-	require.NotEqual(t, user.Email, updatedUser.Email)
-	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt, time.Minute)
-	require.WithinDuration(t, time.Now(), updatedUser.EmailChangedAt, time.Minute)
-}
-
-func TestUpdateUsername(t *testing.T) {
-	user := createRandomUser(t)
-
-	arg := UpdateUsernameParams{
-		ID:       user.ID,
-		Username: util.RandomString(12),
-	}
-
-	updatedUser, err := testQueries.UpdateUsername(context.Background(), arg)
-	require.NoError(t, err)
-	require.NotEmpty(t, updatedUser)
-	require.NotEqual(t, user.Username, updatedUser.Username)
-	require.WithinDuration(t, time.Now(), updatedUser.UpdatedAt, time.Minute)
-	require.WithinDuration(t, time.Now(), updatedUser.UsernameChangedAt, time.Minute)
 }

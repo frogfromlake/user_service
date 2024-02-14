@@ -53,12 +53,6 @@ func (server *Server) setupRouter() {
 	authRoutes.GET("/users/list", server.listUsers)
 	authRoutes.PUT("/users/update/:id", server.updateUser)
 	authRoutes.PUT("/users/update", server.handleMissingID)
-	authRoutes.PUT("/users/update/email/:id", server.updateUserEmail)
-	authRoutes.PUT("/users/update/email", server.handleMissingID)
-	authRoutes.PUT("/users/update/username/:id", server.updateUsername)
-	authRoutes.PUT("/users/update/username", server.handleMissingUsername)
-	authRoutes.PUT("/users/update/password/:id", server.updateUserPassword)
-	authRoutes.PUT("/users/update/password", server.handleMissingID)
 	authRoutes.DELETE("/users/delete/:id", server.deleteUser)
 	authRoutes.DELETE("/users/delete", server.handleMissingID)
 

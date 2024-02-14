@@ -241,7 +241,7 @@ func TestLoginUserAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
-					GetUserByUsername(gomock.Any(), gomock.Eq(user.Username)).
+					GetUserByValue(gomock.Any(), gomock.Eq(user.Username)).
 					Times(1).
 					Return(user, nil)
 
@@ -261,7 +261,7 @@ func TestLoginUserAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
-					GetUserByUsername(gomock.Any(), gomock.Any()).
+					GetUserByValue(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.UserSvcUser{}, sql.ErrNoRows)
 			},
@@ -277,7 +277,7 @@ func TestLoginUserAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
-					GetUserByUsername(gomock.Any(), gomock.Eq(user.Username)).
+					GetUserByValue(gomock.Any(), gomock.Eq(user.Username)).
 					Times(1).
 					Return(user, nil)
 			},
@@ -293,7 +293,7 @@ func TestLoginUserAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
-					GetUserByUsername(gomock.Any(), gomock.Any()).
+					GetUserByValue(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(db.UserSvcUser{}, sql.ErrConnDone)
 			},
@@ -309,7 +309,7 @@ func TestLoginUserAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mock_db.MockStore) {
 				store.EXPECT().
-					GetUserByUsername(gomock.Any(), gomock.Any()).
+					GetUserByValue(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {

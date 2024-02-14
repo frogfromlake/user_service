@@ -68,6 +68,7 @@ network:
 	docker network create ${DOCKER_NETWORK}
 
 db_container:
+	docker network create ${DOCKER_NETWORK}
 	docker run --name ${DB_CONTAINER_NAME} --network ${DOCKER_NETWORK} -p ${DB_HOST_PORT}:${DB_PORT} -e POSTGRES_USER=${DB_USER} -e POSTGRES_PASSWORD=${DB_PASSWORD} -d ${DB_IMAGE}
 
 createdb:

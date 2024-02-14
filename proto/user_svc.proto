@@ -3,21 +3,60 @@ syntax = "proto3";
 package pb;
 
 import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+// import "user/rpc_login_user.proto";
 import "user/rpc_create_user.proto";
-import "user/rpc_login_user.proto";
+import "user/rpc_get_user_by_id.proto";
+import "user/rpc_delete_user.proto";
+import "user/rpc_get_user_by_value.proto";
+import "user/rpc_list_users.proto";
+import "user/rpc_update_user.proto";
 
 option go_package = "github.com/Streamfair/streamfair_user_svc/pb";
 
 service UserService {
+    // rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {
+    //     option (google.api.http) = {
+    //         post: "/v1/login_user"
+    //         body: "*"
+    //     };
+    // }
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
         option (google.api.http) = {
             post: "/v1/create_user"
             body: "*"
         };
     }
-    rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {
+
+    rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-            post: "/v1/login_user"
+            delete: "/v1/delete_user/{id}"
+        };
+    }
+
+    rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse) {
+        option (google.api.http) = {
+            get: "/v1/get_user_by_id/{id}"
+        };
+    }
+
+    rpc GetUserByValue(GetUserByValueRequest) returns (GetUserByValueResponse) {
+        option (google.api.http) = {
+            get: "/v1/get_user_by_value/{username}"
+        };
+    }
+
+    rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+        option (google.api.http) = {
+            post: "/v1/list_users"
+            body: "*"
+        };
+    }
+
+    rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
+        option (google.api.http) = {
+            put: "/v1/update_user/{id}"
             body: "*"
         };
     }

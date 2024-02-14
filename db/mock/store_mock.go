@@ -116,19 +116,19 @@ func (mr *MockStoreMockRecorder) GetUserByID(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByID", reflect.TypeOf((*MockStore)(nil).GetUserByID), ctx, id)
 }
 
-// GetUserByUsername mocks base method.
-func (m *MockStore) GetUserByUsername(ctx context.Context, username string) (db.UserSvcUser, error) {
+// GetUserByValue mocks base method.
+func (m *MockStore) GetUserByValue(ctx context.Context, username string) (db.UserSvcUser, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserByUsername", ctx, username)
+	ret := m.ctrl.Call(m, "GetUserByValue", ctx, username)
 	ret0, _ := ret[0].(db.UserSvcUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserByUsername indicates an expected call of GetUserByUsername.
-func (mr *MockStoreMockRecorder) GetUserByUsername(ctx, username any) *gomock.Call {
+// GetUserByValue indicates an expected call of GetUserByValue.
+func (mr *MockStoreMockRecorder) GetUserByValue(ctx, username any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByUsername", reflect.TypeOf((*MockStore)(nil).GetUserByUsername), ctx, username)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByValue", reflect.TypeOf((*MockStore)(nil).GetUserByValue), ctx, username)
 }
 
 // ListUsers mocks base method.
@@ -161,10 +161,10 @@ func (mr *MockStoreMockRecorder) Ping(ctx, timeout any) *gomock.Call {
 }
 
 // UpdateUser mocks base method.
-func (m *MockStore) UpdateUser(ctx context.Context, arg db.UpdateUserParams) (db.UpdateUserRow, error) {
+func (m *MockStore) UpdateUser(ctx context.Context, arg db.UpdateUserParams) (db.UserSvcUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateUser", ctx, arg)
-	ret0, _ := ret[0].(db.UpdateUserRow)
+	ret0, _ := ret[0].(db.UserSvcUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -173,49 +173,4 @@ func (m *MockStore) UpdateUser(ctx context.Context, arg db.UpdateUserParams) (db
 func (mr *MockStoreMockRecorder) UpdateUser(ctx, arg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockStore)(nil).UpdateUser), ctx, arg)
-}
-
-// UpdateUserEmail mocks base method.
-func (m *MockStore) UpdateUserEmail(ctx context.Context, arg db.UpdateUserEmailParams) (db.UpdateUserEmailRow, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserEmail", ctx, arg)
-	ret0, _ := ret[0].(db.UpdateUserEmailRow)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateUserEmail indicates an expected call of UpdateUserEmail.
-func (mr *MockStoreMockRecorder) UpdateUserEmail(ctx, arg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserEmail", reflect.TypeOf((*MockStore)(nil).UpdateUserEmail), ctx, arg)
-}
-
-// UpdateUserPassword mocks base method.
-func (m *MockStore) UpdateUserPassword(ctx context.Context, arg db.UpdateUserPasswordParams) (db.UpdateUserPasswordRow, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserPassword", ctx, arg)
-	ret0, _ := ret[0].(db.UpdateUserPasswordRow)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateUserPassword indicates an expected call of UpdateUserPassword.
-func (mr *MockStoreMockRecorder) UpdateUserPassword(ctx, arg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPassword", reflect.TypeOf((*MockStore)(nil).UpdateUserPassword), ctx, arg)
-}
-
-// UpdateUsername mocks base method.
-func (m *MockStore) UpdateUsername(ctx context.Context, arg db.UpdateUsernameParams) (db.UpdateUsernameRow, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUsername", ctx, arg)
-	ret0, _ := ret[0].(db.UpdateUsernameRow)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateUsername indicates an expected call of UpdateUsername.
-func (mr *MockStoreMockRecorder) UpdateUsername(ctx, arg any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUsername", reflect.TypeOf((*MockStore)(nil).UpdateUsername), ctx, arg)
 }

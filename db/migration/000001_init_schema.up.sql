@@ -10,10 +10,10 @@ CREATE TABLE "user_svc"."Users" (
   "country_code" varchar NOT NULL,
   "role_id" bigint,
   "status" varchar,
-  "last_login_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
-  "username_changed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
-  "email_changed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
-  "password_changed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
+  "last_login_at" timestamptz NOT NULL DEFAULT('0001-01-01 00:00:00Z'),
+  "username_changed_at" timestamptz NOT NULL DEFAULT('0001-01-01 00:00:00Z'),
+  "email_changed_at" timestamptz NOT NULL DEFAULT('0001-01-01 00:00:00Z'),
+  "password_changed_at" timestamptz NOT NULL DEFAULT('0001-01-01 00:00:00Z'),
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );

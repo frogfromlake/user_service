@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package pb;
+
+import "user/user.proto";
+
+option go_package = "github.com/Streamfair/streamfair_user_svc/pb/user";
+
+message GetUserByValueRequest {
+    string username = 1;
+}
+
+message GetUserByValueResponse {
+    User user = 1;
+}

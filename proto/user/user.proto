@@ -21,3 +21,15 @@ message User {
      google.protobuf.Timestamp created_at = 12;
      google.protobuf.Timestamp updated_at = 13;
 }
+
+message Users {
+     int64                     id = 1;
+     string                    username = 2;
+     string                    full_name = 3;
+     string                    email = 4;
+     string                    country_code = 5;
+     int64                     role_id = 6;
+     google.protobuf.Timestamp last_login_at = 8;
+     google.protobuf.Timestamp created_at = 12;
+     google.protobuf.Timestamp updated_at = 13;
+}

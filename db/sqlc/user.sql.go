@@ -109,13 +109,13 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (UserSvcUser, error
 	return i, err
 }
 
-const getUserByUsername = `-- name: GetUserByUsername :one
+const getUserByValue = `-- name: GetUserByValue :one
 SELECT id, username, full_name, email, password_hash, password_salt, country_code, role_id, status, last_login_at, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at FROM "user_svc"."Users"
 WHERE username = $1 LIMIT 1
 `
 
-func (q *Queries) GetUserByUsername(ctx context.Context, username string) (UserSvcUser, error) {
-	row := q.db.QueryRow(ctx, getUserByUsername, username)
+func (q *Queries) GetUserByValue(ctx context.Context, username string) (UserSvcUser, error) {
+	row := q.db.QueryRow(ctx, getUserByValue, username)
 	var i UserSvcUser
 	err := row.Scan(
 		&i.ID,
@@ -206,142 +206,70 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUse
 
 const updateUser = `-- name: UpdateUser :one
 UPDATE "user_svc"."Users"
-SET username = COALESCE($2, username),
+SET 
+    username = COALESCE($1, username),
+    username_changed_at = COALESCE($2, username_changed_at),
     full_name = COALESCE($3, full_name),
-    country_code = COALESCE($4, country_code),
-    role_id = COALESCE($5, role_id),
-    status = COALESCE($6, status),
+    email = COALESCE($4, email),
+    email_changed_at = COALESCE($5, email_changed_at),
+    password_hash = COALESCE($6, password_hash),
+    password_salt = COALESCE($7, password_salt),
+    password_changed_at = COALESCE($8, password_changed_at),
+    country_code = COALESCE($9, country_code),
+    role_id = COALESCE($10, role_id),
+    status = COALESCE($11, status),
     updated_at = NOW()
-WHERE id = $1
-RETURNING username, full_name, country_code, role_id, status, last_login_at, updated_at
+WHERE id = $12
+RETURNING id, username, full_name, email, password_hash, password_salt, country_code, role_id, status, last_login_at, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at
 `
 
 type UpdateUserParams struct {
-	ID          int64       `json:"id"`
-	Username    string      `json:"username"`
-	FullName    string      `json:"full_name"`
-	CountryCode string      `json:"country_code"`
-	RoleID      pgtype.Int8 `json:"role_id"`
-	Status      pgtype.Text `json:"status"`
+	Username          pgtype.Text        `json:"username"`
+	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
+	FullName          pgtype.Text        `json:"full_name"`
+	Email             pgtype.Text        `json:"email"`
+	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
+	PasswordHash      pgtype.Text        `json:"password_hash"`
+	PasswordSalt      pgtype.Text        `json:"password_salt"`
+	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
+	CountryCode       pgtype.Text        `json:"country_code"`
+	RoleID            pgtype.Int8        `json:"role_id"`
+	Status            pgtype.Text        `json:"status"`
+	ID                pgtype.Int8        `json:"id"`
 }
 
-type UpdateUserRow struct {
-	Username    string      `json:"username"`
-	FullName    string      `json:"full_name"`
-	CountryCode string      `json:"country_code"`
-	RoleID      pgtype.Int8 `json:"role_id"`
-	Status      pgtype.Text `json:"status"`
-	LastLoginAt time.Time   `json:"last_login_at"`
-	UpdatedAt   time.Time   `json:"updated_at"`
-}
-
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UserSvcUser, error) {
 	row := q.db.QueryRow(ctx, updateUser,
-		arg.ID,
 		arg.Username,
+		arg.UsernameChangedAt,
 		arg.FullName,
+		arg.Email,
+		arg.EmailChangedAt,
+		arg.PasswordHash,
+		arg.PasswordSalt,
+		arg.PasswordChangedAt,
 		arg.CountryCode,
 		arg.RoleID,
 		arg.Status,
+		arg.ID,
 	)
-	var i UpdateUserRow
+	var i UserSvcUser
 	err := row.Scan(
+		&i.ID,
 		&i.Username,
 		&i.FullName,
+		&i.Email,
+		&i.PasswordHash,
+		&i.PasswordSalt,
 		&i.CountryCode,
 		&i.RoleID,
 		&i.Status,
 		&i.LastLoginAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const updateUserEmail = `-- name: UpdateUserEmail :one
-UPDATE "user_svc"."Users"
-SET email = COALESCE($2, email),
-    email_changed_at = NOW(),
-    updated_at = NOW()
-WHERE id = $1
-RETURNING email, email_changed_at, updated_at
-`
-
-type UpdateUserEmailParams struct {
-	ID    int64  `json:"id"`
-	Email string `json:"email"`
-}
-
-type UpdateUserEmailRow struct {
-	Email          string    `json:"email"`
-	EmailChangedAt time.Time `json:"email_changed_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
-}
-
-func (q *Queries) UpdateUserEmail(ctx context.Context, arg UpdateUserEmailParams) (UpdateUserEmailRow, error) {
-	row := q.db.QueryRow(ctx, updateUserEmail, arg.ID, arg.Email)
-	var i UpdateUserEmailRow
-	err := row.Scan(&i.Email, &i.EmailChangedAt, &i.UpdatedAt)
-	return i, err
-}
-
-const updateUserPassword = `-- name: UpdateUserPassword :one
-UPDATE "user_svc"."Users"
-SET password_hash = COALESCE($2, password_hash),
-    password_salt = COALESCE($3, password_salt),
-    password_changed_at = NOW(),
-    updated_at = NOW()
-WHERE id = $1
-RETURNING password_hash, password_salt, password_changed_at, updated_at
-`
-
-type UpdateUserPasswordParams struct {
-	ID           int64  `json:"id"`
-	PasswordHash string `json:"password_hash"`
-	PasswordSalt string `json:"password_salt"`
-}
-
-type UpdateUserPasswordRow struct {
-	PasswordHash      string    `json:"password_hash"`
-	PasswordSalt      string    `json:"password_salt"`
-	PasswordChangedAt time.Time `json:"password_changed_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
-}
-
-func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (UpdateUserPasswordRow, error) {
-	row := q.db.QueryRow(ctx, updateUserPassword, arg.ID, arg.PasswordHash, arg.PasswordSalt)
-	var i UpdateUserPasswordRow
-	err := row.Scan(
-		&i.PasswordHash,
-		&i.PasswordSalt,
+		&i.UsernameChangedAt,
+		&i.EmailChangedAt,
 		&i.PasswordChangedAt,
+		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
-	return i, err
-}
-
-const updateUsername = `-- name: UpdateUsername :one
-UPDATE "user_svc"."Users"
-SET username = COALESCE($2, username),
-    username_changed_at = NOW(),
-    updated_at = NOW()
-WHERE id = $1
-RETURNING username, username_changed_at, updated_at
-`
-
-type UpdateUsernameParams struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-}
-
-type UpdateUsernameRow struct {
-	Username          string    `json:"username"`
-	UsernameChangedAt time.Time `json:"username_changed_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
-}
-
-func (q *Queries) UpdateUsername(ctx context.Context, arg UpdateUsernameParams) (UpdateUsernameRow, error) {
-	row := q.db.QueryRow(ctx, updateUsername, arg.ID, arg.Username)
-	var i UpdateUsernameRow
-	err := row.Scan(&i.Username, &i.UsernameChangedAt, &i.UpdatedAt)
 	return i, err
 }

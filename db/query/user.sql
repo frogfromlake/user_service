@@ -13,7 +13,7 @@ INSERT INTO "user_svc"."Users" (
 )
 RETURNING *;
 
--- name: GetUserByUsername :one
+-- name: GetUserByValue :one
 SELECT * FROM "user_svc"."Users"
 WHERE username = $1 LIMIT 1;
 
@@ -38,41 +38,23 @@ ORDER BY id
 LIMIT $1
 OFFSET $2;
 
--- name: UpdateUserEmail :one
-UPDATE "user_svc"."Users"
-SET email = COALESCE($2, email),
-    email_changed_at = NOW(),
-    updated_at = NOW()
-WHERE id = $1
-RETURNING email, email_changed_at, updated_at;
-
--- name: UpdateUserPassword :one
-UPDATE "user_svc"."Users"
-SET password_hash = COALESCE($2, password_hash),
-    password_salt = COALESCE($3, password_salt),
-    password_changed_at = NOW(),
-    updated_at = NOW()
-WHERE id = $1
-RETURNING password_hash, password_salt, password_changed_at, updated_at;
-
--- name: UpdateUsername :one
-UPDATE "user_svc"."Users"
-SET username = COALESCE($2, username),
-    username_changed_at = NOW(),
-    updated_at = NOW()
-WHERE id = $1
-RETURNING username, username_changed_at, updated_at;
-
 -- name: UpdateUser :one
 UPDATE "user_svc"."Users"
-SET username = COALESCE($2, username),
-    full_name = COALESCE($3, full_name),
-    country_code = COALESCE($4, country_code),
-    role_id = COALESCE($5, role_id),
-    status = COALESCE($6, status),
+SET 
+    username = COALESCE(sqlc.narg(username), username),
+    username_changed_at = COALESCE(sqlc.narg(username_changed_at), username_changed_at),
+    full_name = COALESCE(sqlc.narg(full_name), full_name),
+    email = COALESCE(sqlc.narg(email), email),
+    email_changed_at = COALESCE(sqlc.narg(email_changed_at), email_changed_at),
+    password_hash = COALESCE(sqlc.narg(password_hash), password_hash),
+    password_salt = COALESCE(sqlc.narg(password_salt), password_salt),
+    password_changed_at = COALESCE(sqlc.narg(password_changed_at), password_changed_at),
+    country_code = COALESCE(sqlc.narg(country_code), country_code),
+    role_id = COALESCE(sqlc.narg(role_id), role_id),
+    status = COALESCE(sqlc.narg(status), status),
     updated_at = NOW()
-WHERE id = $1
-RETURNING username, full_name, country_code, role_id, status, last_login_at, updated_at;
+WHERE id = sqlc.narg(id)
+RETURNING *;
 
 -- name: DeleteUser :exec
 DELETE FROM "user_svc"."Users"

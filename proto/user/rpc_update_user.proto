@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package pb;
+
+import "google/protobuf/timestamp.proto";
+import "user/user.proto";
+
+option go_package = "github.com/Streamfair/streamfair_user_svc/pb/user";
+
+message UpdateUserRequest {
+    string username = 1;
+    google.protobuf.Timestamp username_changed_at = 2;
+    string full_name = 3;
+    string email = 4;
+    google.protobuf.Timestamp email_changed_at = 5;
+    string password_hash = 6;
+    string password_salt = 7;
+    google.protobuf.Timestamp password_changed_at = 8;
+    string country_code = 9;
+    string role_id = 10;
+    string status = 11;
+}
+
+message UpdateUserResponse {
+    User user = 1;
+}

@@ -61,6 +61,9 @@ ENTRY_POINT := main.go
 MOCK_SOURCE := db/sqlc/store.go
 MOCK_DEST := db/mock/store_mock.go
 
+# Documentation
+SWAGGER_DIR := doc/swagger
+SWAGGER_DOC_NAME := streamfair_user_service
 
 ###  TARGETS  ###
 # DB Management
@@ -129,7 +132,9 @@ proto_core: clean_pb proto_user
 	protoc --proto_path=${PROTO_DIR} --go_out=${PB_DIR} --go_opt=paths=source_relative \
 		--go-grpc_out=${PB_DIR} --go-grpc_opt=paths=source_relative \
 		--grpc-gateway_out=${PB_DIR} --grpc-gateway_opt=paths=source_relative \
+		--openapiv2_out=$(SWAGGER_DIR) --openapiv2_opt=allow_merge=true,merge_file_name=${SWAGGER_DOC_NAME},preserve_rpc_order=true \
 		${PROTO_DIR}/*.proto
+		statik -src=./$(SWAGGER_DIR) -dest=./doc
 
 proto_user: clean_user_dir
 	protoc --proto_path=${PROTO_DIR} --go_out=${PB_DIR} --go_opt=paths=source_relative \
@@ -139,7 +144,8 @@ proto_user: clean_user_dir
 
 clean_pb:
 	rm -f $(PB_DIR)/*.go
-
+	rm -f $(SWAGGER_DIR)/*.swagger.json
+	
 clean_user_dir:
 	rm -f $(USER_DIR)/*.go
 

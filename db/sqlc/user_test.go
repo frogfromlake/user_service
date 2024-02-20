@@ -148,7 +148,7 @@ func TestUpdateUser(t *testing.T) {
 		Email:    util.ConvertToText(util.RandomEmail()),
 		PasswordHash: util.ConvertToText(base64.StdEncoding.EncodeToString([]byte(util.RandomString(32)))),
 		Status: util.ConvertToText("active"),
-		ID: util.ConvertToInt8(user.ID),
+		ID: user.ID,
 	}
 
 	updatedUser, err := testQueries.UpdateUser(context.Background(), arg)

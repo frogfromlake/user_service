@@ -235,7 +235,7 @@ type UpdateUserParams struct {
 	CountryCode       pgtype.Text        `json:"country_code"`
 	RoleID            pgtype.Int8        `json:"role_id"`
 	Status            pgtype.Text        `json:"status"`
-	ID                pgtype.Int8        `json:"id"`
+	ID                int64              `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UserSvcUser, error) {

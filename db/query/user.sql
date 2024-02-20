@@ -53,7 +53,7 @@ SET
     role_id = COALESCE(sqlc.narg(role_id), role_id),
     status = COALESCE(sqlc.narg(status), status),
     updated_at = NOW()
-WHERE id = sqlc.narg(id)
+WHERE id = sqlc.arg(id)
 RETURNING *;
 
 -- name: DeleteUser :exec

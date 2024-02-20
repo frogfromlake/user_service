@@ -19,6 +19,7 @@ message UpdateUserRequest {
     string country_code = 9;
     string role_id = 10;
     string status = 11;
+    int64 id = 12;
 }
 
 message UpdateUserResponse {

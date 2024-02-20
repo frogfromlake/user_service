@@ -4,6 +4,7 @@ package pb;
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 // import "user/rpc_login_user.proto";
 import "user/rpc_create_user.proto";
@@ -14,6 +15,18 @@ import "user/rpc_list_users.proto";
 import "user/rpc_update_user.proto";
 
 option go_package = "github.com/Streamfair/streamfair_user_svc/pb";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+	info: {
+	  title: "Streamfair User Service";
+	  version: "1.0";
+	  contact: {
+		name: "Streamfair";
+		url: "https://github.com/Streamfair";
+		email: "nelix@posteo.de";
+	  };
+	};
+};
 
 service UserService {
     // rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {
@@ -27,24 +40,40 @@ service UserService {
             post: "/v1/create_user"
             body: "*"
         };
+		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+			description: "add description here",
+			summary: "add summary here",
+		};
     }
 
     rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
             delete: "/v1/delete_user/{id}"
         };
+		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+			description: "add description here",
+			summary: "add summary here",
+		};
     }
 
     rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse) {
         option (google.api.http) = {
             get: "/v1/get_user_by_id/{id}"
         };
+		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+			description: "add description here",
+			summary: "add summary here",
+		};
     }
 
     rpc GetUserByValue(GetUserByValueRequest) returns (GetUserByValueResponse) {
         option (google.api.http) = {
             get: "/v1/get_user_by_value/{username}"
         };
+		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+			description: "add description here",
+			summary: "add summary here",
+		};
     }
 
     rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
@@ -52,6 +81,10 @@ service UserService {
             post: "/v1/list_users"
             body: "*"
         };
+		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+			description: "add description here",
+			summary: "add summary here",
+		};
     }
 
     rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
@@ -59,5 +92,9 @@ service UserService {
             put: "/v1/update_user/{id}"
             body: "*"
         };
+		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+			description: "add description here",
+			summary: "add summary here",
+		};
     }
 }

@@ -39,15 +39,6 @@ func main() {
 		return
 	}
 
-	// Start gRPC gateway server in a separate goroutine
-	go func() {
-		if err := server.RunGrpcGatewayServer(); err != nil {
-			fmt.Fprintf(os.Stderr, "grpc gateway server: error while running: %v\n", err)
-		}
-	}()
-
-	// Start gRPC server
-	if err := server.RunGrpcServer(); err != nil {
-		fmt.Fprintf(os.Stderr, "grpc server: error while running: %v\n", err)
-	}
+	go server.RunGrpcGatewayServer()
+	server.RunGrpcServer()
 }

@@ -2,16 +2,17 @@ package gapi
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
+	_ "github.com/Streamfair/streamfair_user_svc/doc/statik"
 	"github.com/Streamfair/streamfair_user_svc/pb"
 	"github.com/Streamfair/streamfair_user_svc/token"
 	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/rakyll/statik/fs"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -48,7 +49,7 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 }
 
 // RunGrpcServer runs a gRPC server on the given address.
-func (server *Server) RunGrpcServer() error {
+func (server *Server) RunGrpcServer() {
 	pb.RegisterUserServiceServer(server.grpcServer, server)
 	reflection.Register(server.grpcServer)
 
@@ -59,7 +60,7 @@ func (server *Server) RunGrpcServer() error {
 	if err != nil {
 		// Update the health status to NOT_SERVING if there's an error.
 		server.healthSrv.SetServingStatus("", grpc_health_v1.HealthCheckResponse_NOT_SERVING)
-		return fmt.Errorf("server: error while creating gRPC listener: %v", err)
+		log.Fatalf("server: error while creating gRPC listener: %v", err)
 	}
 
 	log.Printf("start gRPC server on %s", listener.Addr().String())
@@ -67,13 +68,12 @@ func (server *Server) RunGrpcServer() error {
 	if err != nil {
 		// Update the health status to NOT_SERVING if there's an error.
 		server.healthSrv.SetServingStatus("", grpc_health_v1.HealthCheckResponse_NOT_SERVING)
-		return fmt.Errorf("server: error while serving gRPC: %v", err)
+		log.Fatalf("server: error while serving gRPC: %v", err)
 	}
-	return nil
 }
 
 // RunGrpcGatewayServer runs a gRPC gateway server that translates HTTP requests into gRPC calls.
-func (server *Server) RunGrpcGatewayServer() error {
+func (server *Server) RunGrpcGatewayServer() {
 	jsonOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 		MarshalOptions: protojson.MarshalOptions{
 			UseProtoNames: true,
@@ -89,11 +89,20 @@ func (server *Server) RunGrpcGatewayServer() error {
 
 	err := pb.RegisterUserServiceHandlerServer(ctx, grpcMux, server)
 	if err != nil {
-		return fmt.Errorf("server: error while registering gRPC server: %v", err)
+		log.Fatalf("server: error while registering gRPC server: %v", err)
 	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
+
+	// Serve the Swagger UI files using the statik file system.
+	statikFS, err := fs.New()
+	if err != nil {
+		log.Fatalf("server: error while creating statik file system: %v", err)
+	}
+
+	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
+	mux.Handle("/swagger/", swaggerHandler)
 
 	// Wrap the mux with h2c.NewHandler to support both HTTP/1 and HTTP/2 connections.
 	handler := h2c.NewHandler(mux, &http2.Server{})
@@ -124,15 +133,14 @@ func (server *Server) RunGrpcGatewayServer() error {
 
 	listener, err := net.Listen("tcp", server.config.HttpServerAddress)
 	if err != nil {
-		return fmt.Errorf("server: error while creating HTTP listener: %v", err)
+		log.Fatalf("server: error while creating HTTP listener: %v", err)
 	}
 
 	log.Printf("start HTTP Gateway server on %s", listener.Addr().String())
 	err = server.httpServer.Serve(listener)
 	if err != nil {
-		return fmt.Errorf("server: error while starting HTTP Gateway server: %v", err)
+		log.Fatalf("server: error while starting HTTP Gateway server: %v", err)
 	}
-	return nil
 }
 
 func (server *Server) Shutdown() {

@@ -2,7 +2,7 @@ package gapi
 
 import (
 	"errors"
-	"strings"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -10,6 +10,25 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// API Error Handling
+// CustomError represents a custom error with a status code and field violation details.
+type CustomError struct {
+	StatusCode codes.Code
+	Violation  *errdetails.BadRequest_FieldViolation
+}
+
+// Error returns the string representation of the error.
+func (c *CustomError) Error() string {
+	return fmt.Sprintf("status %s: %s", c.StatusCode, c.Violation.Description)
+}
+
+// WithDetails adds field violation details to a status error.
+func (c *CustomError) WithDetails(field string, err error) *CustomError {
+	c.Violation = fieldViolation(field, err)
+	return c
+}
+
+// fieldViolation creates a new field violation with the given field and error.
 func fieldViolation(field string, err error) *errdetails.BadRequest_FieldViolation {
 	return &errdetails.BadRequest_FieldViolation{
 		Field:       field,
@@ -17,65 +36,105 @@ func fieldViolation(field string, err error) *errdetails.BadRequest_FieldViolati
 	}
 }
 
-func invalidArgumentError(violations []*errdetails.BadRequest_FieldViolation) error {
-	badRequest := &errdetails.BadRequest{FieldViolations: violations}
+// invalidArgumentError creates a new invalid argument error with the given violations.
+func invalidArgumentErrors(violations []*CustomError) error {
+	badRequest := &errdetails.BadRequest{FieldViolations: make([]*errdetails.BadRequest_FieldViolation, len(violations))}
+	for i, violation := range violations {
+		badRequest.FieldViolations[i] = violation.Violation
+	}
 	statusInvalid := status.New(codes.InvalidArgument, "invalid parameters")
-
 	statusDetails, err := statusInvalid.WithDetails(badRequest)
 	if err != nil {
 		return statusInvalid.Err()
 	}
-
 	return statusDetails.Err()
 }
 
-type MultiError []error
-
-func (me MultiError) Error() string {
-	var sb strings.Builder
-	for _, err := range me {
-		sb.WriteString(err.Error())
-		sb.WriteString("\n")
+// invalidArgumentError creates a new invalid argument error with the given violation.
+func invalidArgumentError(violation *CustomError) error {
+	badRequest := &errdetails.BadRequest{
+		FieldViolations: []*errdetails.BadRequest_FieldViolation{violation.Violation},
 	}
-	return sb.String()
+	statusInvalid := status.New(codes.InvalidArgument, "invalid parameters")
+	statusDetails, err := statusInvalid.WithDetails(badRequest)
+	if err != nil {
+		return statusInvalid.Err()
+	}
+	return statusDetails.Err()
 }
 
+// Database Error Handling
+// DatabaseError is a custom error type that encapsulates database-related errors.
+type DatabaseError struct {
+	Code        string
+	Message     string
+	Description string
+}
+
+// ProtoMessage is a marker method to satisfy the protobuf.Message interface.
+func (*DatabaseError) ProtoMessage() {}
+
+// Reset clears the error to its zero value.
+func (d *DatabaseError) Reset() {
+	*d = DatabaseError{}
+}
+
+// String returns a string representation of the DatabaseError.
+func (d *DatabaseError) String() string {
+	return fmt.Sprintf("DatabaseError{Code: %s, Message: %s, Description: %s}", d.Code, d.Message, d.Description)
+}
+
+// Error implements the error interface, providing a string representation of the error.
+func (d *DatabaseError) Error() string {
+	return fmt.Sprintf("Database error: %s - %s", d.Code, d.Message)
+}
+
+// handleDatabaseError is a function that takes an error and returns a new error with additional details.
 func handleDatabaseError(err error) error {
 	var pgErr *pgconn.PgError
-	var errs MultiError
+	var dbErr *DatabaseError
 
 	if errors.As(err, &pgErr) {
+		dbErr = &DatabaseError{
+			Code:        pgErr.Code,
+			Message:     pgErr.Message,
+			Description: "Database operation failed",
+		}
+
+		var statusCode codes.Code
 		switch pgErr.Code {
 		case "23505": // unique_violation
-			errs = append(errs, status.Errorf(codes.AlreadyExists, "unique violation occurred: %v", err))
+			statusCode = codes.AlreadyExists
 		case "23503": // foreign_key_violation
-			errs = append(errs, status.Errorf(codes.FailedPrecondition, "foreign key violation occurred: %v", err))
+			statusCode = codes.FailedPrecondition
 		case "23502": // not_null_violation
-			errs = append(errs, status.Errorf(codes.InvalidArgument, "not null violation occurred: %v", err))
+			statusCode = codes.InvalidArgument
 		case "23514": // check_violation
-			errs = append(errs, status.Errorf(codes.OutOfRange, "check violation occurred: %v", err))
+			statusCode = codes.OutOfRange
 		case "2200L": // invalid_text_representation
-			errs = append(errs, status.Errorf(codes.InvalidArgument, "invalid text representation: %v", err))
+			statusCode = codes.InvalidArgument
 		case "22P02": // invalid_text_representation
-			errs = append(errs, status.Errorf(codes.InvalidArgument, "invalid text representation: %v", err))
+			statusCode = codes.InvalidArgument
 		case "23P01": // exclusion_violation
-			errs = append(errs, status.Errorf(codes.AlreadyExists, "exclusion violation occurred: %v", err))
+			statusCode = codes.AlreadyExists
 		case "25006": // read_only_sql_transaction
-			errs = append(errs, status.Errorf(codes.PermissionDenied, "read-only SQL transaction: %v", err))
+			statusCode = codes.PermissionDenied
 		case "22023": // no_data
-			errs = append(errs, status.Errorf(codes.NotFound, "no data: %v", err))
+			statusCode = codes.NotFound
 		case "54000": // too_many_connections
-			errs = append(errs, status.Errorf(codes.ResourceExhausted, "too many connections: %v", err))
+			statusCode = codes.ResourceExhausted
 		default:
-			errs = append(errs, status.Errorf(codes.Unknown, "unknown database error: %v", err))
+			statusCode = codes.Unknown
 		}
+
+		statusDetails := status.New(statusCode, dbErr.Error())
+		statusDetails, err = statusDetails.WithDetails(dbErr)
+		if err != nil {
+			return statusDetails.Err()
+		}
+		return statusDetails.Err()
 	} else {
-		errs = append(errs, status.Errorf(codes.Internal, "internal error: %v", err))
+		// If the error is not a PostgreSQL error, return an internal error
+		return status.Error(codes.Internal, "internal error: "+err.Error())
 	}
-
-	if len(errs) > 0 {
-		return errs
-	}
-
-	return nil
 }

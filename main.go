@@ -8,6 +8,9 @@ import (
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	"github.com/Streamfair/streamfair_user_svc/gapi"
 	"github.com/Streamfair/streamfair_user_svc/util"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -35,6 +38,21 @@ func main() {
 		log.Printf("server: error while creating server: %v\n", err)
 	}
 
+	runDBMigration(config.MigrationURL, config.DBSource)
+
 	go server.RunGrpcGatewayServer()
 	server.RunGrpcServer()
+}
+
+func runDBMigration(migrationURL string, dbSource string) {
+	migration, err := migrate.New(migrationURL, dbSource)
+	if err != nil {
+		log.Fatalf("db migration: unable to create migration: %v\n", err)
+	}
+
+	if err = migration.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("db migration: unable to apply migration: %v\n", err)
+	}
+
+	log.Println("db migrated successfully")
 }

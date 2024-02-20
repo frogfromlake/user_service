@@ -10,6 +10,7 @@ import (
 // The values are read by viper from a config file or environment variables.
 type Config struct {
 	DBSource             string        `mapstructure:"DB_SOURCE_USER_SERVICE"`
+	MigrationURL         string        `mapstructure:"MIGRATION_URL"`
 	HttpServerAddress    string        `mapstructure:"HTTP_SERVER_ADDRESS_USER_SERVICE"`
 	GrpcServerAddress    string        `mapstructure:"GRPC_SERVER_ADDRESS_USER_SERVICE"`
 	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
@@ -26,6 +27,9 @@ func LoadConfig(path string) (config Config, err error) {
 	// Check if environment variables are set
 	if dbSource := viper.GetString("DB_SOURCE_USER_SERVICE"); dbSource != "" {
 		config.DBSource = dbSource
+	}
+	if migrationURL := viper.GetString("MIGRATION_URL"); migrationURL != "" {
+		config.MigrationURL = migrationURL
 	}
 	if httpServerAddress := viper.GetString("HTTP_SERVER_ADDRESS_USER_SERVICE"); httpServerAddress != "" {
 		config.HttpServerAddress = httpServerAddress

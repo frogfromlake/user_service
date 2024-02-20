@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
+	"log"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	"github.com/Streamfair/streamfair_user_svc/gapi"
@@ -16,23 +16,23 @@ func main() {
 
 	config, err := util.LoadConfig(".")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "config: error while loading config: %v\n", err)
+		log.Printf("config: error while loading config: %v\n", err)
 	}
 
 	poolConfig, err := pgxpool.ParseConfig(config.DBSource)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "config: error while parsing config: %v\n", err)
+		log.Printf("config: error while parsing config: %v\n", err)
 	}
 
 	conn, err := pgxpool.New(context.Background(), poolConfig.ConnString())
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "db connection: unable to create connection pool: %v\n", err)
+		log.Printf("db connection: unable to create connection pool: %v\n", err)
 	}
 
 	store := db.NewStore(conn)
 	server, err := gapi.NewServer(config, store)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "server: error while creating server: %v\n", err)
+		log.Printf("server: error while creating server: %v\n", err)
 	}
 
 	go server.RunGrpcGatewayServer()

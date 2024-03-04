@@ -64,9 +64,8 @@ jobs:
         run: |
             migrate -path=./db/migration -database=postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5436/${{ secrets.POSTGRES_DB }}?sslmode=disable up
 
-      - name: Free up port 8084
-        run: |
-          kill -9 $(lsof -t -i:8084) 2> /dev/null || echo "No process found using port 8084."
+      - name: Stop and Disable mono-xsp4
+        run: sudo kill -9 $(sudo lsof -t -i:8084)
 
       - name: Run unit tests
         run: |

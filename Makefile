@@ -1,7 +1,11 @@
 ###  VARIABLES  ###
+ifndef GITHUB_ACTIONS
+-include ./env/db.env
+endif
+
 # Docker Network
-## ADJUST FOR EACH SERVICE ##
-DOCKER_NETWORK := db_access_network
+DB_NETWORK := db_access_network
+SERVICE_NETWORK := streamfair_internal_network
 
 # Service Container
 ## ADJUST FOR EACH SERVICE ##
@@ -22,9 +26,10 @@ DB_CONTAINER_NAME := db_user_service
 DB_PORT := 5432
 DB_HOST_PORT := 5436
 
-DB_NAME := streamfair_user_service_db
-DB_USER := root
-DB_PASSWORD := secret
+DB_NAME := $(or $(DB_NAME),$(shell grep POSTGRES_DB ./env/db.env | cut -d '=' -f2))
+DB_USER := $(or $(DB_USER),$(shell grep POSTGRES_USER ./env/db.env | cut -d '=' -f2))
+DB_PASSWORD := $(or $(DB_PASSWORD),$(shell grep POSTGRES_PASSWORD ./env/db.env | cut -d '=' -f2))
+
 DB_HOST := localhost
 DB_SOURCE_SERVICE := "postgresql://${DB_USER}:${DB_PASSWORD}@${DOCKER_NETWORK}:${DB_HOST_PORT}/${DB_NAME}?sslmode=disable"
 DB_SOURCE_MIGRATION := "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_HOST_PORT}/${DB_NAME}?sslmode=disable"
@@ -65,52 +70,74 @@ MOCK_DEST := db/mock/store_mock.go
 SWAGGER_DIR := doc/swagger
 SWAGGER_DOC_NAME := streamfair_user_service
 
-###  TARGETS  ###
-# DB Management
-network:
-	docker network create ${DOCKER_NETWORK}
 
-db_container:
-	docker run --name ${DB_CONTAINER_NAME} --network ${DOCKER_NETWORK} -p ${DB_HOST_PORT}:${DB_PORT} -e POSTGRES_USER=${DB_USER} -e POSTGRES_PASSWORD=${DB_PASSWORD} -d ${DB_IMAGE}
+###  TARGETS  ###
+# Network Management
+network:
+	@docker network inspect ${DB_NETWORK} >/dev/null 2>&1 || \
+	docker network create --driver bridge ${DB_NETWORK}
+	@docker network inspect ${SERVICE_NETWORK} >/dev/null 2>&1 || \
+	docker network create --driver bridge ${SERVICE_NETWORK}
+
+# Service Management
+service_image:
+	@docker build -t ${SERVICE_IMAGE}:${SERVICE_TAG} .
+
+service_container:
+	@docker run --name ${SERVICE_IMAGE} --network ${DB_NETWORK} --network ${SERVICE_NETWORK} -p ${GRPC_GATEWAY_HOST_PORT}:${GRPC_GATEWAY_PORT} -p ${GRPC_HOST_PORT}:${GRPC_PORT} -e DB_SOURCE=${DB_SOURCE_SERVICE} ${SERVICE_IMAGE}:${SERVICE_TAG}
+
+# DB Management
+db_container: network
+	@docker start ${DB_CONTAINER_NAME} >/dev/null 2>&1 || \
+	docker run --name ${DB_CONTAINER_NAME} --network ${DB_NETWORK} -p ${DB_HOST_PORT}:${DB_PORT} -e POSTGRES_USER=${DB_USER} -e POSTGRES_PASSWORD=${DB_PASSWORD} -d ${DB_IMAGE}
 
 createdb:
+	@sleep 1
+	@docker exec -it ${DB_CONTAINER_NAME} psql -U ${DB_USER} -lqt | cut -d \| -f 1 | grep -qw ${DB_NAME} >/dev/null 2>&1 || \
 	docker exec -it ${DB_CONTAINER_NAME} createdb --username=${DB_USER} --owner=${DB_USER} ${DB_NAME}
 
 dropdb:
-	docker exec -it ${DB_CONTAINER_NAME} dropdb ${DB_NAME}
+	@docker exec -it ${DB_CONTAINER_NAME} dropdb ${DB_NAME}
 
 createmigration:
 	migrate create -ext sql -dir ${MIGRATION_DIR} -seq ${MIGRATION_NAME}
 
 migrateup:
-	migrate -path ${MIGRATION_DIR} -database ${DB_SOURCE_MIGRATION} -verbose up
+	@migrate -path ${MIGRATION_DIR} -database ${DB_SOURCE_MIGRATION} -verbose up
 
 migrateup1:
-	migrate -path ${MIGRATION_DIR} -database ${DB_SOURCE_MIGRATION} -verbose up 1
+	@migrate -path ${MIGRATION_DIR} -database ${DB_SOURCE_MIGRATION} -verbose up 1
 
 migratedown:
-	migrate -path ${MIGRATION_DIR} -database ${DB_SOURCE_MIGRATION} -verbose down
+	@migrate -path ${MIGRATION_DIR} -database ${DB_SOURCE_MIGRATION} -verbose down
 
 migratedown1:
-	migrate -path ${MIGRATION_DIR} -database ${DB_SOURCE_MIGRATION} -verbose down 1
+	@migrate -path ${MIGRATION_DIR} -database ${DB_SOURCE_MIGRATION} -verbose down 1
 
 dbclean: migratedown migrateup
 	clear
 
 
-# Docker Management
-service_image:
-	docker build -t ${SERVICE_IMAGE}:${SERVICE_TAG} .
-	docker images
-
-service_container:
-	docker run --name ${SERVICE_IMAGE} --network ${DOCKER_NETWORK} -p ${GRPC_GATEWAY_HOST_PORT}:${GRPC_GATEWAY_PORT} -p ${GRPC_HOST_PORT}:${GRPC_PORT} -e DB_SOURCE=${DB_SOURCE_SERVICE} ${SERVICE_IMAGE}:${SERVICE_TAG}
-	docker ps
-
-
 # Execution
-server:
+server: network db_container createdb migrateup
 	@go run ${ENTRY_POINT}
+
+# Cleanup
+down:
+	@if [ "$$(docker ps -aq -f name=$(DB_CONTAINER_NAME))" ]; then \
+		docker stop $(DB_CONTAINER_NAME); \
+		docker rm $(DB_CONTAINER_NAME); \
+	fi
+	@if [ "$$(docker ps -aq -f name=$(SERVICE_IMAGE))" ]; then \
+		docker stop $(SERVICE_IMAGE); \
+		docker rm $(SERVICE_IMAGE); \
+	fi
+	@if [ "$$(docker network ls -q -f name=$(DB_NETWORK))" ]; then \
+		docker network rm $(DB_NETWORK); \
+	fi
+	@if [ "$$(docker network ls -q -f name=$(SERVICE_NETWORK))" ]; then \
+		docker network rm $(SERVICE_NETWORK); \
+	fi
 
 
 # SQLC Generation

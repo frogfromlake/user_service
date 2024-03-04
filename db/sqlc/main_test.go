@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/Streamfair/streamfair_user_svc/util"
@@ -15,19 +15,19 @@ var testQueries *Queries
 var testDB *pgxpool.Pool
 
 func setupDBConnection() {
-	config, err := util.LoadConfig("../..")
+	config, err := util.LoadConfig()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "config: error while loading config: %v\n", err)
+		log.Printf("config: error while loading config: %v\n", err)
 	}
 
 	poolConfig, err := pgxpool.ParseConfig(config.DBSource)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error while parsing config: %v\n", err)
+		log.Printf("error while parsing config: %v\n", err)
 	}
 
 	testDB, err = pgxpool.New(context.Background(), poolConfig.ConnString())
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "db connection: unable to create connection pool: %v\n", err)
+		log.Printf("db connection: unable to create connection pool: %v\n", err)
 	}
 
 	testQueries = New(testDB)

@@ -16,10 +16,9 @@ import (
 
 func main() {
 	fmt.Println("Hello, Streamfair User Management Service!")
-
-	config, err := util.LoadConfig(".")
+	config, err := util.LoadConfig()
 	if err != nil {
-		log.Printf("config: error while loading config: %v\n", err)
+		log.Fatalf("config: error while loading config: %v\n", err)
 	}
 
 	poolConfig, err := pgxpool.ParseConfig(config.DBSource)

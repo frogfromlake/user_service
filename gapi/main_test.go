@@ -10,7 +10,7 @@ import (
 )
 
 func newTestServer(t *testing.T, store db.Store) *Server {
-	config, err := util.LoadConfig("../.")
+	config, err := util.LoadConfig()
 	require.NoError(t, err)
 
 	server, err := NewServer(config, store)
@@ -20,5 +20,6 @@ func newTestServer(t *testing.T, store db.Store) *Server {
 }
 
 func TestMain(m *testing.M) {
+	os.Chdir("../")
 	os.Exit(m.Run())
 }

@@ -2,9 +2,13 @@ package gapi
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
+	"os"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	_ "github.com/Streamfair/streamfair_user_svc/doc/statik"
@@ -13,9 +17,11 @@ import (
 	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rakyll/statik/fs"
+	"github.com/spf13/viper"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
@@ -35,12 +41,25 @@ type Server struct {
 
 // NewServer creates a new gRPC server.
 func NewServer(config util.Config, store db.Store) (*Server, error) {
+	localTokenMaker, err := token.NewLocalPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create local token maker: %w", err)
+	}
+
+	tlsConfig, err := LoadTLSConfigWithTrustedCerts(config.CertPem, config.KeyPem, config.CaCertPem)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load TLS config for 'NewServer': %w", err)
+	}
+
+	creds := credentials.NewTLS(tlsConfig)
+
 	server := &Server{
-		config:     config,
-		store:      store,
-		grpcServer: grpc.NewServer(),
-		httpServer: &http.Server{Handler: nil},
-		healthSrv:  health.NewServer(),
+		config:          config,
+		store:           store,
+		grpcServer:      grpc.NewServer(grpc.Creds(creds)),
+		httpServer:      &http.Server{},
+		healthSrv:       health.NewServer(),
+		localTokenMaker: localTokenMaker,
 	}
 
 	grpc_health_v1.RegisterHealthServer(server.grpcServer, server.healthSrv)
@@ -48,99 +67,161 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 	return server, nil
 }
 
-// RunGrpcServer runs a gRPC server on the given address.
+// RunGrpcServer: runs a gRPC server on the given address.
 func (server *Server) RunGrpcServer() {
 	pb.RegisterUserServiceServer(server.grpcServer, server)
 	reflection.Register(server.grpcServer)
 
-	// Set the initial health status to SERVING when the server starts.
 	server.healthSrv.SetServingStatus("", grpc_health_v1.HealthCheckResponse_SERVING)
 
 	listener, err := net.Listen("tcp", server.config.GrpcServerAddress)
 	if err != nil {
-		// Update the health status to NOT_SERVING if there's an error.
 		server.healthSrv.SetServingStatus("", grpc_health_v1.HealthCheckResponse_NOT_SERVING)
 		log.Fatalf("server: error while creating gRPC listener: %v", err)
 	}
 
 	log.Printf("start gRPC server on %s", listener.Addr().String())
-	err = server.grpcServer.Serve(listener)
-	if err != nil {
-		// Update the health status to NOT_SERVING if there's an error.
+	if err := server.grpcServer.Serve(listener); err != nil {
 		server.healthSrv.SetServingStatus("", grpc_health_v1.HealthCheckResponse_NOT_SERVING)
 		log.Fatalf("server: error while serving gRPC: %v", err)
 	}
 }
 
-// RunGrpcGatewayServer runs a gRPC gateway server that translates HTTP requests into gRPC calls.
+// RunGrpcGatewayServer: runs a gRPC gateway server that translates HTTP requests into gRPC calls.
 func (server *Server) RunGrpcGatewayServer() {
-	jsonOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
-		MarshalOptions: protojson.MarshalOptions{
-			UseProtoNames: true,
-		},
-		UnmarshalOptions: protojson.UnmarshalOptions{
-			DiscardUnknown: true,
-		},
-	})
-
-	grpcMux := runtime.NewServeMux(jsonOption)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	err := pb.RegisterUserServiceHandlerServer(ctx, grpcMux, server)
+	tlsConfig, err := LoadTLSConfigWithTrustedCerts(server.config.CertPem, server.config.KeyPem, server.config.CaCertPem)
 	if err != nil {
+		log.Fatalf("Failed to load TLS config: %v", err)
+	}
+
+	healthClient, err := CreateHealthClient(context.Background(), server.config.GrpcServerAddress, tlsConfig)
+	if err != nil {
+		log.Fatalf("Failed to create health client: %v", err)
+	}
+
+	grpcMux := runtime.NewServeMux(
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			MarshalOptions: protojson.MarshalOptions{
+				UseProtoNames: true,
+			},
+			UnmarshalOptions: protojson.UnmarshalOptions{
+				DiscardUnknown: true,
+			},
+		}),
+		runtime.WithHealthEndpointAt(healthClient, "/streamfair/v1/healthz"),
+	)
+
+	if err := pb.RegisterUserServiceHandlerServer(context.Background(), grpcMux, server); err != nil {
 		log.Fatalf("server: error while registering gRPC server: %v", err)
 	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
 
-	// Serve the Swagger UI files using the statik file system.
+	if err := ServeSwaggerUI(mux); err != nil {
+		log.Fatalf("Failed to serve Swagger UI: %v", err)
+	}
+
+	handler := h2c.NewHandler(mux, &http2.Server{})
+	server.httpServer.Handler = handler
+
+	if err := StartHTTPServer(server.httpServer, server.config, server.config.CertPem, server.config.KeyPem); err != nil {
+		log.Fatalf("Failed to start HTTP server: %v", err)
+	}
+}
+
+// LoadTLSConfigWithTrustedCerts loads the TLS configuration either from the specified paths
+// or using raw PEM data, depending on the CI environment variable.
+func LoadTLSConfigWithTrustedCerts(certPath, keyPath, caCertPath string) (*tls.Config, error) {
+	var cert tls.Certificate
+	var err error
+
+	// Check if CI is set to true
+	if viper.GetString("CI") == "true" {
+		// Load the server's certificate and private key from raw PEM data
+		cert, err = tls.X509KeyPair([]byte(certPath), []byte(keyPath))
+	} else {
+		// Load the server's certificate and private key from paths
+		cert, err = tls.LoadX509KeyPair(certPath, keyPath)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to load server certificates: %w", err)
+	}
+
+	var caCertPEM []byte
+	if viper.GetString("CI") == "true" {
+		// Use raw PEM data for the CA's certificate
+		caCertPEM = []byte(caCertPath)
+	} else {
+		// Load the CA's certificate from a path
+		caCertPEM, err = os.ReadFile(caCertPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read CA certificate file: %w", err)
+		}
+	}
+
+	// Create a new certificate pool and add the CA's certificate
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(caCertPEM) {
+		return nil, fmt.Errorf("failed to append CA certificate to pool")
+	}
+
+	return &tls.Config{
+		RootCAs:      certPool,                // Use the CA's certificate pool
+		Certificates: []tls.Certificate{cert}, // Use the server's certificate and key
+	}, nil
+}
+
+// CreateHealthClient creates a gRPC health client to be used for health checks.
+func CreateHealthClient(ctx context.Context, grpcServerAddress string, tlsConfig *tls.Config) (grpc_health_v1.HealthClient, error) {
+	creds := credentials.NewTLS(tlsConfig)
+
+	conn, err := grpc.DialContext(ctx, grpcServerAddress, grpc.WithTransportCredentials(creds))
+	if err != nil {
+		return nil, fmt.Errorf("failed to dial health server: %w", err)
+	}
+
+	return grpc_health_v1.NewHealthClient(conn), nil
+}
+
+// ServeSwaggerUI configures the HTTP server to serve the Swagger UI files.
+func ServeSwaggerUI(mux *http.ServeMux) error {
 	statikFS, err := fs.New()
 	if err != nil {
-		log.Fatalf("server: error while creating statik file system: %v", err)
+		return fmt.Errorf("error while creating statik file system: %w", err)
 	}
 
 	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
 	mux.Handle("/swagger/", swaggerHandler)
 
-	// Wrap the mux with h2c.NewHandler to support both HTTP/1 and HTTP/2 connections.
-	handler := h2c.NewHandler(mux, &http2.Server{})
+	return nil
+}
 
-	// Set the httpServer handler to the wrapped mux.
-	server.httpServer.Handler = handler
-
-	// Add a route for the health check service.
-	mux.HandleFunc("/v1/healthz", func(w http.ResponseWriter, r *http.Request) {
-		resp, err := server.healthSrv.Check(context.Background(), &grpc_health_v1.HealthCheckRequest{})
+// StartHTTPServer starts the HTTP server with TLS enabled.
+func StartHTTPServer(server *http.Server, config util.Config, certPath, keyPath string) error {
+	if viper.GetString("CI") == "true" {
+		tlsConfig, err := LoadTLSConfigWithTrustedCerts(config.CertPem, config.KeyPem, config.CaCertPem)
 		if err != nil {
-			// Log the error for debugging purposes
-			log.Printf("Health check failed: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Internal Server Error"))
-			return
+			log.Fatalf("Failed to load TLS config: %v", err)
 		}
 
-		switch resp.GetStatus() {
-		case grpc_health_v1.HealthCheckResponse_SERVING:
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("OK"))
-		default:
-			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Write([]byte("NOT OK"))
-		}
-	})
+		// Set the TLSConfig on the http.Server
+		server.TLSConfig = tlsConfig
+		certPath = ""
+		keyPath = ""
+	}
 
-	listener, err := net.Listen("tcp", server.config.HttpServerAddress)
+	listener, err := net.Listen("tcp", config.HttpServerAddress)
 	if err != nil {
-		log.Fatalf("server: error while creating HTTP listener: %v", err)
+		return fmt.Errorf("error while creating HTTP listener: %w", err)
 	}
 
 	log.Printf("start HTTP Gateway server on %s", listener.Addr().String())
-	err = server.httpServer.Serve(listener)
-	if err != nil {
-		log.Fatalf("server: error while starting HTTP Gateway server: %v", err)
+	if err := server.ServeTLS(listener, certPath, keyPath); err != nil {
+		return fmt.Errorf("error while starting HTTP Gateway server: %w", err)
 	}
+
+	return nil
 }
 
 func (server *Server) Shutdown() {

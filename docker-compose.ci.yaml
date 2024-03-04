@@ -4,9 +4,10 @@ services:
     image: postgres:16-alpine
     container_name: streamfair_user_service_db
     environment:
-      CONTAINER_ENV: true
-    env_file:
-      - env/db.env
+      CONTAINER_ENV:     true
+      POSTGRES_DB:       ${POSTGRES_DB}
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5436:5432"
     networks:
@@ -24,9 +25,19 @@ services:
       dockerfile: Dockerfile
     container_name: streamfair_user_service
     environment:
-      CONTAINER_ENV: true
-    env_file:
-      - env/app.env
+      CONTAINER_ENV:                    true
+      CI:                               true
+      DB_SOURCE_USER_SERVICE:           ${DB_SOURCE_USER_SERVICE}
+      MIGRATION_URL:                    ${MIGRATION_URL}
+      HTTP_SERVER_ADDRESS_USER_SERVICE: ${HTTP_SERVER_ADDRESS_USER_SERVICE}
+      GRPC_SERVER_ADDRESS_USER_SERVICE: ${GRPC_SERVER_ADDRESS_USER_SERVICE}
+      TOKEN_SYMMETRIC_KEY:              ${TOKEN_SYMMETRIC_KEY}
+      ACCESS_TOKEN_DURATION:            ${ACCESS_TOKEN_DURATION}
+      REFRESH_TOKEN_DURATION:           ${REFRESH_TOKEN_DURATION}
+      SERVER_NAME:                      ${SERVER_NAME}
+      CERT_PEM:                         ${CERT_PEM}
+      KEY_PEM:                          ${KEY_PEM}
+      CA_CERT_PEM:                      ${CA_CERT_PEM}
     ports:
       - "9590:9094"
       - "8580:8084"
@@ -44,8 +55,6 @@ services:
       timeout:      1s
       retries:      30
       start_period: 5s
-    volumes:
-      - ./ssl:/ssl:ro
 
   # a dummy service which blocks "docker compose up -d" from returning until all services are up & healthy
   app-healthy:

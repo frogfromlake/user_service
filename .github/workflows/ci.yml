@@ -1,24 +1,16 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
-name: streamfair_user_service_ci
-
-defaults:
-  run:
-    working-directory: ./
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: ["main"]
-
-  pull_request:
-    branches: ["main"]
+    branches:
+      - main
 
 jobs:
-
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes:   10
     env:
+      DB_SOURCE_USER_SERVICE_LOCAL: ${{ secrets.DB_SOURCE_USER_SERVICE_LOCAL }}
       DB_SOURCE_USER_SERVICE: ${{ secrets.DB_SOURCE_USER_SERVICE }}
       MIGRATION_URL: ${{ secrets.MIGRATION_URL }}
       HTTP_SERVER_ADDRESS_USER_SERVICE: ${{ secrets.HTTP_SERVER_ADDRESS_USER_SERVICE }}
@@ -26,28 +18,73 @@ jobs:
       TOKEN_SYMMETRIC_KEY: ${{ secrets.TOKEN_SYMMETRIC_KEY }}
       ACCESS_TOKEN_DURATION: ${{ secrets.ACCESS_TOKEN_DURATION }}
       REFRESH_TOKEN_DURATION: ${{ secrets.REFRESH_TOKEN_DURATION }}
-
+      SERVER_NAME: ${{ secrets.SERVER_NAME }}
+      CERT_PEM: ${{ secrets.CERT_PEM }}
+      KEY_PEM: ${{ secrets.KEY_PEM }}
+      CA_CERT_PEM: ${{ secrets.CA_CERT_PEM }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16-alpine
         env:
-          POSTGRES_USER: root
-          POSTGRES_PASSWORD: secret
-          POSTGRES_DB: streamfair_user_service_db
-        ports:
-        - 5436:5432
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         options: >-
-          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5436:5432
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: ^1.22
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version:  1.22.0
 
-    - name: Stop and Disable mono-xsp4
-      run: sudo kill -9 $(sudo lsof -t -i:8084)
-    
-    - name: Test
-      run: make test
+      - name: Install golang-migrate
+        run: |
+            wget https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz
+            tar xvzf migrate.linux-amd64.tar.gz
+            sudo mv migrate /usr/local/bin/migrate
+
+      - name: Create Database
+        run: |
+            sleep 1
+            PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -h localhost -p 5436 -U ${{ secrets.POSTGRES_USER }} -lqt | cut -d \| -f 1 | grep -qw ${{ secrets.POSTGRES_DB }} >/dev/null 2>&1 || \
+            PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -h localhost -p 5436 -U ${{ secrets.POSTGRES_USER }} -c "CREATE DATABASE ${{ secrets.POSTGRES_DB }};"
+        
+      - name: Run Migrations
+        run: |
+            migrate -path=./db/migration -database=postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5436/${{ secrets.POSTGRES_DB }}?sslmode=disable up
+        
+      - name: Run unit tests
+        run: |
+          go test -v ./...
+
+      - name: Stop and Remove PostgreSQL Service
+        run: |
+          docker ps -qf "ancestor=postgres:16-alpine" | xargs docker stop
+          docker ps -a -qf "ancestor=postgres:16-alpine" | xargs docker rm
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      
+      - name: Prepare Environment
+        run: |
+          mkdir ssl
+
+      - name: Run Docker Compose
+        run: |
+          docker compose -f docker-compose.ci.yaml up -d --build
+
+      - name: Stop Docker Compose
+        run: |
+          docker compose -f docker-compose.ci.yaml down
+          docker system prune -a -f

@@ -31,13 +31,13 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 service UserService {
     // rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {
     //     option (google.api.http) = {
-    //         post: "/v1/login_user"
+    //         post: "/streamfair/v1/login_user"
     //         body: "*"
     //     };
     // }
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
         option (google.api.http) = {
-            post: "/v1/create_user"
+            post: "/streamfair/v1/create_user"
             body: "*"
         };
 		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -48,7 +48,7 @@ service UserService {
 
     rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-            delete: "/v1/delete_user/{id}"
+            delete: "/streamfair/v1/delete_user/{id}"
         };
 		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
 			description: "add description here",
@@ -58,7 +58,7 @@ service UserService {
 
     rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse) {
         option (google.api.http) = {
-            get: "/v1/get_user_by_id/{id}"
+            get: "/streamfair/v1/get_user_by_id/{id}"
         };
 		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
 			description: "add description here",
@@ -68,7 +68,7 @@ service UserService {
 
     rpc GetUserByValue(GetUserByValueRequest) returns (GetUserByValueResponse) {
         option (google.api.http) = {
-            get: "/v1/get_user_by_value/{username}"
+            get: "/streamfair/v1/get_user_by_value/{username}"
         };
 		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
 			description: "add description here",
@@ -78,7 +78,7 @@ service UserService {
 
     rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
         option (google.api.http) = {
-            post: "/v1/list_users"
+            post: "/streamfair/v1/list_users"
             body: "*"
         };
 		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -89,7 +89,7 @@ service UserService {
 
     rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
         option (google.api.http) = {
-            put: "/v1/update_user/{id}"
+            put: "/streamfair/v1/update_user/{id}"
             body: "*"
         };
 		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {

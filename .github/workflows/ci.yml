@@ -59,7 +59,7 @@ jobs:
             sleep 1
             PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -h localhost -p 5436 -U ${{ secrets.POSTGRES_USER }} -lqt | cut -d \| -f 1 | grep -qw ${{ secrets.POSTGRES_DB }} >/dev/null 2>&1 || \
             PGPASSWORD=${{ secrets.POSTGRES_PASSWORD }} psql -h localhost -p 5436 -U ${{ secrets.POSTGRES_USER }} -c "CREATE DATABASE ${{ secrets.POSTGRES_DB }};"
-        
+
       - name: Run Migrations
         run: |
             migrate -path=./db/migration -database=postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5436/${{ secrets.POSTGRES_DB }}?sslmode=disable up

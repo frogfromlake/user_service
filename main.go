@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"os"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	"github.com/Streamfair/streamfair_user_svc/gapi"
@@ -15,26 +18,31 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, Streamfair User Management Service!")
 	config, err := util.LoadConfig()
 	if err != nil {
-		log.Fatalf("config: error while loading config: %v\n", err)
+		log.Fatal().Err(err).Msg("config: error while loading config:")
 	}
+
+	if viper.GetString("ENVIRONMENT") == "development" {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
+	log.Info().Msg("Hello, Streamfair User Service!")
 
 	poolConfig, err := pgxpool.ParseConfig(config.DBSource)
 	if err != nil {
-		log.Printf("config: error while parsing config: %v\n", err)
+		log.Fatal().Err(err).Msg("config: error while parsing config:")
 	}
 
 	conn, err := pgxpool.New(context.Background(), poolConfig.ConnString())
 	if err != nil {
-		log.Printf("db connection: unable to create connection pool: %v\n", err)
+		log.Fatal().Err(err).Msg("db connection: unable to create connection pool:")
 	}
 
 	store := db.NewStore(conn)
 	server, err := gapi.NewServer(config, store)
 	if err != nil {
-		log.Printf("server: error while creating server: %v\n", err)
+		log.Fatal().Err(err).Msg("server: error while creating server:")
 	}
 
 	runDBMigration(config.MigrationURL, config.DBSource)
@@ -46,12 +54,12 @@ func main() {
 func runDBMigration(migrationURL string, dbSource string) {
 	migration, err := migrate.New(migrationURL, dbSource)
 	if err != nil {
-		log.Fatalf("db migration: unable to create migration: %v\n", err)
+		log.Fatal().Err(err).Msg("db migration: unable to create migration:")
 	}
 
 	if err = migration.Up(); err != nil && err != migrate.ErrNoChange {
-		log.Fatalf("db migration: unable to apply migration: %v\n", err)
+		log.Fatal().Err(err).Msg("db migration: unable to apply migration:")
 	}
 
-	log.Println("db migrated successfully")
+	log.Info().Msg("DB migrated successfully")
 }

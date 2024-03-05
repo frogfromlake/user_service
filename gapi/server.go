@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"log"
+	"github.com/rs/zerolog/log"
 	"net"
 	"net/http"
 	"os"
@@ -52,11 +52,12 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 	}
 
 	creds := credentials.NewTLS(tlsConfig)
+	grpcLogger := grpc.UnaryInterceptor(GrpcLogger)
 
 	server := &Server{
 		config:          config,
 		store:           store,
-		grpcServer:      grpc.NewServer(grpc.Creds(creds)),
+		grpcServer:      grpc.NewServer(grpc.Creds(creds), grpcLogger),
 		httpServer:      &http.Server{},
 		healthSrv:       health.NewServer(),
 		localTokenMaker: localTokenMaker,
@@ -77,13 +78,13 @@ func (server *Server) RunGrpcServer() {
 	listener, err := net.Listen("tcp", server.config.GrpcServerAddress)
 	if err != nil {
 		server.healthSrv.SetServingStatus("", grpc_health_v1.HealthCheckResponse_NOT_SERVING)
-		log.Fatalf("server: error while creating gRPC listener: %v", err)
+		log.Fatal().Err(err).Msg("server: error while creating gRPC listener:")
 	}
 
-	log.Printf("start gRPC server on %s", listener.Addr().String())
+	log.Info().Msgf("start gRPC server on %s", listener.Addr().String())
 	if err := server.grpcServer.Serve(listener); err != nil {
 		server.healthSrv.SetServingStatus("", grpc_health_v1.HealthCheckResponse_NOT_SERVING)
-		log.Fatalf("server: error while serving gRPC: %v", err)
+		log.Fatal().Err(err).Msg("server: error while serving gRPC:")
 	}
 }
 
@@ -91,12 +92,12 @@ func (server *Server) RunGrpcServer() {
 func (server *Server) RunGrpcGatewayServer() {
 	tlsConfig, err := LoadTLSConfigWithTrustedCerts(server.config.CertPem, server.config.KeyPem, server.config.CaCertPem)
 	if err != nil {
-		log.Fatalf("Failed to load TLS config: %v", err)
+		log.Fatal().Err(err).Msg("Failed to load TLS config:")
 	}
 
 	healthClient, err := CreateHealthClient(context.Background(), server.config.GrpcServerAddress, tlsConfig)
 	if err != nil {
-		log.Fatalf("Failed to create health client: %v", err)
+		log.Fatal().Err(err).Msg("Failed to create health client:")
 	}
 
 	grpcMux := runtime.NewServeMux(
@@ -112,21 +113,21 @@ func (server *Server) RunGrpcGatewayServer() {
 	)
 
 	if err := pb.RegisterUserServiceHandlerServer(context.Background(), grpcMux, server); err != nil {
-		log.Fatalf("server: error while registering gRPC server: %v", err)
+		log.Fatal().Err(err).Msg("server: error while registering gRPC server:")
 	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
 
 	if err := ServeSwaggerUI(mux); err != nil {
-		log.Fatalf("Failed to serve Swagger UI: %v", err)
+		log.Fatal().Err(err).Msg("Failed to serve Swagger UI:")
 	}
 
 	handler := h2c.NewHandler(mux, &http2.Server{})
 	server.httpServer.Handler = handler
 
 	if err := StartHTTPServer(server.httpServer, server.config, server.config.CertPem, server.config.KeyPem); err != nil {
-		log.Fatalf("Failed to start HTTP server: %v", err)
+		log.Fatal().Err(err).Msg("Failed to start HTTP server:")
 	}
 }
 
@@ -202,7 +203,7 @@ func StartHTTPServer(server *http.Server, config util.Config, certPath, keyPath 
 	if viper.GetString("CI") == "true" {
 		tlsConfig, err := LoadTLSConfigWithTrustedCerts(config.CertPem, config.KeyPem, config.CaCertPem)
 		if err != nil {
-			log.Fatalf("Failed to load TLS config: %v", err)
+			log.Fatal().Err(err).Msg("Failed to load TLS config:")
 		}
 
 		// Set the TLSConfig on the http.Server
@@ -216,7 +217,7 @@ func StartHTTPServer(server *http.Server, config util.Config, certPath, keyPath 
 		return fmt.Errorf("error while creating HTTP listener: %w", err)
 	}
 
-	log.Printf("start HTTP Gateway server on %s", listener.Addr().String())
+	log.Info().Msgf("start HTTP Gateway server on %s", listener.Addr().String())
 	if err := server.ServeTLS(listener, certPath, keyPath); err != nil {
 		return fmt.Errorf("error while starting HTTP Gateway server: %w", err)
 	}

@@ -119,7 +119,7 @@ dbclean: migratedown migrateup
 
 
 # Execution
-server: network db_container createdb migrateup
+server: network db_container createdb
 	@go run ${ENTRY_POINT}
 
 # Cleanup

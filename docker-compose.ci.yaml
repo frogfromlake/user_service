@@ -5,6 +5,7 @@ services:
     container_name: streamfair_user_service_db
     environment:
       CONTAINER_ENV:     true
+      ENVIRONMENT:       development
       POSTGRES_DB:       ${POSTGRES_DB}
       POSTGRES_USER:     ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -27,6 +28,7 @@ services:
     environment:
       CONTAINER_ENV:                    true
       CI:                               true
+      ENVIRONMENT:                      development
       DB_SOURCE_USER_SERVICE:           ${DB_SOURCE_USER_SERVICE}
       MIGRATION_URL:                    ${MIGRATION_URL}
       HTTP_SERVER_ADDRESS_USER_SERVICE: ${HTTP_SERVER_ADDRESS_USER_SERVICE}

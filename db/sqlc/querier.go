@@ -13,9 +13,10 @@ import (
 type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) (UserSvcSession, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (UserSvcUser, error)
-	DeleteUser(ctx context.Context, id int64) error
+	DeleteUserById(ctx context.Context, id int64) error
+	DeleteUserByValue(ctx context.Context, username string) error
 	GetSession(ctx context.Context, id uuid.UUID) (UserSvcSession, error)
-	GetUserByID(ctx context.Context, id int64) (UserSvcUser, error)
+	GetUserById(ctx context.Context, id int64) (UserSvcUser, error)
 	GetUserByValue(ctx context.Context, username string) (UserSvcUser, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UserSvcUser, error)

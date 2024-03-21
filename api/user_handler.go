@@ -132,7 +132,7 @@ func (server *Server) getUserByID(ctx *gin.Context) {
 		return
 	}
 
-	user, err := server.store.GetUserByID(ctx, req.ID)
+	user, err := server.store.GetUserById(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -309,13 +309,13 @@ func (server *Server) deleteUser(ctx *gin.Context) {
 		return
 	}
 
-	_, err := server.store.GetUserByID(ctx, req.ID)
+	_, err := server.store.GetUserById(ctx, req.ID)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, errorResponse(err))
 		return
 	}
 
-	err = server.store.DeleteUser(ctx, req.ID)
+	err = server.store.DeleteUserById(ctx, req.ID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

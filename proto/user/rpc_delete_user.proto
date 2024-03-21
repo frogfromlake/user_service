@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package pb;
-
-option go_package = "github.com/Streamfair/streamfair_user_svc/pb/user";
-
-message DeleteUserRequest {
-    int64 id = 1;
-}

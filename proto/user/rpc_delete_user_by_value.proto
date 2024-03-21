@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/Streamfair/streamfair_user_svc/pb/user";
+
+message DeleteUserByValueRequest {
+    string username = 1;
+}

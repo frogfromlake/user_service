@@ -6,10 +6,10 @@ import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
-// import "user/rpc_login_user.proto";
 import "user/rpc_create_user.proto";
+import "user/rpc_delete_user_by_id.proto";
+import "user/rpc_delete_user_by_value.proto";
 import "user/rpc_get_user_by_id.proto";
-import "user/rpc_delete_user.proto";
 import "user/rpc_get_user_by_value.proto";
 import "user/rpc_list_users.proto";
 import "user/rpc_update_user.proto";
@@ -29,12 +29,6 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 };
 
 service UserService {
-    // rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {
-    //     option (google.api.http) = {
-    //         post: "/streamfair/v1/login_user"
-    //         body: "*"
-    //     };
-    // }
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
         option (google.api.http) = {
             post: "/streamfair/v1/create_user"
@@ -46,10 +40,20 @@ service UserService {
 		};
     }
 
-    rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
-        option (google.api.http) = {
-            delete: "/streamfair/v1/delete_user/{id}"
-        };
+    rpc DeleteUserById(DeleteUserByIdRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete: "/streamfair/v1/delete_user_by_id/{id}"
+		};
+		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+			description: "add description here",
+			summary: "add summary here",
+		};
+    }
+
+    rpc DeleteUserByValue(DeleteUserByValueRequest) returns (google.protobuf.Empty) {
+		option (google.api.http) = {
+			delete: "/streamfair/v1/delete_user_by_value/{username}"
+		};
 		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
 			description: "add description here",
 			summary: "add summary here",
@@ -79,7 +83,6 @@ service UserService {
     rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
         option (google.api.http) = {
             post: "/streamfair/v1/list_users"
-            body: "*"
         };
 		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
 			description: "add description here",
@@ -89,7 +92,7 @@ service UserService {
 
     rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
         option (google.api.http) = {
-            put: "/streamfair/v1/update_user/{id}"
+            patch: "/streamfair/v1/update_user/{id}"
             body: "*"
         };
 		option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {

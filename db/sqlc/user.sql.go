@@ -71,23 +71,33 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (UserSvc
 	return i, err
 }
 
-const deleteUser = `-- name: DeleteUser :exec
+const deleteUserById = `-- name: DeleteUserById :exec
 DELETE FROM "user_svc"."Users"
 WHERE id = $1
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
-	_, err := q.db.Exec(ctx, deleteUser, id)
+func (q *Queries) DeleteUserById(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteUserById, id)
 	return err
 }
 
-const getUserByID = `-- name: GetUserByID :one
+const deleteUserByValue = `-- name: DeleteUserByValue :exec
+DELETE FROM "user_svc"."Users"
+WHERE username = $1
+`
+
+func (q *Queries) DeleteUserByValue(ctx context.Context, username string) error {
+	_, err := q.db.Exec(ctx, deleteUserByValue, username)
+	return err
+}
+
+const getUserById = `-- name: GetUserById :one
 SELECT id, username, full_name, email, password_hash, password_salt, country_code, role_id, status, last_login_at, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at FROM "user_svc"."Users"
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id int64) (UserSvcUser, error) {
-	row := q.db.QueryRow(ctx, getUserByID, id)
+func (q *Queries) GetUserById(ctx context.Context, id int64) (UserSvcUser, error) {
+	row := q.db.QueryRow(ctx, getUserById, id)
 	var i UserSvcUser
 	err := row.Scan(
 		&i.ID,

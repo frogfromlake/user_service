@@ -21,7 +21,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/create_user": {
+    "/streamfair/v1/create_user": {
       "post": {
         "summary": "add summary here",
         "description": "add description here",
@@ -55,11 +55,11 @@
         ]
       }
     },
-    "/v1/delete_user/{id}": {
+    "/streamfair/v1/delete_user_by_id/{id}": {
       "delete": {
         "summary": "add summary here",
         "description": "add description here",
-        "operationId": "UserService_DeleteUser",
+        "operationId": "UserService_DeleteUserById",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -89,7 +89,40 @@
         ]
       }
     },
-    "/v1/get_user_by_id/{id}": {
+    "/streamfair/v1/delete_user_by_value/{username}": {
+      "delete": {
+        "summary": "add summary here",
+        "description": "add description here",
+        "operationId": "UserService_DeleteUserByValue",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/streamfair/v1/get_user_by_id/{id}": {
       "get": {
         "summary": "add summary here",
         "description": "add description here",
@@ -122,7 +155,7 @@
         ]
       }
     },
-    "/v1/get_user_by_value/{username}": {
+    "/streamfair/v1/get_user_by_value/{username}": {
       "get": {
         "summary": "add summary here",
         "description": "add description here",
@@ -154,7 +187,7 @@
         ]
       }
     },
-    "/v1/list_users": {
+    "/streamfair/v1/list_users": {
       "post": {
         "summary": "add summary here",
         "description": "add description here",
@@ -175,12 +208,18 @@
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/pbListUsersRequest"
-            }
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -188,8 +227,8 @@
         ]
       }
     },
-    "/v1/update_user/{id}": {
-      "put": {
+    "/streamfair/v1/update_user/{id}": {
+      "patch": {
         "summary": "add summary here",
         "description": "add description here",
         "operationId": "UserService_UpdateUser",
@@ -265,7 +304,8 @@
           "type": "string"
         },
         "roleId": {
-          "type": "string"
+          "type": "string",
+          "format": "int64"
         },
         "status": {
           "type": "string"
@@ -320,19 +360,6 @@
       "properties": {
         "user": {
           "$ref": "#/definitions/pbUser"
-        }
-      }
-    },
-    "pbListUsersRequest": {
-      "type": "object",
-      "properties": {
-        "limit": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "offset": {
-          "type": "integer",
-          "format": "int32"
         }
       }
     },

@@ -17,7 +17,7 @@ RETURNING *;
 SELECT * FROM "user_svc"."Users"
 WHERE username = $1 LIMIT 1;
 
--- name: GetUserByID :one
+-- name: GetUserById :one
 SELECT * FROM "user_svc"."Users"
 WHERE id = $1 LIMIT 1;
 
@@ -56,6 +56,10 @@ SET
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
--- name: DeleteUser :exec
+-- name: DeleteUserById :exec
 DELETE FROM "user_svc"."Users"
 WHERE id = $1;
+
+-- name: DeleteUserByValue :exec
+DELETE FROM "user_svc"."Users"
+WHERE username = $1;

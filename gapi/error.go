@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Streamfair/streamfair_user_svc/pb"
 	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
@@ -63,39 +64,13 @@ func invalidArgumentError(violation *CustomError) error {
 	return statusDetails.Err()
 }
 
-// Database Error Handling
-// DatabaseError is a custom error type that encapsulates database-related errors.
-type DatabaseError struct {
-	Code        string
-	Message     string
-	Description string
-}
-
-// ProtoMessage is a marker method to satisfy the protobuf.Message interface.
-func (*DatabaseError) ProtoMessage() {}
-
-// Reset clears the error to its zero value.
-func (d *DatabaseError) Reset() {
-	*d = DatabaseError{}
-}
-
-// String returns a string representation of the DatabaseError.
-func (d *DatabaseError) String() string {
-	return fmt.Sprintf("DatabaseError{Code: %s, Message: %s, Description: %s}", d.Code, d.Message, d.Description)
-}
-
-// Error implements the error interface, providing a string representation of the error.
-func (d *DatabaseError) Error() string {
-	return fmt.Sprintf("Database error: %s - %s", d.Code, d.Message)
-}
-
 // handleDatabaseError is a function that takes an error and returns a new error with additional details.
 func handleDatabaseError(err error) error {
 	var pgErr *pgconn.PgError
-	var dbErr *DatabaseError
+	var dbErr *pb.DatabaseError // Use the generated DatabaseError struct
 
 	if errors.As(err, &pgErr) {
-		dbErr = &DatabaseError{
+		dbErr = &pb.DatabaseError{ // Use the generated DatabaseError struct
 			Code:        pgErr.Code,
 			Message:     pgErr.Message,
 			Description: "Database operation failed",
@@ -127,10 +102,14 @@ func handleDatabaseError(err error) error {
 			statusCode = codes.Unknown
 		}
 
-		statusDetails := status.New(statusCode, dbErr.Error())
+		// Create a status with the error code and message
+		statusDetails := status.New(statusCode, dbErr.Message)
+
+		// Attach the DatabaseError details to the status
 		statusDetails, err = statusDetails.WithDetails(dbErr)
 		if err != nil {
-			return statusDetails.Err()
+			// If there's an error attaching the details, return an internal error
+			return status.Error(codes.Internal, "internal error: "+err.Error())
 		}
 		return statusDetails.Err()
 	} else {

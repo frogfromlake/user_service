@@ -3,23 +3,29 @@ package gapi
 import (
 	"context"
 	"encoding/base64"
-	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/rs/zerolog/log"
 
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	pb "github.com/Streamfair/streamfair_user_svc/pb/user"
 	"github.com/Streamfair/streamfair_user_svc/util"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/Streamfair/streamfair_user_svc/validator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
+	violations := validateCreateUserRequest(req)
+	if len(violations) > 0 {
+		return nil, invalidArgumentErrors(violations)
+	}
 
 	byteHash, err := util.HashPassword(req.Password)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to hash password: %v", err)
 	}
-
 	hashedPassword := base64.StdEncoding.EncodeToString(byteHash.Hash)
 	passwordSalt := base64.StdEncoding.EncodeToString(byteHash.Salt)
 
@@ -36,18 +42,19 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 
 	user, err := server.store.CreateUser(ctx, arg)
 	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) {
-			switch pgErr.Code {
-			case "23505": // unique_violation
-				return nil, status.Errorf(codes.AlreadyExists, "unique violation occured: %v", err)
-			case "23503": // foreign_key_violation
-				return nil, status.Errorf(codes.FailedPrecondition, "foreign key violation occurred: %v", err)
-			default:
-				return nil, status.Errorf(codes.Internal, "failed to create user: %v", err)
-			}
+		log.Printf("failed to create user: %v", err)
+		if strings.Contains(err.Error(), "Users_email_key") {
+			violation := (&CustomError{
+				StatusCode: codes.AlreadyExists,
+			}).WithDetails("email", fmt.Errorf("user with email %s already exists", req.GetEmail()))
+			return nil, invalidArgumentError(violation)
+		} else if strings.Contains(err.Error(), "Users_username_key") {
+			violation := (&CustomError{
+				StatusCode: codes.AlreadyExists,
+			}).WithDetails("username", fmt.Errorf("user with username %s already exists", req.GetUsername()))
+			return nil, invalidArgumentError(violation)
 		}
-		return nil, status.Errorf(codes.Internal, "failed to create user: %v", err)
+		return nil, handleDatabaseError(err)
 	}
 
 	rsp := &pb.CreateUserResponse{
@@ -55,4 +62,51 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 	}
 
 	return rsp, nil
+}
+
+// validateCreateTokenRequest validates the create token request and returns a slice of custom errors.
+func validateCreateUserRequest(req *pb.CreateUserRequest) (violations []*CustomError) {
+	if err := validator.ValidateUsername(req.GetUsername()); err != nil {
+		violations = append(violations, (&CustomError{
+			StatusCode: codes.InvalidArgument,
+		}).WithDetails("username", err))
+	}
+
+	if err := validator.ValidateFullName(req.GetFullName()); err != nil {
+		violations = append(violations, (&CustomError{
+			StatusCode: codes.InvalidArgument,
+		}).WithDetails("full_name", err))
+	}
+
+	if err := validator.ValidateEmail(req.GetEmail()); err != nil {
+		violations = append(violations, (&CustomError{
+			StatusCode: codes.InvalidArgument,
+		}).WithDetails("email", err))
+	}
+
+	if err := validator.ValidatePassword(req.GetPassword()); err != nil {
+		violations = append(violations, (&CustomError{
+			StatusCode: codes.InvalidArgument,
+		}).WithDetails("password", err))
+	}
+
+	if err := validator.ValidateCountryCode(req.GetCountryCode()); err != nil {
+		violations = append(violations, (&CustomError{
+			StatusCode: codes.InvalidArgument,
+		}).WithDetails("country_code", err))
+	}
+
+	if err := validator.ValidateRoleId(req.GetRoleId()); err != nil {
+		violations = append(violations, (&CustomError{
+			StatusCode: codes.InvalidArgument,
+		}).WithDetails("role_id", err))
+	}
+
+	if err := validator.ValidateStatus(req.GetStatus()); err != nil {
+		violations = append(violations, (&CustomError{
+			StatusCode: codes.InvalidArgument,
+		}).WithDetails("status", err))
+	}
+
+	return violations
 }

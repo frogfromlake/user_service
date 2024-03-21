@@ -116,8 +116,11 @@ func (server *Server) RunGrpcGatewayServer() {
 		log.Fatal().Err(err).Msg("server: error while registering gRPC server:")
 	}
 
+	// Add the HTTP logger middleware
+	httpLogger := HttpLogger(grpcMux)
+
 	mux := http.NewServeMux()
-	mux.Handle("/", grpcMux)
+	mux.Handle("/", httpLogger)
 
 	if err := ServeSwaggerUI(mux); err != nil {
 		log.Fatal().Err(err).Msg("Failed to serve Swagger UI:")

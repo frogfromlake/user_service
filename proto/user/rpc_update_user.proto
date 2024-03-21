@@ -17,7 +17,7 @@ message UpdateUserRequest {
     string password_salt = 7;
     google.protobuf.Timestamp password_changed_at = 8;
     string country_code = 9;
-    string role_id = 10;
+    int64 role_id = 10;
     string status = 11;
     int64 id = 12;
 }

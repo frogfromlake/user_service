@@ -19,7 +19,7 @@ option go_package = "github.com/Streamfair/streamfair_user_svc/pb";
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 	info: {
 	  title: "Streamfair User Service";
-	  version: "1.0";
+	  version: "1.1";
 	  contact: {
 		name: "Streamfair";
 		url: "https://github.com/Streamfair";

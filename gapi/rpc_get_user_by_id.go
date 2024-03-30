@@ -28,7 +28,7 @@ func (server *Server) GetUserById(ctx context.Context, req *pb.GetUserByIdReques
 	}
 	
 	rsp := &pb.GetUserByIdResponse{
-		User: convertUser(user),
+		User: ConvertUser(user),
 	}
 	return rsp, nil
 }

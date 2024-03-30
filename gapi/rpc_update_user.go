@@ -45,7 +45,7 @@ func (server *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 	}
 
 	rsp := &pb.UpdateUserResponse{
-		User: convertUser(user),
+		User: ConvertUser(user),
 	}
 
 	return rsp, nil

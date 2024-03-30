@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func convertUser(user db.UserSvcUser) *pb.User {
+func ConvertUser(user db.UserSvcUser) *pb.User {
 	return &pb.User{
 		Id:                user.ID,
 		Username:          user.Username,

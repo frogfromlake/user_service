@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Streamfair User Service",
-    "version": "1.0",
+    "version": "1.1",
     "contact": {
       "name": "Streamfair",
       "url": "https://github.com/Streamfair",
@@ -397,6 +397,12 @@
           "type": "string"
         },
         "email": {
+          "type": "string"
+        },
+        "passwordHash": {
+          "type": "string"
+        },
+        "passwordSalt": {
           "type": "string"
         },
         "countryCode": {

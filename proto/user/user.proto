@@ -11,15 +11,17 @@ message User {
      string                    username = 2;
      string                    full_name = 3;
      string                    email = 4;
-     string                    country_code = 5;
-     int64                     role_id = 6;
-     string                    status = 7;
-     google.protobuf.Timestamp last_login_at = 8;
-     google.protobuf.Timestamp username_changed_at = 9;
-     google.protobuf.Timestamp email_changed_at = 10;
-     google.protobuf.Timestamp password_changed_at = 11;
-     google.protobuf.Timestamp created_at = 12;
-     google.protobuf.Timestamp updated_at = 13;
+     string                    password_hash = 5;
+     string                    password_salt = 6;
+     string                    country_code = 7;
+     int64                     role_id = 8;
+     string                    status = 9;
+     google.protobuf.Timestamp last_login_at = 10;
+     google.protobuf.Timestamp username_changed_at = 11;
+     google.protobuf.Timestamp email_changed_at = 12;
+     google.protobuf.Timestamp password_changed_at = 13;
+     google.protobuf.Timestamp created_at = 14;
+     google.protobuf.Timestamp updated_at = 15;
 }
 
 message Users {
@@ -29,7 +31,7 @@ message Users {
      string                    email = 4;
      string                    country_code = 5;
      int64                     role_id = 6;
-     google.protobuf.Timestamp last_login_at = 8;
-     google.protobuf.Timestamp created_at = 12;
-     google.protobuf.Timestamp updated_at = 13;
+     google.protobuf.Timestamp last_login_at = 7;
+     google.protobuf.Timestamp created_at = 8;
+     google.protobuf.Timestamp updated_at = 9;
 }

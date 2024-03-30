@@ -58,7 +58,7 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 	}
 
 	rsp := &pb.CreateUserResponse{
-		User: convertUser(user),
+		User: ConvertUser(user),
 	}
 
 	return rsp, nil

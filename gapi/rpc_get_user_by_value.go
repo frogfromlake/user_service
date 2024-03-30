@@ -28,7 +28,7 @@ func (server *Server) GetUserByValue(ctx context.Context, req *pb.GetUserByValue
 	}
 
 	rsp := &pb.GetUserByValueResponse{
-		User: convertUser(user),
+		User: ConvertUser(user),
 	}
 	return rsp, nil
 }

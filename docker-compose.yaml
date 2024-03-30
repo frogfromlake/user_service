@@ -52,7 +52,7 @@ services:
   # a dummy service which blocks "docker compose up -d" from returning until all services are up & healthy
   app-healthy:
     image: alpine:latest
-    container_name: service_status
+    container_name: streamfair_user_service_status
     command: [ "echo", "all services are up & healthy" ]
     depends_on:
       api:
@@ -62,4 +62,4 @@ networks:
   db_access_network:
     driver: bridge
   streamfair_internal_network:
-    driver: bridge
+    external: true

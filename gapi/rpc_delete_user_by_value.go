@@ -3,7 +3,7 @@ package gapi
 import (
 	"context"
 
-	pb "github.com/Streamfair/streamfair_user_svc/pb/user"
+	pb "github.com/Streamfair/streamfair_user_svc/common_proto/UserService/pb/user"
 	"github.com/Streamfair/streamfair_user_svc/validator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"

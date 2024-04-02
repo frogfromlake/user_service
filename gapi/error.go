@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Streamfair/streamfair_idp/pb"
+	db_err "github.com/Streamfair/streamfair_user_svc/common_proto/error"
 	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
@@ -67,10 +67,10 @@ func invalidArgumentError(violation *CustomError) error {
 // handleDatabaseError is a function that takes an error and returns a new error with additional details.
 func handleDatabaseError(err error) error {
 	var pgErr *pgconn.PgError
-	var dbErr *pb.DatabaseError // Use the generated DatabaseError struct
+	var dbErr *db_err.DatabaseError // Use the generated DatabaseError struct
 
 	if errors.As(err, &pgErr) {
-		dbErr = &pb.DatabaseError{ // Use the generated DatabaseError struct
+		dbErr = &db_err.DatabaseError{ // Use the generated DatabaseError struct
 			Code:        pgErr.Code,
 			Message:     pgErr.Message,
 			Description: "Database operation failed",

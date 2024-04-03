@@ -1,3 +1,0 @@
-[submodule "common_proto"]
-	path = common_proto
-	url = https://github.com/Streamfair/common_proto.git

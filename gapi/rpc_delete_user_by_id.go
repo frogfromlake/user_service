@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Streamfair/streamfair_user_svc/validator"
-	pb "github.com/Streamfair/streamfair_user_svc/common_proto/UserService/pb/user"
+	pb "github.com/Streamfair/common_proto/UserService/pb/user"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/emptypb"
 )

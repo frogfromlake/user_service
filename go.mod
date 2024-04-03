@@ -1,6 +1,6 @@
 module github.com/Streamfair/streamfair_user_svc
 
-go 1.22
+go 1.22.0
 
 require (
 	github.com/aead/chacha20poly1305 v0.0.0-20201124145622-1a5aba2a8b29
@@ -24,6 +24,7 @@ require (
 )
 
 require (
+	github.com/Streamfair/common_proto v0.0.0-20240403094914-da378434b90b // indirect
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/aead/poly1305 v0.0.0-20180717145839-3fee0db0b635 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect

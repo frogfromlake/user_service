@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	db_err "github.com/Streamfair/streamfair_user_svc/common_proto/error"
+	db_err "github.com/Streamfair/common_proto/error"
 	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"

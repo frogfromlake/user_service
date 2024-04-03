@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"os"
 
-	pb "github.com/Streamfair/streamfair_user_svc/common_proto/UserService/pb"
+	pb "github.com/Streamfair/streamfair_user_svc/common_proto/UserService/pb/user"
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	_ "github.com/Streamfair/streamfair_user_svc/doc/statik"
 	"github.com/Streamfair/streamfair_user_svc/token"

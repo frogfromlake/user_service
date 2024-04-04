@@ -8,8 +8,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	pb "github.com/Streamfair/common_proto/UserService/pb/user"
+	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/Streamfair/streamfair_user_svc/validator"
 	"google.golang.org/grpc/codes"

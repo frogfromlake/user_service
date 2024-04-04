@@ -161,7 +161,7 @@ proto_core: clean_pb proto_user proto_errors
 		--proto_path=${PROTO_DIR} \
 		--proto_path=${COMMON_PROTO_DIR} \
 		--go_out=${PB_DIR} \
-		--go_opt=paths=source_relative,Muser_svc.proto=github.com/Streamfair/streamfair_user_svc/common_proto/UserService/pb \
+		--go_opt=paths=source_relative \
 		--go-grpc_out=${PB_DIR} \
 		--go-grpc_opt=paths=source_relative \
 		--grpc-gateway_out=${PB_DIR} \
@@ -174,7 +174,7 @@ proto_user: clean_user_dir
 		--proto_path=${PROTO_DIR} \
 		--proto_path=${COMMON_PROTO_DIR} \
 		--go_out=${PB_DIR} \
-		--go_opt=paths=source_relative,Muser/rpc_create_user.proto=github.com/Streamfair/streamfair_user_svc/common_proto/UserService/pb/user \
+		--go_opt=paths=source_relative \
 		--go-grpc_out=${PB_DIR} \
 		--go-grpc_opt=paths=source_relative \
 		--grpc-gateway_out=${PB_DIR} \

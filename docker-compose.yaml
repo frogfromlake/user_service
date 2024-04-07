@@ -22,6 +22,8 @@ services:
   api:
     build:
       context: .
+      additional_contexts:
+        parent: ../
       dockerfile: Dockerfile
     container_name: streamfair_user_service
     environment:

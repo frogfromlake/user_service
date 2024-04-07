@@ -1,17 +1,11 @@
 # Build Stage
 FROM golang:1.22.0-alpine3.19 AS build
 WORKDIR /streamfair_user_svc
+
+# Copy go.work and go.work.sum files for local module resolution
+COPY --from=parent go.work go.work.sum ./
+
 COPY . .
-
-# Install git
-RUN apk update && apk add --no-cache git
-
-# Set GOPRIVATE environment variable
-# ENV GOPRIVATE=github.com/Streamfair/*
-
-# Add .netrc file for GitHub authentication
-# COPY .netrc /root/.netrc
-# RUN chmod 600 /root/.netrc
 
 RUN go mod tidy
 
@@ -35,4 +29,4 @@ CMD [ "/streamfair_user_svc/user_svc" ]
 ENTRYPOINT [ "/streamfair_user_svc/start.sh" ]
 
 # Install bash, curl, and git in the final image
-RUN apk add --no-cache bash curl git
+RUN apk add --no-cache bash curl

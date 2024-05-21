@@ -22,18 +22,18 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 		return nil, invalidArgumentErrors(violations)
 	}
 
-	// byteHash, err := util.HashPassword(req.Password)
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, "failed to hash password: %v", err)
-	// }
-	// hashedPassword := base64.StdEncoding.EncodeToString(byteHash.Hash)
-	// passwordSalt := base64.StdEncoding.EncodeToString(byteHash.Salt)
+	byteHash, err := util.HashPassword(req.Password)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to hash password: %v", err)
+	}
 
+	hashedPassword := base64.StdEncoding.EncodeToString(byteHash.Hash)
+	passwordSalt := base64.StdEncoding.EncodeToString(byteHash.Salt)
 	arg := db.CreateUserParams{
 		Username:     req.GetUsername(),
 		FullName:     req.GetFullName(),
 		Email:        req.GetEmail(),
-		PasswordHash: req.getPasswordHash(),
+		PasswordHash: hashedPassword,
 		PasswordSalt: passwordSalt,
 		CountryCode:  req.GetCountryCode(),
 		RoleID:       util.ConvertToInt8(req.GetRoleId()),

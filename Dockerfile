@@ -2,9 +2,6 @@
 FROM golang:1.22.0-alpine3.19 AS build
 WORKDIR /streamfair_user_svc
 
-# Copy go.work and go.work.sum files for local module resolution
-COPY --from=parent go.work go.work.sum ./
-
 COPY . .
 
 RUN go mod tidy
@@ -28,5 +25,5 @@ EXPOSE 9094
 CMD [ "/streamfair_user_svc/user_svc" ]
 ENTRYPOINT [ "/streamfair_user_svc/start.sh" ]
 
-# Install bash, curl, and git in the final image
+# Install bash and curl in the final image
 RUN apk add --no-cache bash curl

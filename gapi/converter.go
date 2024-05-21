@@ -1,8 +1,8 @@
 package gapi
 
 import (
-	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	pb "github.com/Streamfair/common_proto/UserService/pb/user"
+	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -12,6 +12,8 @@ func ConvertUser(user db.UserSvcUser) *pb.User {
 		Username:          user.Username,
 		FullName:          user.FullName,
 		Email:             user.Email,
+		PasswordHash:      user.PasswordHash,
+		PasswordSalt:      user.PasswordSalt,
 		CountryCode:       user.CountryCode,
 		RoleId:            user.RoleID.Int64,
 		Status:            user.Status.String,

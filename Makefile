@@ -40,10 +40,10 @@ MIGRATION_NAME := init_schema
 
 # Proto
 ## ADJUST FOR EACH SERVICE ##
-COMMON_PROTO_DIR := ../CommonProto
-COMMON_PROTO_ERROR_DIR := ../CommonProto/error
-PROTO_DIR := ../CommonProto/UserService/proto
-PB_DIR := ../CommonProto/UserService/pb
+COMMON_PROTO_DIR := ../common_proto
+COMMON_PROTO_ERROR_DIR := ../common_proto/error
+PROTO_DIR := ../common_proto/UserService/proto
+PB_DIR := ../common_proto/UserService/pb
 USER_DIR := user
 
 # Test
@@ -193,7 +193,7 @@ clean_pb:
 	rm -f $(SWAGGER_DIR)/*.swagger.json
 	
 clean_user_dir:
-	rm -f $(USER_DIR)/*.go
+	rm -f $(PB_DIR)/$(USER_DIR)/*.go
 
 
 # Evans GRPC Client

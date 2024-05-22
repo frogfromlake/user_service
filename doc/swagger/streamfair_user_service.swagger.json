@@ -1,0 +1,513 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Streamfair User Service",
+    "version": "1.1",
+    "contact": {
+      "name": "Streamfair",
+      "url": "https://github.com/Streamfair",
+      "email": "nelix@posteo.de"
+    }
+  },
+  "tags": [
+    {
+      "name": "UserService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/streamfair/v1/create_user": {
+      "post": {
+        "summary": "add summary here",
+        "description": "add description here",
+        "operationId": "UserService_CreateUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbCreateUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pbCreateUserRequest"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/streamfair/v1/delete_user_by_id/{id}": {
+      "delete": {
+        "summary": "add summary here",
+        "description": "add description here",
+        "operationId": "UserService_DeleteUserById",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/streamfair/v1/delete_user_by_value/{username}": {
+      "delete": {
+        "summary": "add summary here",
+        "description": "add description here",
+        "operationId": "UserService_DeleteUserByValue",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/streamfair/v1/get_user_by_id/{id}": {
+      "get": {
+        "summary": "add summary here",
+        "description": "add description here",
+        "operationId": "UserService_GetUserById",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbGetUserByIdResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/streamfair/v1/get_user_by_value/{username}": {
+      "get": {
+        "summary": "add summary here",
+        "description": "add description here",
+        "operationId": "UserService_GetUserByValue",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbGetUserByValueResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/streamfair/v1/list_users": {
+      "post": {
+        "summary": "add summary here",
+        "description": "add description here",
+        "operationId": "UserService_ListUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbListUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    },
+    "/streamfair/v1/update_user/{id}": {
+      "patch": {
+        "summary": "add summary here",
+        "description": "add description here",
+        "operationId": "UserService_UpdateUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbUpdateUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserServiceUpdateUserBody"
+            }
+          }
+        ],
+        "tags": [
+          "UserService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "UserServiceUpdateUserBody": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "usernameChangedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "emailChangedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "passwordHash": {
+          "type": "string"
+        },
+        "passwordSalt": {
+          "type": "string"
+        },
+        "passwordChangedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "roleId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "pbCreateUserRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "passwordHash": {
+          "type": "string"
+        },
+        "passwordSalt": {
+          "type": "string"
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "roleId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "pbCreateUserResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/pbUser"
+        }
+      }
+    },
+    "pbGetUserByIdResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/pbUser"
+        }
+      }
+    },
+    "pbGetUserByValueResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/pbUser"
+        }
+      }
+    },
+    "pbListUsersResponse": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbUsers"
+          }
+        }
+      }
+    },
+    "pbUpdateUserResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/pbUser"
+        }
+      }
+    },
+    "pbUser": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "username": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "passwordHash": {
+          "type": "string"
+        },
+        "passwordSalt": {
+          "type": "string"
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "roleId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "status": {
+          "type": "string"
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "usernameChangedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "emailChangedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "passwordChangedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "pbUsers": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "username": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "roleId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

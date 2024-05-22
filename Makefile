@@ -166,6 +166,8 @@ proto_core: clean_pb proto_user proto_errors
 		--go-grpc_opt=paths=source_relative \
 		--grpc-gateway_out=${PB_DIR} \
 		--grpc-gateway_opt=paths=source_relative \
+		--openapiv2_out=$(SWAGGER_DIR) \
+		--openapiv2_opt=allow_merge=true,merge_file_name=${SWAGGER_DOC_NAME},preserve_rpc_order=true \
 		${PROTO_DIR}/*.proto
 	statik -src=./$(SWAGGER_DIR) -dest=./doc
 

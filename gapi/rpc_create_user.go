@@ -2,7 +2,6 @@ package gapi
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"strings"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/Streamfair/streamfair_user_svc/validator"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
@@ -22,19 +20,12 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 		return nil, invalidArgumentErrors(violations)
 	}
 
-	byteHash, err := util.HashPassword(req.Password)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to hash password: %v", err)
-	}
-
-	hashedPassword := base64.StdEncoding.EncodeToString(byteHash.Hash)
-	passwordSalt := base64.StdEncoding.EncodeToString(byteHash.Salt)
 	arg := db.CreateUserParams{
 		Username:     req.GetUsername(),
 		FullName:     req.GetFullName(),
 		Email:        req.GetEmail(),
-		PasswordHash: hashedPassword,
-		PasswordSalt: passwordSalt,
+		PasswordHash: req.GetPasswordHash(),
+		PasswordSalt: req.GetPasswordSalt(),
 		CountryCode:  req.GetCountryCode(),
 		RoleID:       util.ConvertToInt8(req.GetRoleId()),
 		Status:       util.ConvertToText(req.GetStatus()),
@@ -82,12 +73,6 @@ func validateCreateUserRequest(req *pb.CreateUserRequest) (violations []*CustomE
 		violations = append(violations, (&CustomError{
 			StatusCode: codes.InvalidArgument,
 		}).WithDetails("email", err))
-	}
-
-	if err := validator.ValidatePassword(req.GetPassword()); err != nil {
-		violations = append(violations, (&CustomError{
-			StatusCode: codes.InvalidArgument,
-		}).WithDetails("password", err))
 	}
 
 	if err := validator.ValidateCountryCode(req.GetCountryCode()); err != nil {

@@ -3,7 +3,7 @@ module github.com/Streamfair/streamfair_user_svc
 go 1.22.0
 
 require (
-	github.com/Streamfair/common_proto v0.0.0-20240404155614-fae4f080d0e6
+	github.com/Streamfair/common_proto v0.0.0-20240521204828-19a42b277339
 	github.com/aead/chacha20poly1305 v0.0.0-20201124145622-1a5aba2a8b29
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-migrate/migrate/v4 v4.17.0

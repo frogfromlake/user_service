@@ -4,6 +4,8 @@ github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migc
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/Streamfair/common_proto v0.0.0-20240404155614-fae4f080d0e6 h1:GmV4kI3zaAsYeLiYTI+1y6Wh9jEzQ+IQqHcuZDjsbAQ=
 github.com/Streamfair/common_proto v0.0.0-20240404155614-fae4f080d0e6/go.mod h1:c6I+NzHzhTeQ5lq2TTNr+ZpBFRwedjyHpihFHIxAUnM=
+github.com/Streamfair/common_proto v0.0.0-20240521204828-19a42b277339 h1:b1DBXAjTQvU+gyYvsaDlkT1dxL6sOZdBwVsCTLhYZOU=
+github.com/Streamfair/common_proto v0.0.0-20240521204828-19a42b277339/go.mod h1:c6I+NzHzhTeQ5lq2TTNr+ZpBFRwedjyHpihFHIxAUnM=
 github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da h1:KjTM2ks9d14ZYCvmHS9iAKVt9AyzRSqNU1qabPih5BY=
 github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da/go.mod h1:eHEWzANqSiWQsof+nXEI9bUVUyV6F53Fp89EuCh2EAA=
 github.com/aead/chacha20poly1305 v0.0.0-20170617001512-233f39982aeb/go.mod h1:UzH9IX1MMqOcwhoNOIjmTQeAxrFgzs50j4golQtXXxU=

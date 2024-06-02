@@ -24,7 +24,7 @@
     "/streamfair/v1/create_user": {
       "post": {
         "summary": "add summary here",
-        "description": "add description here",
+        "description": "add description here test",
         "operationId": "UserService_CreateUser",
         "responses": {
           "200": {

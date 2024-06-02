@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Streamfair/common_proto/UserService/pb"
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
 	_ "github.com/Streamfair/streamfair_user_svc/doc/statik"
+	"github.com/Streamfair/common_proto/UserService/pb"
 	"github.com/Streamfair/streamfair_user_svc/token"
 	"github.com/Streamfair/streamfair_user_svc/util"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"

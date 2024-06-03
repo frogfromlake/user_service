@@ -39,4 +39,7 @@ coverage.out
 # openssl
 ssl
 
+# custom
+failure.log
+
 .netrc

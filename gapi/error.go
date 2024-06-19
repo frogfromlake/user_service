@@ -43,7 +43,7 @@ func invalidArgumentErrors(violations []*CustomError) error {
 	for i, violation := range violations {
 		badRequest.FieldViolations[i] = violation.Violation
 	}
-	statusInvalid := status.New(codes.InvalidArgument, "invalid parameters")
+	statusInvalid := status.New(codes.InvalidArgument, "invalid parameters in"+violations[0].Violation.GetField())
 	statusDetails, err := statusInvalid.WithDetails(badRequest)
 	if err != nil {
 		return statusInvalid.Err()

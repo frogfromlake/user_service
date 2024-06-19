@@ -3,9 +3,8 @@ package gapi
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"github.com/rs/zerolog/log"
+	"strings"
 
 	pb "github.com/Streamfair/common_proto/UserService/pb/user"
 	db "github.com/Streamfair/streamfair_user_svc/db/sqlc"
@@ -16,10 +15,6 @@ import (
 
 func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	violations := validateCreateUserRequest(req)
-	if len(violations) > 0 {
-		return nil, invalidArgumentErrors(violations)
-	}
-
 	arg := db.CreateUserParams{
 		Username:     req.GetUsername(),
 		FullName:     req.GetFullName(),
@@ -30,10 +25,13 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 		RoleID:       util.ConvertToInt8(req.GetRoleId()),
 		Status:       util.ConvertToText(req.GetStatus()),
 	}
+	if len(violations) > 0 {
+		log.Fatal().Msgf("INVALID REQUEST: %v\nPARAMS: %v\n", violations, arg)
+		return nil, invalidArgumentErrors(violations)
+	}
 
 	user, err := server.store.CreateUser(ctx, arg)
 	if err != nil {
-		log.Printf("failed to create user: %v", err)
 		if strings.Contains(err.Error(), "Users_email_key") {
 			violation := (&CustomError{
 				StatusCode: codes.AlreadyExists,
@@ -47,7 +45,6 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 		}
 		return nil, handleDatabaseError(err)
 	}
-
 	rsp := &pb.CreateUserResponse{
 		User: ConvertUser(user),
 	}

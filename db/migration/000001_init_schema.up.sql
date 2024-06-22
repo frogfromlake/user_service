@@ -14,8 +14,8 @@ CREATE TABLE "user_svc"."Users" (
   "username_changed_at" timestamptz NOT NULL DEFAULT('0001-01-01 00:00:00Z'),
   "email_changed_at" timestamptz NOT NULL DEFAULT('0001-01-01 00:00:00Z'),
   "password_changed_at" timestamptz NOT NULL DEFAULT('0001-01-01 00:00:00Z'),
-  "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT (now())
+  "created_at" timestamptz NOT NULL DEFAULT(now()),
+  "updated_at" timestamptz NOT NULL DEFAULT(now())
 );
 
 CREATE TABLE "user_svc"."Sessions" (

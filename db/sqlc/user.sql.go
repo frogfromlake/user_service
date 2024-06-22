@@ -21,9 +21,21 @@ INSERT INTO "user_svc"."Users" (
  password_salt,
  country_code,
  role_id,
- status
+ status,
+ last_login_at,
+ username_changed_at,
+ email_changed_at,
+ password_changed_at,
+ created_at,
+ updated_at
 ) VALUES (
- $1, $2, $3, $4, $5 , $6, $7, $8
+ $1, $2, $3, $4, $5 , $6, $7, $8,
+    '0001-01-01 00:00:00Z',
+    '0001-01-01 00:00:00Z',
+    '0001-01-01 00:00:00Z',
+    '0001-01-01 00:00:00Z',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 )
 RETURNING id, username, full_name, email, password_hash, password_salt, country_code, role_id, status, last_login_at, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at
 `
@@ -218,49 +230,58 @@ const updateUser = `-- name: UpdateUser :one
 UPDATE "user_svc"."Users"
 SET 
     username = COALESCE($1, username),
-    username_changed_at = COALESCE($2, username_changed_at),
-    full_name = COALESCE($3, full_name),
-    email = COALESCE($4, email),
-    email_changed_at = COALESCE($5, email_changed_at),
-    password_hash = COALESCE($6, password_hash),
-    password_salt = COALESCE($7, password_salt),
-    password_changed_at = COALESCE($8, password_changed_at),
-    country_code = COALESCE($9, country_code),
-    role_id = COALESCE($10, role_id),
-    status = COALESCE($11, status),
+    username_changed_at = CASE
+                            WHEN $1 IS NOT NULL AND $1 != username
+                            THEN NOW()
+                            ELSE username_changed_at
+                          END,
+    full_name = COALESCE($2, full_name),
+    email = COALESCE($3, email),
+    email_changed_at = CASE
+                         WHEN $3 IS NOT NULL AND $3 != email
+                         THEN NOW()
+                         ELSE email_changed_at
+                       END,
+    password_hash = COALESCE($4, password_hash),
+    password_salt = COALESCE($5, password_salt),
+    password_changed_at = CASE
+                            WHEN $4 IS NOT NULL AND $4 != password_hash
+                            THEN NOW()
+                            ELSE password_changed_at
+                          END,
+    country_code = COALESCE($6, country_code),
+    role_id = COALESCE($7, role_id),
+    status = COALESCE($8, status),
+    created_at = COALESCE($9, created_at),
     updated_at = NOW()
-WHERE id = $12
+WHERE id = $10
 RETURNING id, username, full_name, email, password_hash, password_salt, country_code, role_id, status, last_login_at, username_changed_at, email_changed_at, password_changed_at, created_at, updated_at
 `
 
 type UpdateUserParams struct {
-	Username          pgtype.Text        `json:"username"`
-	UsernameChangedAt pgtype.Timestamptz `json:"username_changed_at"`
-	FullName          pgtype.Text        `json:"full_name"`
-	Email             pgtype.Text        `json:"email"`
-	EmailChangedAt    pgtype.Timestamptz `json:"email_changed_at"`
-	PasswordHash      pgtype.Text        `json:"password_hash"`
-	PasswordSalt      pgtype.Text        `json:"password_salt"`
-	PasswordChangedAt pgtype.Timestamptz `json:"password_changed_at"`
-	CountryCode       pgtype.Text        `json:"country_code"`
-	RoleID            pgtype.Int8        `json:"role_id"`
-	Status            pgtype.Text        `json:"status"`
-	ID                int64              `json:"id"`
+	Username     pgtype.Text        `json:"username"`
+	FullName     pgtype.Text        `json:"full_name"`
+	Email        pgtype.Text        `json:"email"`
+	PasswordHash pgtype.Text        `json:"password_hash"`
+	PasswordSalt pgtype.Text        `json:"password_salt"`
+	CountryCode  pgtype.Text        `json:"country_code"`
+	RoleID       pgtype.Int8        `json:"role_id"`
+	Status       pgtype.Text        `json:"status"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	ID           int64              `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UserSvcUser, error) {
 	row := q.db.QueryRow(ctx, updateUser,
 		arg.Username,
-		arg.UsernameChangedAt,
 		arg.FullName,
 		arg.Email,
-		arg.EmailChangedAt,
 		arg.PasswordHash,
 		arg.PasswordSalt,
-		arg.PasswordChangedAt,
 		arg.CountryCode,
 		arg.RoleID,
 		arg.Status,
+		arg.CreatedAt,
 		arg.ID,
 	)
 	var i UserSvcUser

@@ -24,18 +24,18 @@ func (server *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 	}
 
 	arg := db.UpdateUserParams{
+		ID:                req.GetId(),
 		Username:          pgtype.Text{String: req.GetUsername(), Valid: req.Username != "" && req.Username != user.Username},
-		UsernameChangedAt: pgtype.Timestamptz{Time: time.Now(), Valid: req.UsernameChangedAt != nil},
 		FullName:          pgtype.Text{String: req.GetFullName(), Valid: req.FullName != ""},
 		Email:             pgtype.Text{String: req.GetEmail(), Valid: req.Email != "" && req.Email != user.Email},
-		EmailChangedAt:    pgtype.Timestamptz{Time: time.Now(), Valid: req.EmailChangedAt != nil},
 		PasswordHash:      pgtype.Text{String: req.GetPasswordHash(), Valid: req.PasswordHash != ""},
 		PasswordSalt:      pgtype.Text{String: req.GetPasswordSalt(), Valid: req.PasswordSalt != ""},
-		PasswordChangedAt: pgtype.Timestamptz{Time: time.Now(), Valid: req.PasswordChangedAt != nil},
 		CountryCode:       pgtype.Text{String: req.GetCountryCode(), Valid: req.CountryCode != ""},
 		RoleID:            pgtype.Int8{Int64: req.GetRoleId(), Valid: req.RoleId != 0},
 		Status:            pgtype.Text{String: req.GetStatus(), Valid: req.Status != ""},
-		ID:                req.GetId(),
+		PasswordChangedAt: pgtype.Timestamptz{Time: time.Now(), Valid: req.PasswordChangedAt != nil && req.PasswordChangedAt.AsTime() != user.PasswordChangedAt},
+		EmailChangedAt:    pgtype.Timestamptz{Time: time.Now(), Valid: req.EmailChangedAt != nil && req.EmailChangedAt.AsTime() != user.EmailChangedAt},
+		UsernameChangedAt: pgtype.Timestamptz{Time: time.Now(), Valid: req.UsernameChangedAt != nil && req.UsernameChangedAt.AsTime() != user.UsernameChangedAt},
 	}
 
 	// Update the user in the database
